@@ -1,0 +1,89 @@
+`include "./cpu/aludefs.vh"
+
+module alu(
+	input I_clk,
+	input I_en,
+	input I_reset,
+	input[31:0] I_dataS1,
+	input[31:0] I_dataS2,
+	input [3:0] I_aluop,
+	output O_busy,
+	output[31:0] O_data,
+	output O_lt,
+	output O_ltu,
+	output O_eq);
+	
+	reg O_lt, O_ltu, O_eq;
+	reg[31:0] result, sum, myor, myxor, myand;
+	reg[32:0] sub; // additional bit for underflow detection
+	reg eq, lt, ltu, busy = 0;
+	reg[4:0] shiftcnt;
+
+	assign O_busy = busy;
+	assign O_data = result;
+	
+	always @(*) begin
+		sum <= I_dataS1 + I_dataS2;
+		sub <= {1'b0, I_dataS1} - {1'b0, I_dataS2};
+		
+		myor <= I_dataS1 | I_dataS2;
+		myxor <= I_dataS1 ^ I_dataS2;
+		myand <= I_dataS1 & I_dataS2;
+	end
+	
+	always @(*) begin
+		// unsigned comparison: simply look at underflow bit
+		ltu <= (sub[32] === 1'b1);
+		// signed comparison: xor underflow bit with xored sign bit
+		lt <= ((sub[32] ^ myxor[31]) === 1'b1);
+		
+		eq <= (sub === 33'b0);
+	end
+	
+	always @(posedge I_clk) begin
+		if(I_reset) begin
+			busy <= 0;
+		end else if(I_en) begin
+			case(I_aluop)
+				`ALUOP_ADD: result <= sum;
+				`ALUOP_SUB: result <= sub;		
+				`ALUOP_AND: result <= myand;
+				`ALUOP_OR:  result <= myor;
+				`ALUOP_XOR: result <= myxor;
+
+				`ALUOP_SLT: begin
+					result <= 0;
+					if(lt) result[0] <= 1;
+				end
+
+				`ALUOP_SLTU: begin
+					result <= 0;
+					if(ltu) result[0] <= 1;
+				end
+
+				`ALUOP_SLL, `ALUOP_SRL, `ALUOP_SRA: begin
+					if(!busy) begin
+						busy <= 1;
+						result <= I_dataS1;
+						shiftcnt <= I_dataS2[4:0];
+					end else if(shiftcnt !== 5'b00000) begin
+						case(I_aluop)
+							`ALUOP_SLL: result <= {result[30:0], 1'b0};
+							`ALUOP_SRL: result <= {1'b0, result[31:1]};
+							default: result <= {result[31], result[31:1]};
+						endcase
+						shiftcnt <= shiftcnt - 1;
+					end else begin
+						busy <= 0;
+					end
+				end
+			endcase
+
+			O_lt <= lt;
+			O_ltu <= ltu;
+			O_eq <= eq;
+
+		end
+	end
+		
+endmodule
