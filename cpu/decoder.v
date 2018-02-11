@@ -25,7 +25,7 @@ module decoder(
 			`OP_STORE: O_imm = {{20{I_instr[31]}}, I_instr[31:25], I_instr[11:8], I_instr[7]}; // S-type
 			`OP_BRANCH: O_imm = {{19{I_instr[31]}}, I_instr[31], I_instr[7], I_instr[30:25], I_instr[11:8], 1'b0}; // SB-type
 			`OP_LUI, `OP_AUIPC: O_imm = {I_instr[31:12], {12{1'b0}}};
-			`OP_JAL: O_imm = {{19{I_instr[31]}}, I_instr[31], I_instr[19:12], I_instr[20], I_instr[30:25], I_instr[24:21], 1'b0}; // UJ-type
+			`OP_JAL: O_imm = {{11{I_instr[31]}}, I_instr[31], I_instr[19:12], I_instr[20], I_instr[30:25], I_instr[24:21], 1'b0}; // UJ-type
 			default: O_imm = {{20{I_instr[31]}}, I_instr[31:20]}; // I-type and R-type. Immediate has no meaning for R-type instructions
 		endcase
 
