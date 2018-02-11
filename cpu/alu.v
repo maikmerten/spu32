@@ -9,11 +9,10 @@ module alu(
 	input [3:0] I_aluop,
 	output O_busy,
 	output[31:0] O_data,
-	output O_lt,
-	output O_ltu,
-	output O_eq);
+	output reg O_lt,
+	output reg O_ltu,
+	output reg O_eq);
 	
-	reg O_lt, O_ltu, O_eq;
 	reg[31:0] result, sum, myor, myxor, myand;
 	reg[32:0] sub; // additional bit for underflow detection
 	reg eq, lt, ltu, busy = 0;
