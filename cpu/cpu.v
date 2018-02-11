@@ -454,7 +454,6 @@ module cpu(
             end
 
             `STATE_CSRRW2: begin
-                // TODO: it should be safe to merge this with CSRRW1
                 // update MSRs with value of rs1
                 if(dec_imm[11]) begin // denotes a writable MSR
                     case(dec_imm[1:0])
