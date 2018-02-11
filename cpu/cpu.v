@@ -10,6 +10,7 @@ module cpu(
 	input ACK_I,
 	input[7:0] DAT_I,
 	input RST_I,
+    input INTERRUPT_I,
 	output[31:0] ADR_O,
 	output[7:0] DAT_O,
 	output CYC_O,
@@ -17,12 +18,24 @@ module cpu(
 	output WE_O
     );
 
+    `define VECTOR_RESET        32'd0
+    `define VECTOR_EXCEPTION    32'd16
+
     wire clk, reset;
     assign clk = CLK_I;
     assign reset = RST_I;
 
     // MSRS
-    reg[31:0] instr, pc;
+    reg[31:0] instr, pc, epc;
+     // current and previous machine-mode external interrupt enable
+    reg meie = 0, meie_prev = 0;
+     // machine cause register, mcause[4] denotes interrupt, mcause[3:0] encodes exception code
+    reg[4:0] mcause = 0;
+
+    `define CAUSE_EXTERNAL_INTERRUPT    5'b11011
+    `define CAUSE_INVALID_INSTRUCTION   5'b00010
+    `define CAUSE_BREAK                 5'b00011
+    `define CAUSE_ECALL                 5'b01011
 
     // ALU instance
     reg alu_en = 0;
@@ -142,15 +155,39 @@ module cpu(
         .out(bus_addr)
     );
 
+    // Muxer for MSRs
+    wire[1:0] mux_msr_sel;
+    wire[31:0] msr_data;
+    assign mux_msr_sel = dec_imm[1:0];
+    wire[31:0] mcause32;
+    assign mcause32 = {mcause[4], {27{1'b0}}, mcause[3:0]};
+    wire[31:0] mie32;
+    assign mie32 = {{20{1'b0}}, meie, {11{1'b0}}};
+
+    `define MSR_MIE     2'b00
+    `define MSR_CAUSE   2'b01
+    `define MSR_EPC     2'b11
+
+
+    mux32x3 mux_msr(
+        .port0(mie32),
+        .port1(mcause32),
+        .port2(epc),
+        .sel(mux_msr_sel),
+        .out(msr_data)
+    );
+
     // Muxer for register data input
     reg[1:0] mux_reg_input_sel = 0;
     `define MUX_REGINPUT_ALU    0
     `define MUX_REGINPUT_BUS    1
     `define MUX_REGINPUT_IMM    2
-    mux32x3 mux_reg_input(
+    `define MUX_REGINPUT_MSR    3
+    mux32x4 mux_reg_input(
         .port0(alu_dataout),
         .port1(bus_dataout),
         .port2(dec_imm),
+        .port3(msr_data),
         .sel(mux_reg_input_sel),
         .out(reg_datain)
     );
@@ -172,13 +209,15 @@ module cpu(
     `define STATE_BRANCH1           14
     `define STATE_BRANCH2           15
     `define STATE_TRAP1             16
-    `define STATE_TRAP2             17
-    `define STATE_REGWRITEBUS       18
-    `define STATE_REGWRITEALU       19
-    `define STATE_PCNEXT            20
-    `define STATE_PCREGIMM          21
-    `define STATE_PCIMM             22
-    `define STATE_PCUPDATE_FETCH    23
+    `define STATE_REGWRITEBUS       17
+    `define STATE_REGWRITEALU       18
+    `define STATE_PCNEXT            19
+    `define STATE_PCREGIMM          20
+    `define STATE_PCIMM             21
+    `define STATE_PCUPDATE_FETCH    22
+    `define STATE_SYSTEM            23
+    `define STATE_CSRRW1            24
+    `define STATE_CSRRW2            25
 
 
     reg[4:0] state = 0, nextstate = 0;
@@ -204,7 +243,8 @@ module cpu(
 
         case(state)
             `STATE_RESET: begin
-                pc <= 0;
+                pc <= `VECTOR_RESET;
+                meie <= 0; // disable machine-mode external interrupt
                 nextstate <= `STATE_FETCH;
             end
 
@@ -218,6 +258,14 @@ module cpu(
             `STATE_DECODE: begin
                 instr <= bus_dataout;
                 nextstate <= `STATE_REGREAD;
+
+                // checking for interrupt here because no bus operations are active here
+                // TODO: find a proper place that doesn't let an instruction fetch go to waste
+                if(meie & INTERRUPT_I) begin
+                    mcause <= `CAUSE_EXTERNAL_INTERRUPT;
+                    nextstate <= `STATE_TRAP1;
+                end
+
             end
 
             `STATE_REGREAD: begin
@@ -361,8 +409,64 @@ module cpu(
                 nextstate <= `STATE_REGWRITEALU;
             end
 
-            `STATE_TRAP1: nextstate <= `STATE_TRAP2; // TODO: do something proper her
-            `STATE_TRAP2: nextstate <= `STATE_PCNEXT; // TODO: see above
+            `STATE_SYSTEM: begin
+                nextstate <= `STATE_TRAP1;
+                case(dec_funct3)
+                    `FUNC_ECALL_EBREAK: begin
+                        // handle ecall, ebreak and mret here
+                        case(dec_imm[11:0])
+                            `SYSTEM_ECALL: mcause <= `CAUSE_ECALL;
+                            `SYSTEM_EBREAK: mcause <= `CAUSE_BREAK;
+                            `SYSTEM_MRET: begin
+                                meie <= meie_prev;
+                                pc <= epc;
+                                mcause <= 0;
+                                nextstate <= `STATE_FETCH;
+                            end
+                            default: mcause <= `CAUSE_INVALID_INSTRUCTION;
+                        endcase
+                    end
+
+                    `FUNC_CSRRW: begin
+                        // handle csrrw here
+                        nextstate <= `STATE_CSRRW1;
+                    end
+
+                    // unsupported SYSTEM instruction
+                    default: mcause <= `CAUSE_INVALID_INSTRUCTION;
+                endcase
+            end
+
+            `STATE_TRAP1: begin
+                meie_prev <= meie;
+                meie <= 0;
+                epc <= pc;
+                pc <= `VECTOR_EXCEPTION;
+
+                nextstate <= `STATE_FETCH;
+            end
+
+            `STATE_CSRRW1: begin
+                // write MSR-value to register
+                mux_reg_input_sel <= `MUX_REGINPUT_MSR;
+                reg_we <= 1;
+                nextstate <= `STATE_CSRRW2;
+            end
+
+            `STATE_CSRRW2: begin
+                // TODO: it should be safe to merge this with CSRRW1
+                // update MSRs with value of rs1
+                if(dec_imm[11]) begin // denotes a writable MSR
+                    case(dec_imm[1:0])
+                        `MSR_CAUSE: mcause <= {reg_val1[31], reg_val1[3:0]};
+                        `MSR_EPC:   epc <= reg_val1;
+                        `MSR_MIE:   meie <= reg_val1[11];
+                        default: begin end
+                    endcase
+                end
+                nextstate <= `STATE_PCNEXT;
+            end
+
 
             `STATE_REGWRITEBUS: begin
                 reg_we <= 1;

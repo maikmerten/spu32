@@ -7,6 +7,7 @@ module cpu_tb();
     `include "./tb/tbcommon.v"
 
     reg reset = 1;
+    reg interrupt = 0;
 
     wire cpu_cyc, cpu_stb, cpu_we;
     wire[7:0] cpu_dat;
@@ -20,6 +21,7 @@ module cpu_tb();
 	    .ACK_I(ram_ack),
 	    .DAT_I(ram_dat),
 	    .RST_I(reset),
+        .INTERRUPT_I(interrupt),
 	    .ADR_O(cpu_adr),
 	    .DAT_O(cpu_dat),
 	    .CYC_O(cpu_cyc),

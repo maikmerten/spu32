@@ -59,8 +59,13 @@
 	`define FUNC_FENCE	3'b000
 	`define FUNC_FENCEI	3'b001
 
-	`define FUNC_SCALL_SBREAK	3'b000
-	`define FUNC_RD		3'b010
+	`define FUNC_ECALL_EBREAK	3'b000
+	`define FUNC_CSRRW			3'b001
+
+	// imm[11:0] of SYSTEM-opcode encodes function
+	`define SYSTEM_ECALL	12'b000000000000
+	`define SYSTEM_EBREAK	12'b000000000001
+	`define SYSTEM_MRET		12'b001100000010
 
 
 	// Registers
