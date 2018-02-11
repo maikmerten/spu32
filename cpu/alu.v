@@ -45,7 +45,7 @@ module alu(
 		end else if(I_en) begin
 			case(I_aluop)
 				`ALUOP_ADD: result <= sum;
-				`ALUOP_SUB: result <= sub;		
+				`ALUOP_SUB: result <= sub[31:0];		
 				`ALUOP_AND: result <= myand;
 				`ALUOP_OR:  result <= myor;
 				`ALUOP_XOR: result <= myxor;
@@ -71,7 +71,7 @@ module alu(
 							`ALUOP_SRL: result <= {1'b0, result[31:1]};
 							default: result <= {result[31], result[31:1]};
 						endcase
-						shiftcnt <= shiftcnt - 1;
+						shiftcnt <= shiftcnt - 5'd1;
 					end else begin
 						busy <= 0;
 					end

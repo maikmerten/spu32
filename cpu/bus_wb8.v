@@ -27,7 +27,7 @@ module bus_wb8(
 	reg busy = 0;
 	assign O_busy = busy;
 
-	reg[1:0] byte = 0, byte_target = 0;
+	reg[1:0] bytecnt = 0, byte_target = 0;
 	reg signextend = 0;
 	reg mysign = 0;
 
@@ -45,14 +45,14 @@ module bus_wb8(
 		if(I_en) begin
 
 			// compute memory address
-			ADR_O <= I_addr + byte;
+			ADR_O <= I_addr + bytecnt;
 
 			case(state)
 			
 				`IDLE: begin // in idle state, evaluate requested op
 					signextend <= 1;
 					busy <= 1;
-					byte <= 0;
+					bytecnt <= 0;
 
 					case(I_op)
 						`BUSOP_READB: begin
@@ -113,20 +113,20 @@ module bus_wb8(
 
 						mysign = DAT_I[7] & signextend;
 
-						case (byte)
+						case (bytecnt)
 							0: buffer <= {{24{mysign}}, DAT_I};	
 							1: buffer[31:8] <= {{16{mysign}}, DAT_I};	
 							2: buffer[23:16] <= DAT_I;
 							3: buffer[31:24] <= DAT_I;
 						endcase
 
-						if(byte < byte_target) begin
-							byte <= byte + 1;
+						if(bytecnt < byte_target) begin
+							bytecnt <= bytecnt + 2'd1;
 							state <= `READ_START;
 						end else begin
 							busy <= 0;
 							CYC_O <= 0;
-							byte <= 0;
+							bytecnt <= 0;
 							state <= `IDLE;
 						end
 					end
@@ -138,7 +138,7 @@ module bus_wb8(
 					CYC_O <= 1;
 					STB_O <= 1;
 
-					case(byte)
+					case(bytecnt)
 						0: DAT_O <= I_data[7:0];
 						1: DAT_O <= I_data[15:8];
 						2: DAT_O <= I_data[23:16];
@@ -154,13 +154,13 @@ module bus_wb8(
 						STB_O <= 0;
 
 
-						if(byte < byte_target) begin
-							byte <= byte + 1;
+						if(bytecnt < byte_target) begin
+							bytecnt <= bytecnt + 2'd1;
 							state <= `WRITE_START;
 						end else begin
 							busy <= 0;
 							CYC_O <= 0;
-							byte <= 0;
+							bytecnt <= 0;
 							state <= `IDLE;
 						end
 					end
