@@ -1,0 +1,44 @@
+
+set_io --warn-no-port clk_100mhz R9
+
+set_io --warn-no-port led1 C8
+set_io --warn-no-port led2 F7
+set_io --warn-no-port led3 K9
+
+
+set_io --warn-no-port pmod1_1  D8
+set_io --warn-no-port pmod1_2  B9
+set_io --warn-no-port pmod1_3  B10
+set_io --warn-no-port pmod1_4  B11
+set_io --warn-no-port pmod1_7  B8
+set_io --warn-no-port pmod1_8  A9
+set_io --warn-no-port pmod1_9  A10
+set_io --warn-no-port pmod1_10 A11
+
+#set_io --warn-no-port pmod2_1  A5
+#set_io --warn-no-port pmod2_2  A2
+#set_io --warn-no-port pmod2_3  C3
+#set_io --warn-no-port pmod2_4  B4
+#set_io --warn-no-port pmod2_7  B7
+#set_io --warn-no-port pmod2_8  B6
+#set_io --warn-no-port pmod2_9  B3
+#set_io --warn-no-port pmod2_10 B5
+
+#set_io --warn-no-port pmod3_1  L9
+#set_io --warn-no-port pmod3_2  G5
+#set_io --warn-no-port pmod3_3  L7
+#set_io --warn-no-port pmod3_4  N6
+#set_io --warn-no-port pmod3_7  N9
+#set_io --warn-no-port pmod3_8  P9
+#set_io --warn-no-port pmod3_9  M8
+#set_io --warn-no-port pmod3_10 N7
+
+#set_io --warn-no-port pmod4_1  T15
+#set_io --warn-no-port pmod4_2  T14
+#set_io --warn-no-port pmod4_3  T11
+#set_io --warn-no-port pmod4_4  R10
+#set_io --warn-no-port pmod4_7  R14
+#set_io --warn-no-port pmod4_8  T13
+#set_io --warn-no-port pmod4_9  T10
+#set_io --warn-no-port pmod4_10 T9
+
