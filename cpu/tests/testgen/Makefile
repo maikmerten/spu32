@@ -12,6 +12,7 @@ testsuite.o: testcollection.s testsuite.s
 
 testsuite.bin: testsuite.o
 	riscv32-unknown-elf-objcopy -O binary testsuite.o testsuite.bin
+	truncate -s 1024 testsuite.bin
 
 testsuite.dat: testsuite.bin
 	hexdump -v -f hexdump-format-byte testsuite.bin > testsuite.dat

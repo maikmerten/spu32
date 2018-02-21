@@ -13,7 +13,7 @@ module ram1k_wb8(
 	`ifndef RAMINITFILE
 		`define RAMINITFILE "./ram/raminit.dat"
 	`endif
-	initial $readmemh(`RAMINITFILE, ram);
+	initial $readmemh(`RAMINITFILE, ram, 0, 1023);
 
 	reg ack = 0;
 	assign ACK_O = ack & STB_I;
