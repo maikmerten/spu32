@@ -4,15 +4,15 @@ COPY=riscv32-unknown-elf-objcopy
 
 all: blink-test.dat
 
-blink-test.o: blink-test.s
-	$(LINK) -o blink-test.o blink-test.s
+%.o: %.s
+	$(LINK) -o $@ $<
 
-blink-test.bin: blink-test.o
-	$(DUMP) -d blink-test.o
-	$(COPY) -O binary blink-test.o blink-test.bin
+%.bin: %.o
+	$(DUMP) -d $<
+	$(COPY) -O binary $< $@
 
-blink-test.dat: blink-test.bin
-	hexdump -v -f hexdump-format-byte blink-test.bin > blink-test.dat
+%.dat: %.bin
+	hexdump -v -f hexdump-format-byte $< > $@
 
 clean:
 	-rm *.o *.bin *.dat
