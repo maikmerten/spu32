@@ -12,7 +12,7 @@ all: blink-test.dat
 	$(COPY) -O binary $< $@
 
 %.dat: %.bin
-	hexdump -v -f hexdump-format-byte $< > $@
+	hexdump -v -e '1/1 "%02x" "\n"' $< > $@
 
 clean:
 	-rm *.o *.bin *.dat
