@@ -8,7 +8,7 @@ testcollection.s:
 	java -jar tomthumb-testgen-1.0-SNAPSHOT.jar > testcollection.s
 
 testsuite.o: testcollection.s testsuite.s
-	riscv32-unknown-elf-gcc -march=RV32I -O0 -nostdlib -nostartfiles -Tlink.ld -x assembler-with-cpp -o testsuite.o testsuite.s
+	riscv32-unknown-elf-gcc -march=rv32i -O0 -nostdlib -nostartfiles -Tlink.ld -x assembler-with-cpp -o testsuite.o testsuite.s
 
 testsuite.bin: testsuite.o
 	riscv32-unknown-elf-objcopy -O binary testsuite.o testsuite.bin

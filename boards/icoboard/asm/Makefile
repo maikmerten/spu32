@@ -1,4 +1,4 @@
-LINK=riscv32-unknown-elf-gcc -march=RV32I -O0 -nostdlib -nostartfiles -Tlink.ld -x assembler-with-cpp
+LINK=riscv32-unknown-elf-gcc -march=rv32i -O0 -nostdlib -nostartfiles -Tlink.ld -x assembler-with-cpp
 DUMP=riscv32-unknown-elf-objdump
 COPY=riscv32-unknown-elf-objcopy
 
