@@ -30,7 +30,7 @@ module uart_wb8
     reg writestate = `WRITE_IDLE;
 
     reg[7:0] inputbuf, readbuf, writebuf = 0;
-    reg[2:0] edgefilter = 0;
+    reg[2:0] edgefilter = 3'b111;
     
     reg[3:0] readbitcnt, writebitcnt = 0;
     reg[9:0] readclkcnt, writeclkcnt = 0;
@@ -42,17 +42,17 @@ module uart_wb8
         case (readstate)
             `READ_IDLE: begin
                 edgefilter <= {I_rx, edgefilter[2:1]};
-                if({I_rx, edgefilter} == 4'b0) begin
+                if({I_rx, edgefilter} == 0) begin
                     readstate <= `READ_READ;
                     readclkcnt <= 0;
                     readbitcnt <= 0;
-                    edgefilter <= 3'b1;
+                    edgefilter <= 3'b111;
                 end            
             end 
 
             `READ_READ: begin
                 // sample mid-baud
-                if(readbitcnt == baudclocks/2) begin
+                if(readclkcnt == baudclocks/2) begin
                     if(readbitcnt != 9) begin
                         inputbuf <= {I_rx, inputbuf[7:1]};    
                     end else begin
@@ -75,6 +75,7 @@ module uart_wb8
                   writestate <= `WRITE_WRITE;
                   writeclkcnt <= 0;
                   writebitcnt <= 0;
+                  O_tx <= 0; // start bit
                 end
               
             end

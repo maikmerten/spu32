@@ -1,5 +1,5 @@
 `include "./cpu/cpu.v"
-`define RAMINITFILE "./boards/icoboard/asm/blink-test.dat"
+`define RAMINITFILE "./boards/icoboard/asm/uart-echo.dat"
 `include "./ram/ram1k_wb8.v"
 `include "./leds/leds_wb8.v"
 `include "./uart/uart_wb8.v"
@@ -10,8 +10,8 @@ module top(
         // LED outputs on pmod header 1
         output pmod1_1, pmod1_2, pmod1_3, pmod1_4, pmod1_7, pmod1_8, pmod1_9, pmod1_10,
         // UART pins on pmod header 2
-        input pmod2_8,
-        output reg pmod2_9,
+        input uart_rx,
+        output uart_tx,
         // board LEDs
         output led1, led2
     );
@@ -98,9 +98,6 @@ module top(
     wire uart_tx, uart_ack;
     wire[7:0] uart_dat;
 
-    assign uart_rx = pmod2_9;
-    assign pmod2_8 = uart_tx;
-
     uart_wb8 uart_inst(
         .CLK_I(clk),
         .ADR_I(cpu_adr[1:0]),
@@ -114,8 +111,8 @@ module top(
     );
 
 
-    assign led1 = cpu_stb;
-    assign led2 = cpu_cyc;
+    assign led1 = !uart_rx;
+    assign led2 = !uart_tx;
     assign led3 = cpu_we;
 
     // The iCE40 BRAMs always return zero for a while after device program and reset:

@@ -5,6 +5,9 @@ set_io --warn-no-port led1 C8
 set_io --warn-no-port led2 F7
 set_io --warn-no-port led3 K9
 
+# UART on pmod header 2
+set_io --warn-no-port uart_rx C3
+set_io --warn-no-port uart_tx A2
 
 set_io --warn-no-port pmod1_1  D8
 set_io --warn-no-port pmod1_2  B9
@@ -20,8 +23,8 @@ set_io --warn-no-port pmod1_10 A11
 #set_io --warn-no-port pmod2_3  C3
 #set_io --warn-no-port pmod2_4  B4
 #set_io --warn-no-port pmod2_7  B7
-set_io --warn-no-port pmod2_8  B6
-set_io --warn-no-port pmod2_9  B3
+#set_io --warn-no-port pmod2_8  B6
+#set_io --warn-no-port pmod2_9  B3
 #set_io --warn-no-port pmod2_10 B5
 
 #set_io --warn-no-port pmod3_1  L9
