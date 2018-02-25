@@ -10,8 +10,8 @@ module top(
         // LED outputs on pmod header 1
         output pmod1_1, pmod1_2, pmod1_3, pmod1_4, pmod1_7, pmod1_8, pmod1_9, pmod1_10,
         // UART pins on pmod header 2
-        input pmod2_2,
-        output reg pmod2_3,
+        input pmod2_8,
+        output reg pmod2_9,
         // board LEDs
         output led1, led2
     );
@@ -97,8 +97,8 @@ module top(
     wire uart_tx, uart_ack;
     wire[7:0] uart_dat;
 
-    assign uart_rx = pmod2_3;
-    assign pmod2_2 = uart_tx;
+    assign uart_rx = pmod2_9;
+    assign pmod2_8 = uart_tx;
 
     uart_wb8 uart_inst(
         .CLK_I(clk),
