@@ -41,7 +41,8 @@ module top(
     assign clk = clk_pll;
 
 
-    reg reset = 0;
+    reg reset = 1;
+    reg[7:0] resetcnt = 1;
     reg interrupt = 0;
 
     wire cpu_cyc, cpu_stb, cpu_we;
@@ -116,6 +117,17 @@ module top(
     assign led1 = cpu_stb;
     assign led2 = cpu_cyc;
     assign led3 = cpu_we;
+
+    // The iCE40 BRAMs always return zero for a while after device program and reset:
+    // https://github.com/cliffordwolf/icestorm/issues/76
+    // Assert reset for while until things should have settled.
+    always @(posedge clk) begin
+      if(resetcnt != 0) begin
+        reset <= 1;
+        resetcnt <= resetcnt + 1;
+      end else reset <= 0;
+    end
+
 
     // bus arbiter
     always @(*) begin
