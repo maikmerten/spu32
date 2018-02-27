@@ -161,16 +161,16 @@ module cpu(
     assign mux_msr_sel = dec_imm[1:0];
     wire[31:0] mcause32;
     assign mcause32 = {mcause[4], {27{1'b0}}, mcause[3:0]};
-    wire[31:0] mie32;
-    assign mie32 = {{20{1'b0}}, meie, {11{1'b0}}};
+    wire[31:0] mstatus32;
+    assign mstatus32 = {{29{1'b0}}, INTERRUPT_I, meie_prev, meie};
 
-    `define MSR_MIE     2'b00
+    `define MSR_MSTATUS 2'b00
     `define MSR_CAUSE   2'b01
     `define MSR_EPC     2'b11
 
 
     mux32x3 mux_msr(
-        .port0(mie32),
+        .port0(mstatus32),
         .port1(mcause32),
         .port2(epc),
         .sel(mux_msr_sel),
@@ -459,7 +459,10 @@ module cpu(
                     case(dec_imm[1:0])
                         `MSR_CAUSE: mcause <= {reg_val1[31], reg_val1[3:0]};
                         `MSR_EPC:   epc <= reg_val1;
-                        `MSR_MIE:   meie <= reg_val1[11];
+                        `MSR_MSTATUS: begin
+                            meie <= reg_val1[0];
+                            meie_prev <= reg_val1[1];
+                        end
                         default: begin end
                     endcase
                 end
