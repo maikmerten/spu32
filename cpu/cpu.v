@@ -5,21 +5,23 @@
 `include "./cpu/muxers.v"
 
 
-module cpu(
-    input CLK_I,
-	input ACK_I,
-	input[7:0] DAT_I,
-	input RST_I,
-    input INTERRUPT_I,
-	output[31:0] ADR_O,
-	output[7:0] DAT_O,
-	output CYC_O,
-	output STB_O,
-	output WE_O
+module cpu
+    #(
+        parameter VECTOR_RESET = 32'd0,
+        parameter VECTOR_EXCEPTION = 32'd16
+    )
+    (
+        input CLK_I,
+	    input ACK_I,
+	    input[7:0] DAT_I,
+	    input RST_I,
+        input INTERRUPT_I,
+	    output[31:0] ADR_O,
+	    output[7:0] DAT_O,
+	    output CYC_O,
+	    output STB_O,
+	    output WE_O
     );
-
-    `define VECTOR_RESET        32'd0
-    `define VECTOR_EXCEPTION    32'd16
 
     wire clk, reset;
     assign clk = CLK_I;
@@ -243,7 +245,7 @@ module cpu(
 
         case(state)
             `STATE_RESET: begin
-                pc <= `VECTOR_RESET;
+                pc <= VECTOR_RESET;
                 meie <= 0; // disable machine-mode external interrupt
                 nextstate <= `STATE_FETCH;
             end
@@ -441,7 +443,7 @@ module cpu(
                 meie_prev <= meie;
                 meie <= 0;
                 epc <= pc;
-                pc <= `VECTOR_EXCEPTION;
+                pc <= VECTOR_EXCEPTION;
 
                 nextstate <= `STATE_FETCH;
             end
