@@ -9,6 +9,12 @@ set_io --warn-no-port led3 K9
 set_io --warn-no-port uart_rx C3
 set_io --warn-no-port uart_tx A2
 
+# SPI port 0 on lower row of pmod header 4
+set_io --warn-no-port spi0_clk T9
+set_io --warn-no-port spi0_miso T10
+set_io --warn-no-port spi0_mosi T13
+set_io --warn-no-port spi0_cs R14
+
 set_io --warn-no-port pmod1_1  D8
 set_io --warn-no-port pmod1_2  B9
 set_io --warn-no-port pmod1_3  B10

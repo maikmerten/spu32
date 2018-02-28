@@ -3,6 +3,7 @@
 `include "./ram/ram1k_wb8.v"
 `include "./leds/leds_wb8.v"
 `include "./uart/uart_wb8.v"
+`include "./spi/spi_wb8.v"
 
 
 module top(
@@ -13,7 +14,10 @@ module top(
         input uart_rx,
         output uart_tx,
         // board LEDs
-        output led1, led2
+        output led1, led2,
+        // SPI port 0
+        input spi0_miso,
+        output spi0_clk, spi0_mosi, spi0_cs
     );
 
     wire clk_pll, pll_locked;
@@ -38,6 +42,7 @@ module top(
 		.RESETB       (1'b1      )
 	);
 
+    reg clk;
     assign clk = clk_pll;
 
 
@@ -115,6 +120,24 @@ module top(
     assign led2 = !uart_tx;
     assign led3 = cpu_we;
 
+    reg spi0_stb = 0;
+    wire[7:0] spi0_dat;
+    wire spi0_ack;
+
+    spi_wb8 spi0_inst(
+        .CLK_I(clk),
+        .ADR_I(cpu_adr[1:0]),
+        .DAT_I(cpu_dat),
+        .STB_I(spi0_stb),
+        .WE_I(cpu_we),
+        .DAT_O(spi0_dat),
+        .ACK_O(spi0_ack),
+        .I_spi_miso(spi0_miso),
+        .O_spi_mosi(spi0_mosi),
+        .O_spi_clk(spi0_clk),
+        .O_spi_cs(spi0_cs)
+    );
+
     // The iCE40 BRAMs always return zero for a while after device program and reset:
     // https://github.com/cliffordwolf/icestorm/issues/76
     // Assert reset for while until things should have settled.
@@ -131,6 +154,7 @@ module top(
         ram_stb = 0;
         leds_stb = 0;
         uart_stb = 0;
+        spi0_stb = 0;
 
         case(cpu_adr[31:28])
             4'hF: begin // 0xFxxxxxxx: I/O devices
@@ -139,6 +163,12 @@ module top(
                         arbiter_dat_o = uart_dat;
                         arbiter_ack_o = uart_ack;
                         uart_stb = cpu_stb;
+                    end
+
+                    1: begin // 0xF1xxxxxx: SPI port 0
+                        arbiter_dat_o = spi0_dat;
+                        arbiter_ack_o = spi0_ack;
+                        spi0_stb = cpu_stb;
                     end
 
                     default: begin // default I/O device: LEDs
