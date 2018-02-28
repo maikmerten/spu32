@@ -53,29 +53,13 @@ module spi_wb8(
             case(ADR_I)
                 0: begin
                     if(WE_I) begin
-                        case(state)
-                            STATE_IDLE: begin
-                                txdata <= DAT_I;
-                                state <= STATE_WAIT_BUSY;
-                            end
-
-                            STATE_WAIT_BUSY: begin
-                                // tell SPI controller to start transmission until it asserts busy
-                                txstart <= 1;
-                                if(busy) state <= STATE_WAIT_READY;
-                            end
-
-                            STATE_WAIT_READY: begin
-                                // wait for SPI controller to deassert busy, which means it should be finished
-                                txstart <= 0;
-                                if(!busy) state <= STATE_IDLE;
-                            end
-                        endcase
-
+                        if(state == STATE_IDLE) begin
+                            txdata <= DAT_I;
+                            state <= STATE_WAIT_BUSY;
+                        end
                     end else begin
                         DAT_O <= rxdata;
                     end
-                
                 end
 
                 1: begin // chip select
@@ -88,6 +72,24 @@ module spi_wb8(
                 end
 
             endcase
+
+            // if not idle, a transmission is in progress. Ensure it proceeds orderly
+            case(state)
+                STATE_WAIT_BUSY: begin
+                    // tell SPI controller to start transmission until it asserts busy
+                    txstart <= 1;
+                    if(busy) state <= STATE_WAIT_READY;
+                end
+
+                STATE_WAIT_READY: begin
+                    // wait for SPI controller to deassert busy, which means it should be finished
+                    txstart <= 0;
+                    if(!busy) state <= STATE_IDLE;
+                end
+
+                default: begin end
+            endcase
+
         end
 
 	end

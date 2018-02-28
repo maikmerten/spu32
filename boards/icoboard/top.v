@@ -1,5 +1,5 @@
 `include "./cpu/cpu.v"
-`define RAMINITFILE "./boards/icoboard/asm/uart-echo.dat"
+`define RAMINITFILE "./boards/icoboard/asm/spi-test.dat"
 `include "./ram/ram1k_wb8.v"
 `include "./leds/leds_wb8.v"
 `include "./uart/uart_wb8.v"
