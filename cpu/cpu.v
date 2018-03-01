@@ -34,10 +34,10 @@ module cpu
      // machine cause register, mcause[4] denotes interrupt, mcause[3:0] encodes exception code
     reg[4:0] mcause = 0;
 
-    `define CAUSE_EXTERNAL_INTERRUPT    5'b11011
-    `define CAUSE_INVALID_INSTRUCTION   5'b00010
-    `define CAUSE_BREAK                 5'b00011
-    `define CAUSE_ECALL                 5'b01011
+    localparam CAUSE_EXTERNAL_INTERRUPT     = 5'b11011;
+    localparam CAUSE_INVALID_INSTRUCTION    = 5'b00010;
+    localparam CAUSE_BREAK                  = 5'b00011;
+    localparam CAUSE_ECALL                  = 5'b01011;
 
     // ALU instance
     reg alu_en = 0;
@@ -58,8 +58,6 @@ module cpu
         .O_ltu(alu_ltu),
         .O_eq(alu_eq)
     );
-
-
     
     reg bus_en = 0;
     reg[2:0] bus_op = 0;
@@ -123,9 +121,9 @@ module cpu
     );
 
     // Muxer for first operand of ALU
-    reg mux_alu_s1_sel = 0;
-    `define MUX_ALUDAT1_REGVAL1 0
-    `define MUX_ALUDAT1_PC      1
+    localparam MUX_ALUDAT1_REGVAL1 = 0;
+    localparam MUX_ALUDAT1_PC      = 1;
+    reg mux_alu_s1_sel = MUX_ALUDAT1_REGVAL1;
     mux32x2 mux_alu_s1(
         .port0(reg_val1),
         .port1(pc),
@@ -134,10 +132,10 @@ module cpu
     );
 
     // Muxer for second operand of ALU
-    reg[1:0] mux_alu_s2_sel = 0;
-    `define MUX_ALUDAT2_REGVAL2 0
-    `define MUX_ALUDAT2_IMM     1
-    `define MUX_ALUDAT2_INSTLEN 2
+    localparam MUX_ALUDAT2_REGVAL2 = 0;
+    localparam MUX_ALUDAT2_IMM     = 1;
+    localparam MUX_ALUDAT2_INSTLEN = 2;
+    reg[1:0] mux_alu_s2_sel = MUX_ALUDAT2_REGVAL2;
     mux32x3 mux_alu_s2(
         .port0(reg_val2),
         .port1(dec_imm),
@@ -147,9 +145,9 @@ module cpu
     );
 
     // Muxer for bus address
-    reg mux_bus_addr_sel = 0;
-    `define MUX_BUSADDR_ALU 0
-    `define MUX_BUSADDR_PC  1
+    localparam MUX_BUSADDR_ALU = 0;
+    localparam MUX_BUSADDR_PC  = 1;
+    reg mux_bus_addr_sel = MUX_BUSADDR_ALU;
     mux32x2 mux_bus_addr(
         .port0(alu_dataout),
         .port1(pc),
@@ -166,9 +164,9 @@ module cpu
     wire[31:0] mstatus32;
     assign mstatus32 = {{29{1'b0}}, INTERRUPT_I, meie_prev, meie};
 
-    `define MSR_MSTATUS 2'b00
-    `define MSR_CAUSE   2'b01
-    `define MSR_EPC     2'b11
+    localparam MSR_MSTATUS = 2'b00;
+    localparam MSR_CAUSE   = 2'b01;
+    localparam MSR_EPC     = 2'b11;
 
 
     mux32x3 mux_msr(
@@ -180,11 +178,11 @@ module cpu
     );
 
     // Muxer for register data input
-    reg[1:0] mux_reg_input_sel = 0;
-    `define MUX_REGINPUT_ALU    0
-    `define MUX_REGINPUT_BUS    1
-    `define MUX_REGINPUT_IMM    2
-    `define MUX_REGINPUT_MSR    3
+    localparam MUX_REGINPUT_ALU = 0;
+    localparam MUX_REGINPUT_BUS = 1;
+    localparam MUX_REGINPUT_IMM = 2;
+    localparam MUX_REGINPUT_MSR = 3;
+    reg[1:0] mux_reg_input_sel = MUX_REGINPUT_ALU;
     mux32x4 mux_reg_input(
         .port0(alu_dataout),
         .port1(bus_dataout),
@@ -253,7 +251,7 @@ module cpu
             STATE_FETCH: begin
                 bus_en <= 1;
                 bus_op <= `BUSOP_READW;
-                mux_bus_addr_sel <= `MUX_BUSADDR_PC;
+                mux_bus_addr_sel <= MUX_BUSADDR_PC;
                 nextstate <= STATE_DECODE;
             end
 
@@ -264,7 +262,7 @@ module cpu
                 // checking for interrupt here because no bus operations are active here
                 // TODO: find a proper place that doesn't let an instruction fetch go to waste
                 if(meie & INTERRUPT_I) begin
-                    mcause <= `CAUSE_EXTERNAL_INTERRUPT;
+                    mcause <= CAUSE_EXTERNAL_INTERRUPT;
                     nextstate <= STATE_TRAP1;
                 end
 
@@ -289,8 +287,8 @@ module cpu
 
             STATE_OP: begin
                 alu_en <= 1;
-                mux_alu_s1_sel <= `MUX_ALUDAT1_REGVAL1;
-                mux_alu_s2_sel <= `MUX_ALUDAT2_REGVAL2;
+                mux_alu_s1_sel <= MUX_ALUDAT1_REGVAL1;
+                mux_alu_s2_sel <= MUX_ALUDAT2_REGVAL2;
                 case(dec_funct3)
                     `FUNC_ADD_SUB:  alu_op <= dec_funct7[5] ? `ALUOP_SUB : `ALUOP_ADD;
                     `FUNC_SLL:      alu_op <= `ALUOP_SLL;
@@ -307,8 +305,8 @@ module cpu
 
             STATE_OPIMM: begin
                 alu_en <= 1;
-                mux_alu_s1_sel <= `MUX_ALUDAT1_REGVAL1;
-                mux_alu_s2_sel <= `MUX_ALUDAT2_IMM;
+                mux_alu_s1_sel <= MUX_ALUDAT1_REGVAL1;
+                mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
                 case(dec_funct3)
                     `FUNC_ADDI:         alu_op <= `ALUOP_ADD;
                     `FUNC_SLLI:         alu_op <= `ALUOP_SLL;
@@ -326,14 +324,14 @@ module cpu
             STATE_LOAD1: begin // compute load address on ALU
                 alu_en <= 1;
                 alu_op <= `ALUOP_ADD;
-                mux_alu_s1_sel <= `MUX_ALUDAT1_REGVAL1;
-                mux_alu_s2_sel <= `MUX_ALUDAT2_IMM;
+                mux_alu_s1_sel <= MUX_ALUDAT1_REGVAL1;
+                mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
                 nextstate <= STATE_LOAD2;
             end
 
             STATE_LOAD2: begin // load from computed address
                 bus_en <= 1;
-                mux_bus_addr_sel <= `MUX_BUSADDR_ALU;
+                mux_bus_addr_sel <= MUX_BUSADDR_ALU;
                 case(dec_funct3)
                     `FUNC_LB:   bus_op <= `BUSOP_READB;
                     `FUNC_LH:   bus_op <= `BUSOP_READH;
@@ -347,14 +345,14 @@ module cpu
             STATE_STORE1: begin // compute store address on ALU
                 alu_en <= 1;
                 alu_op <= `ALUOP_ADD;
-                mux_alu_s1_sel <= `MUX_ALUDAT1_REGVAL1;
-                mux_alu_s2_sel <= `MUX_ALUDAT2_IMM;
+                mux_alu_s1_sel <= MUX_ALUDAT1_REGVAL1;
+                mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
                 nextstate <= STATE_STORE2;
             end
 
             STATE_STORE2: begin // store to computed address
                 bus_en <= 1;
-                mux_bus_addr_sel <= `MUX_BUSADDR_ALU;
+                mux_bus_addr_sel <= MUX_BUSADDR_ALU;
                 case(dec_funct3)
                     `FUNC_SB:   bus_op <= `BUSOP_WRITEB;
                     `FUNC_SH:   bus_op <= `BUSOP_WRITEH;
@@ -366,22 +364,22 @@ module cpu
             STATE_JAL_JALR1: begin // compute return address on ALU
                 alu_en <= 1;
                 alu_op <= `ALUOP_ADD;
-                mux_alu_s1_sel <= `MUX_ALUDAT1_PC;
-                mux_alu_s2_sel <= `MUX_ALUDAT2_INSTLEN;
+                mux_alu_s1_sel <= MUX_ALUDAT1_PC;
+                mux_alu_s2_sel <= MUX_ALUDAT2_INSTLEN;
                 nextstate <= STATE_JAL_JALR2;
             end
 
             STATE_JAL_JALR2: begin // write return address to register file
                 reg_we <= 1;
-                mux_reg_input_sel <= `MUX_REGINPUT_ALU;
+                mux_reg_input_sel <= MUX_REGINPUT_ALU;
                 nextstate <= (dec_opcode[1]) ? STATE_PCIMM : STATE_PCREGIMM;
             end
 
             STATE_BRANCH1: begin // use ALU for comparisons
                 alu_en <= 1;
                 alu_op <= `ALUOP_ADD; // doesn't really matter
-                mux_alu_s1_sel <= `MUX_ALUDAT1_REGVAL1;
-                mux_alu_s2_sel <= `MUX_ALUDAT2_REGVAL2;
+                mux_alu_s1_sel <= MUX_ALUDAT1_REGVAL1;
+                mux_alu_s2_sel <= MUX_ALUDAT2_REGVAL2;
                 nextstate <= STATE_BRANCH2;
             end
 
@@ -399,15 +397,15 @@ module cpu
 
             STATE_LUI: begin
                 reg_we <= 1;
-                mux_reg_input_sel <= `MUX_REGINPUT_IMM;
+                mux_reg_input_sel <= MUX_REGINPUT_IMM;
                 nextstate <= STATE_PCNEXT;
             end
 
             STATE_AUIPC: begin // compute PC + IMM on ALU
                 alu_en <= 1;
                 alu_op <= `ALUOP_ADD;
-                mux_alu_s1_sel <= `MUX_ALUDAT1_PC;
-                mux_alu_s2_sel <= `MUX_ALUDAT2_IMM;
+                mux_alu_s1_sel <= MUX_ALUDAT1_PC;
+                mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
                 nextstate <= STATE_REGWRITEALU;
             end
 
@@ -417,15 +415,15 @@ module cpu
                     `FUNC_ECALL_EBREAK: begin
                         // handle ecall, ebreak and mret here
                         case(dec_imm[11:0])
-                            `SYSTEM_ECALL: mcause <= `CAUSE_ECALL;
-                            `SYSTEM_EBREAK: mcause <= `CAUSE_BREAK;
+                            `SYSTEM_ECALL: mcause <= CAUSE_ECALL;
+                            `SYSTEM_EBREAK: mcause <= CAUSE_BREAK;
                             `SYSTEM_MRET: begin
                                 meie <= meie_prev;
                                 pc <= epc;
                                 mcause <= 0;
                                 nextstate <= STATE_FETCH;
                             end
-                            default: mcause <= `CAUSE_INVALID_INSTRUCTION;
+                            default: mcause <= CAUSE_INVALID_INSTRUCTION;
                         endcase
                     end
 
@@ -435,7 +433,7 @@ module cpu
                     end
 
                     // unsupported SYSTEM instruction
-                    default: mcause <= `CAUSE_INVALID_INSTRUCTION;
+                    default: mcause <= CAUSE_INVALID_INSTRUCTION;
                 endcase
             end
 
@@ -450,7 +448,7 @@ module cpu
 
             STATE_CSRRW1: begin
                 // write MSR-value to register
-                mux_reg_input_sel <= `MUX_REGINPUT_MSR;
+                mux_reg_input_sel <= MUX_REGINPUT_MSR;
                 reg_we <= 1;
                 nextstate <= STATE_CSRRW2;
             end
@@ -459,9 +457,9 @@ module cpu
                 // update MSRs with value of rs1
                 if(dec_imm[11]) begin // denotes a writable MSR
                     case(dec_imm[1:0])
-                        `MSR_CAUSE: mcause <= {reg_val1[31], reg_val1[3:0]};
-                        `MSR_EPC:   epc <= reg_val1;
-                        `MSR_MSTATUS: begin
+                        MSR_CAUSE: mcause <= {reg_val1[31], reg_val1[3:0]};
+                        MSR_EPC:   epc <= reg_val1;
+                        MSR_MSTATUS: begin
                             meie <= reg_val1[0];
                             meie_prev <= reg_val1[1];
                         end
@@ -474,37 +472,37 @@ module cpu
 
             STATE_REGWRITEBUS: begin
                 reg_we <= 1;
-                mux_reg_input_sel <= `MUX_REGINPUT_BUS;
+                mux_reg_input_sel <= MUX_REGINPUT_BUS;
                 nextstate <= STATE_PCNEXT;
             end
 
             STATE_REGWRITEALU: begin
                 reg_we <= 1;
-                mux_reg_input_sel <= `MUX_REGINPUT_ALU;
+                mux_reg_input_sel <= MUX_REGINPUT_ALU;
                 nextstate <= STATE_PCNEXT;
             end
 
             STATE_PCNEXT: begin // compute PC + INSTLEN
                 alu_en <= 1;
                 alu_op <= `ALUOP_ADD;
-                mux_alu_s1_sel <= `MUX_ALUDAT1_PC;
-                mux_alu_s2_sel <= `MUX_ALUDAT2_INSTLEN;
+                mux_alu_s1_sel <= MUX_ALUDAT1_PC;
+                mux_alu_s2_sel <= MUX_ALUDAT2_INSTLEN;
                 nextstate <= STATE_PCUPDATE_FETCH;
             end
 
             STATE_PCREGIMM: begin // compute REGVAL1 + IMM
                 alu_en <= 1;
                 alu_op <= `ALUOP_ADD;
-                mux_alu_s1_sel <= `MUX_ALUDAT1_REGVAL1;
-                mux_alu_s2_sel <= `MUX_ALUDAT2_IMM;
+                mux_alu_s1_sel <= MUX_ALUDAT1_REGVAL1;
+                mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
                 nextstate <= STATE_PCUPDATE_FETCH;
             end
 
             STATE_PCIMM: begin // compute PC + IMM
                 alu_en <= 1;
                 alu_op <= `ALUOP_ADD;
-                mux_alu_s1_sel <= `MUX_ALUDAT1_PC;
-                mux_alu_s2_sel <= `MUX_ALUDAT2_IMM;
+                mux_alu_s1_sel <= MUX_ALUDAT1_PC;
+                mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
                 nextstate <= STATE_PCUPDATE_FETCH;
             end
 
@@ -515,7 +513,7 @@ module cpu
                 // ALU output is address of next instruction. Go fetch!
                 bus_en <= 1;
                 bus_op <= `BUSOP_READW;
-                mux_bus_addr_sel <= `MUX_BUSADDR_ALU;
+                mux_bus_addr_sel <= MUX_BUSADDR_ALU;
                 nextstate <= STATE_DECODE;
             end
 
