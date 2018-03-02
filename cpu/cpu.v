@@ -455,7 +455,7 @@ module cpu
 
             STATE_CSRRW2: begin
                 // update MSRs with value of rs1
-                if(dec_imm[11]) begin // denotes a writable MSR
+                if(!dec_imm[11]) begin // denotes a writable non-standard machine-mode MSR
                     case(dec_imm[1:0])
                         MSR_CAUSE: mcause <= {reg_val1[31], reg_val1[3:0]};
                         MSR_EPC:   epc <= reg_val1;
