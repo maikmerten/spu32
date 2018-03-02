@@ -26,11 +26,21 @@ trap:
     # push a0 to LEDs
     sb a0, -1(zero)
 
-    # read EPC and increment by 4
+    # check cause to distinguish interrupts from traps
+    # interrupts have most significant bit set to 1
+    csrrw t0, MSR_CAUSE_R, x0
+    blt t0, zero, trap_return
+
+    # for software interrupts: read EPC and increment by 4 to form return address
     csrrw t0, MSR_EPC_R, x0
     addi t0, t0, 4
-    csrw MSR_EPC_RW, t0
+    csrrw zero, MSR_EPC_RW, t0
 
+trap_return:
+    # the following instruction should do nothing (writing to read-only MSR)
+    csrrw zero, MSR_EPC_R, zero
+
+    # return from trap handler
     mret
 ##### end of trap handler ##########
 
