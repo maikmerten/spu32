@@ -281,6 +281,7 @@ module cpu
                     `OP_LUI:        nextstate <= STATE_LUI;
                     `OP_AUIPC:      nextstate <= STATE_AUIPC;
                     `OP_MISCMEM:    nextstate <= STATE_PCNEXT; // nop
+                    `OP_SYSTEM:     nextstate <= STATE_SYSTEM;
                     default:        nextstate <= STATE_TRAP1;
                 endcase
             end

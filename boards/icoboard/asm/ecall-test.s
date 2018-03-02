@@ -15,7 +15,7 @@
 #define MSR_EPC_RW 0x7C2
 
 main:
-    li a0, 0x44
+    li a0, 0
     j loop
     nop
     nop
@@ -24,19 +24,12 @@ main:
 .=16
 trap:
     # push a0 to LEDs
-    #sb a0, -1(zero)
+    sb a0, -1(zero)
 
     # read EPC and increment by 4
-    csrr t0, MSR_EPC_R
-
-    # write to UART
-    li t1, 0xF0000000
-    sb t0,0(t1)
-
+    csrrw t0, MSR_EPC_R, x0
     addi t0, t0, 4
     csrw MSR_EPC_RW, t0
-
-    sb a0, -1(zero)
 
     mret
 ##### end of trap handler ##########
@@ -44,8 +37,6 @@ trap:
 loop:
 
     ecall
-    nop
-    nop
     addi a0, a0, 1;
 
     li t0, 99999
