@@ -166,7 +166,7 @@ module cpu
 
     localparam MSR_MSTATUS = 2'b00;
     localparam MSR_CAUSE   = 2'b01;
-    localparam MSR_EPC     = 2'b11;
+    localparam MSR_EPC     = 2'b10;
 
 
     mux32x3 mux_msr(
