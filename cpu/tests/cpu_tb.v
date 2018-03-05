@@ -1,5 +1,4 @@
 `include "./cpu/cpu.v"
-`define RAMINITFILE "./cpu/tests/testgen/testsuite.dat"
 `include "./ram/ram1k_wb8.v"
 `include "./leds/leds_wb8.v"
 
@@ -34,7 +33,9 @@ module cpu_tb();
     reg ram_stb;
     wire[7:0] ram_dat;
 
-    ram1k_wb8 ram_inst(
+    ram1k_wb8 #(
+        .RAMINITFILE("./cpu/tests/testgen/testsuite.dat")
+    ) ram_inst (
 	    .CLK_I(clk),
 	    .STB_I(ram_stb),
 	    .WE_I(cpu_we),

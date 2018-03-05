@@ -1,7 +1,5 @@
 `include "./cpu/busdefs.vh"
 `include "./cpu/bus_wb8.v"
-
-`define RAMINITFILE "./cpu/tests/bus_wb8_tb_raminit.dat"
 `include "./ram/ram1k_wb8.v"
 
 module bus_wb8_tb;
@@ -43,7 +41,9 @@ module bus_wb8_tb;
 	);
 
 
-	ram1k_wb8 ram(
+	ram1k_wb8 #(
+		.RAMINITFILE("./cpu/tests/bus_wb8_tb_raminit.dat")
+	) ram (
 		.CLK_I(clk),
 		.STB_I(bus_stb),
 		.WE_I(bus_we),
