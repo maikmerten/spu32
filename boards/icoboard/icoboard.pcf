@@ -15,6 +15,12 @@ set_io --warn-no-port spi0_miso T10
 set_io --warn-no-port spi0_mosi T13
 set_io --warn-no-port spi0_cs R14
 
+# push buttons on lower row of pmod header 3
+set_io --warn-no-port button0 N9
+set_io --warn-no-port button1 P9
+set_io --warn-no-port button2 M8
+set_io --warn-no-port button3 N7
+
 set_io --warn-no-port pmod1_1  D8
 set_io --warn-no-port pmod1_2  B9
 set_io --warn-no-port pmod1_3  B10

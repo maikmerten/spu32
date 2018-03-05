@@ -16,7 +16,9 @@ module top(
         output led1, led2,
         // SPI port 0
         input spi0_miso,
-        output spi0_clk, spi0_mosi, spi0_cs
+        output spi0_clk, spi0_mosi, spi0_cs,
+        // push buttons
+        input button0, button1, button2, button3
     );
 
     wire clk_pll, pll_locked;
@@ -47,7 +49,7 @@ module top(
 
     reg reset = 1;
     reg[7:0] resetcnt = 1;
-    reg interrupt = 0;
+    reg interrupt = button0;
 
     wire cpu_cyc, cpu_stb, cpu_we;
     wire[7:0] cpu_dat;

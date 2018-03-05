@@ -15,14 +15,18 @@
 #define MSR_EPC_RW 0x7C2
 
 main:
+    li sp, 1024
     li a0, 0
-    j loop
-    nop
+    j interrupt_setup
     nop
 
 ########## trap handler ############
 .=16
 trap:
+    # push registers to stack that will be modified
+    addi sp, sp, -4
+    sw t0, 0(sp)
+
     # push a0 to LEDs
     sb a0, -1(zero)
 
@@ -40,9 +44,19 @@ trap_return:
     # the following instruction should do nothing (writing to read-only MSR)
     csrrw zero, MSR_EPC_R, zero
 
-    # return from trap handler
+    # restore registers and return from trap handler
+    lw t0, 0(sp)
+    addi sp, sp, 4
     mret
 ##### end of trap handler ##########
+
+interrupt_setup:
+    # read status register
+    csrrw t1, MSR_STATUS_R, zero
+    # set least-significant bit (interrupt enable)
+    ori t1, t1, 1
+    # write back to status register
+    csrrw zero, MSR_STATUS_RW, t1
 
 loop:
 
