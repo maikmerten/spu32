@@ -107,14 +107,14 @@ module bus_wb8_pipelined(
 				end
 
 				ACTIVE: begin
-					WE_O <=  write;
+					WE_O <= write;
 					CYC_O <= 1;
 					STB_O <= 0;
 					
-					if(ackcnt < byte_target) begin
+					if(ackcnt != byte_target) begin
 						// we haven't yet received the proper number of ACKs, so we need to
 						// output addresses and receive ACKs
-						if(addrcnt < byte_target) begin
+						if(addrcnt != byte_target) begin
 							STB_O <= 1;
 							ADR_O <= I_addr + addrcnt;
 
