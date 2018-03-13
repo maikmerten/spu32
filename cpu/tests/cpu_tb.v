@@ -91,7 +91,7 @@ module cpu_tb();
         @(leds_value == 8'hF0)
         #128
 
-        if(cpu_dat === 8'hFF) begin
+        if(leds_value === 8'hFF) begin
             $display("VERDICT: PASS   \\o/");
         end else begin
             $display("VERDICT: !!! FAIL !!!, failed testcase %d", cpu_dat);
