@@ -37,7 +37,27 @@ module bus_wb8(
 	localparam IDLE	= 0;
 	localparam ACTIVE = 1;
 	reg[0:0] state = IDLE;
-	
+
+	always @(*) begin
+		// determine number of bytes to be processed
+		case(I_op)
+			`BUSOP_READW, `BUSOP_WRITEW: byte_target = 4;
+			`BUSOP_READH, `BUSOP_READHU, `BUSOP_WRITEH: byte_target = 2;
+			default: byte_target = 1;
+		endcase
+
+		// determine if sign extension is requested
+		case(I_op)
+			`BUSOP_READBU, `BUSOP_READHU: signextend = 0;
+			default: signextend = 1;
+		endcase
+
+		// determine if a write operation is requested
+		case(I_op)
+			`BUSOP_WRITEB, `BUSOP_WRITEH, `BUSOP_WRITEW: write = 1;
+			default: write = 0;
+		endcase
+	end
 
 
 	always @(posedge CLK_I) begin
@@ -46,64 +66,15 @@ module bus_wb8(
 			case(state)
 			
 				IDLE: begin // in idle state, evaluate requested op
-					signextend <= 1;
 					busy <= 1;
 					addrcnt <= 0;
 					ackcnt <= 0;
-					write <= 0;
 
 					WE_O <= 0;
 					CYC_O <= 0;
 					STB_O <= 0;
 
-
-					case(I_op)
-						`BUSOP_READB: begin
-							byte_target <= 1; // read 1 byte
-							state <= ACTIVE;
-						end
-
-						`BUSOP_READBU: begin
-							byte_target <= 1; // read 1 byte
-							signextend <= 0;
-							state <= ACTIVE;
-						end
-
-						`BUSOP_READH: begin
-							byte_target <= 2; // read 2 bytes
-							state <= ACTIVE;
-						end
-
-						`BUSOP_READHU: begin
-							byte_target <= 2; // read 2 bytes
-							signextend <= 0;
-							state <= ACTIVE;
-						end
-
-						`BUSOP_READW: begin
-							byte_target <= 4; // read 4 bytes
-							state <= ACTIVE;
-						end
-
-
-						`BUSOP_WRITEB: begin
-							byte_target <= 1; // write 1 byte
-							write <= 1;
-							state <= ACTIVE;
-						end
-
-						`BUSOP_WRITEH: begin
-							byte_target <= 2; // write 2 bytes
-							write <= 1;
-							state <= ACTIVE;
-						end
-
-						`BUSOP_WRITEW: begin
-							byte_target <= 4; // write 4 bytes
-							write <= 1;
-							state <= ACTIVE;
-						end
-					endcase
+					state <= ACTIVE;
 				end
 
 				ACTIVE: begin
