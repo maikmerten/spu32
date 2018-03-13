@@ -33,11 +33,6 @@ module bus_wb8(
 
 	reg mysign = 0;
 
-	// states of internal state machine
-	localparam IDLE	= 0;
-	localparam ACTIVE = 1;
-	reg[0:0] state = IDLE;
-
 	always @(*) begin
 		// determine number of bytes to be processed
 		case(I_op)
@@ -61,77 +56,58 @@ module bus_wb8(
 
 
 	always @(posedge CLK_I) begin
+		WE_O <= 0;
+		CYC_O <= 0;
+		STB_O <= 0;
+
 		if(I_en) begin
+			// if enabled, act
+			WE_O <= write;
+			CYC_O <= 1;
+			busy <= 1;
+					
+			if(ackcnt != byte_target) begin
+				// we haven't yet received the proper number of ACKs, so we need to
+				// output addresses and receive ACKs
+				if(addrcnt != byte_target) begin
+					STB_O <= 1;
+					ADR_O <= I_addr + addrcnt;
 
-			case(state)
-			
-				IDLE: begin // in idle state, evaluate requested op
-					busy <= 1;
-					addrcnt <= 0;
-					ackcnt <= 0;
+					// put data on bus for current address
+					case(addrcnt)
+						0:			DAT_O <= I_data[7:0];
+						1: 			DAT_O <= I_data[15:8];
+						2: 			DAT_O <= I_data[23:16];
+						default:	DAT_O <= I_data[31:24];
+					endcase
 
-					WE_O <= 0;
-					CYC_O <= 0;
-					STB_O <= 0;
-
-					state <= ACTIVE;
+					// TODO: only increment addrcnt when STALL_I is not asserted
+					addrcnt <= addrcnt + 1;
 				end
 
-				ACTIVE: begin
-					WE_O <= write;
-					CYC_O <= 1;
-					STB_O <= 0;
-					
-					if(ackcnt != byte_target) begin
-						// we haven't yet received the proper number of ACKs, so we need to
-						// output addresses and receive ACKs
-						if(addrcnt != byte_target) begin
-							STB_O <= 1;
-							ADR_O <= I_addr + addrcnt;
-
-							// put data on bus for current address
-							case(addrcnt)
-								0:			DAT_O <= I_data[7:0];
-								1: 			DAT_O <= I_data[15:8];
-								2: 			DAT_O <= I_data[23:16];
-								default:	DAT_O <= I_data[31:24];
-							endcase
-
-							// TODO: only increment addrcnt when STALL_I is not asserted
-							addrcnt <= addrcnt + 1;
-						end
-
-						if(ACK_I) begin
-							mysign = DAT_I[7] & signextend;
-							// yay, ACK received, read data and put into buffer
-							case (ackcnt)
-								0:			buffer <= {{24{mysign}}, DAT_I};	
-								1:			buffer[31:8] <= {{16{mysign}}, DAT_I};	
-								2:			buffer[23:16] <= DAT_I;
-								default:	buffer[31:24] <= DAT_I;
-							endcase
-							ackcnt <= ackcnt + 1;
-						end
-					
-					end else begin
-						// we received all ACKs we needed, return to IDLE state
-						WE_O <= 0;
-						CYC_O <= 0;
-						STB_O <= 0;
-						busy <= 0;
-						state <= IDLE;
-					end
+				if(ACK_I) begin
+					mysign = DAT_I[7] & signextend;
+					// yay, ACK received, read data and put into buffer
+					case (ackcnt)
+						0:			buffer <= {{24{mysign}}, DAT_I};	
+						1:			buffer[31:8] <= {{16{mysign}}, DAT_I};	
+						2:			buffer[23:16] <= DAT_I;
+						default:	buffer[31:24] <= DAT_I;
+					endcase
+					ackcnt <= ackcnt + 1;
 				end
-				
-			endcase
+			end else begin
+				// reached the correct number of ACKs, prepare for next request
+				busy <= 0;
+				ackcnt <= 0;
+				addrcnt <= 0;
+			end
+
 		end
 
 		if(RST_I) begin
-			WE_O <= 0;
-			STB_O <= 0;
-			CYC_O <= 0;
-			busy <= 0;
-			state <= IDLE;
+			ackcnt <= 0;
+			addrcnt <= 0;
 		end
 
 	end
