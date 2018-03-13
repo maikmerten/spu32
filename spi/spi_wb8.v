@@ -8,7 +8,7 @@ module spi_wb8(
         input[1:0] ADR_I,
         input[7:0] DAT_I,
         output reg [7:0] DAT_O,
-        output ACK_O,
+        output reg ACK_O,
 
         // SPI signals
         input I_spi_miso,
@@ -16,9 +16,6 @@ module spi_wb8(
         output O_spi_mosi,
         output O_spi_cs
     );
-
-   	reg ack = 0;
-	assign ACK_O = ack & STB_I;
 
 
     reg cs = 0;
@@ -46,9 +43,9 @@ module spi_wb8(
     reg[1:0] state = STATE_IDLE;
 
    	always @(posedge CLK_I) begin
-		ack <= 0;
+		ACK_O <= 0;
 		if(STB_I) begin
-            ack <= 1;
+            ACK_O <= 1;
 
             case(ADR_I)
                 0: begin
