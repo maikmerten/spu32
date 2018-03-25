@@ -20,7 +20,7 @@ Following vectors are used by the CPU and can be configured via parameters when 
 The CPU supports following types of interrupts and exceptions:
 
 * software interrupts using the `ecall` and `ebreak` instructions
-* external interrupts raised, e.g., by a peripheral
+* external interrupts raised, e.g., by a peripheral device
 * illegal/unknown instructions
 
 If an interrupt occurs of any type occurs, the CPU will jump to `VECTOR_EXCEPTION`, where a handling routine should be present.
@@ -80,6 +80,6 @@ Note that `MSR_CAUSE[31]` can be used to easily distinguish external interrupts 
 
 This status-register contains the address of the instruction where the last interrupt/exception occurred. The `mret`-instruction will jump to the address stored in this status-register.
 
-**Please note**: In case of software interrupts/exceptions, this status-register will point to the instruction that caused the interrupt/exception. When directly issuing `mret`, execution will resume at exactly the same instruction, which means that yet another interrupt/exception will be raised immediately. To resume normal program flow, one needs to increment the value of `MSR_EPC` by `4` (i.e., by the l ength of one instruction) to resume execution a the next instruction. This can be detected by `MSR_CAUSE[31]`.
+**Please note**: In case of software interrupts/exceptions, this status-register will point to the instruction that caused the interrupt/exception. When directly issuing `mret`, execution will resume at exactly the same instruction, which means that yet another interrupt/exception will be raised immediately. To resume normal program flow, one needs to increment the value of `MSR_EPC` by `4` (i.e., by the length of one instruction) to resume execution a the next instruction. This can be detected by `MSR_CAUSE[31]`.
 
 External interrupts directly resume execution at the address stored in `MSR_EPC`, so no increment is needed prior to `mret`.
