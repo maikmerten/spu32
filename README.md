@@ -23,7 +23,7 @@ The CPU supports following types of interrupts and exceptions:
 * external interrupts raised, e.g., by a peripheral device
 * illegal/unknown instructions
 
-If an interrupt occurs of any type occurs, the CPU will jump to `VECTOR_EXCEPTION`, where a handling routine should be present.
+If an interrupt of any type occurs, the CPU will jump to `VECTOR_EXCEPTION`, where a handling routine should be present.
 
 The mode of interrupt/exception-handling is inspired by the privileged RISC-V specification, but much simplified for sake of implementation compactness. It therefore does not conform to an official specification, but should feel somewhat similar.
 
