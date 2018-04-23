@@ -1,15 +1,14 @@
 #include "devices.h"
 
 .section .text
- 
+
 .global _start
 
 main:
-    li t0,0
 
 loop:
-    addi t0,t0,1
-    srli t1,t0,16
+    lw t1,DEV_TIMER(zero)
+    srli t1,t1,10
     sb t1,DEV_LED(zero)
 
 	j loop

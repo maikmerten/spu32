@@ -77,7 +77,7 @@ module top(
     wire[7:0] ram_dat;
 
     ram1k_wb8 #(
-        .RAMINITFILE("./boards/icoboard/asm/trap-test.dat")
+        .RAMINITFILE("./boards/icoboard/asm/spi-test.dat")
     ) ram_inst (
 	    .CLK_I(clk),
 	    .STB_I(ram_stb),
@@ -175,26 +175,32 @@ module top(
         spi0_stb = 0;
         timer_stb = 0;
 
-        case(cpu_adr[31:28])
-            4'hF: begin // 0xFxxxxxxx: I/O devices
-                case(cpu_adr[27:24])
-                    0: begin // 0xF0xxxxxx: UART
+        case(cpu_adr[31:11])
+            21'hFFFFFF: begin // 0xFFFFF8xxx - 0xFFFFFFFF: I/O devices
+                case(cpu_adr[10:8])
+                    0: begin // 0xFFFFF8xx: UART
                         arbiter_dat_o = uart_dat;
                         arbiter_ack_o = uart_ack;
                         uart_stb = cpu_stb;
                     end
 
-                    1: begin // 0xF1xxxxxx: SPI port 0
+                    1: begin // 0xFFFFF9xx: SPI port 0
                         arbiter_dat_o = spi0_dat;
                         arbiter_ack_o = spi0_ack;
                         spi0_stb = cpu_stb;
                     end
 
-                    5: begin // 0xF5xxxxxx: Timer
+                    // 2: 0xFFFFFAxx
+                    // 3: 0xFFFFFBxx
+                    // 4: 0xFFFFFCxx 
+
+                    5: begin // 0xFFFFFDxx: Timer
                         arbiter_dat_o = timer_dat;
                         arbiter_ack_o = timer_ack;
                         timer_stb = cpu_stb;
                     end
+
+                    // 6: 0xFFFFFExx
 
                     default: begin // default I/O device: LEDs
                         arbiter_dat_o = leds_dat;

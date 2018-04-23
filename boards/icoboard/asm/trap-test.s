@@ -1,3 +1,5 @@
+#include "devices.h"
+
 .section .text
  
 .global _start
@@ -28,7 +30,7 @@ trap:
     sw t0, 0(sp)
 
     # push a0 to LEDs
-    sb a0, -1(zero)
+    sb a0, DEV_LED(zero)
 
     # check cause to distinguish interrupts from traps
     # interrupts have most significant bit set to 1

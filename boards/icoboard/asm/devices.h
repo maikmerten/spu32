@@ -1,0 +1,15 @@
+#ifndef DEVICES
+    #define DEVICES
+
+    #define DEV_UART_DATA 0xFFFFF800
+    #define DEV_UART_RX_READY 0xFFFFF801
+    #define DEV_UART_TX_READY 0xFFFFF802
+
+    #define DEV_SPI_DATA 0xFFFFF900
+    #define DEV_SPI_SELECT 0xFFFFF901
+    #define DEV_SPI_READY 0xFFFFF902
+
+    #define DEV_TIMER 0xFFFFFD00
+    #define DEV_LED 0xFFFFFF00
+
+#endif

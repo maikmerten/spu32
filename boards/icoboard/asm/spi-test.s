@@ -1,8 +1,9 @@
+#include "devices.h"
+
 .section .text
  
 .global _start
 
-#define SPIBASE 0xF1000000
 #define SPI_OP_READ 0x03
 
 main:
@@ -27,7 +28,7 @@ main_readloop:
     jal transmit
 
     # push read value to LEDs
-    sb a0, -1(zero)
+    sb a0, DEV_LED(zero)
     
     # delay
     li a0, 16384
@@ -39,35 +40,31 @@ main_delay:
 
 
 chipselect:
-    li a7, SPIBASE
     li a6, 1
-    sb a6, 1(a7)
+    sb a6, DEV_SPI_SELECT(zero)
     ret
 
 chipdeselect:
-    li a7, SPIBASE
-    sb zero, 1(a7)
+    sb zero, DEV_SPI_SELECT(zero)
     ret
 
 
 transmit:
-    li a7, SPIBASE
-
     # wait until SPI port is ready
 transmit_readyloop:
-    lbu a6, 2(a7)
+    lbu a6, DEV_SPI_READY(zero)
     beqz a6, transmit_readyloop
 
     # start transmission by writing data to SPI port
-    sb a0, 0(a7)
+    sb a0, DEV_SPI_DATA(zero)
 
     # wait until SPI port is ready again (transmission finished)
 transmit_readyloop2:
-    lbu a6, 2(a7)
+    lbu a6, DEV_SPI_READY(zero)
     beqz a6, transmit_readyloop2
 
     # write received data to a0 and return
-    lbu a0, 0(a7)
+    lbu a0, DEV_SPI_DATA(zero)
     ret
 
 
