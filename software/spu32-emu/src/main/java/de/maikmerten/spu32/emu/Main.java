@@ -5,6 +5,7 @@ import de.maikmerten.spu32.emu.cpu.CPUThread;
 import de.maikmerten.spu32.emu.cpu.CPU;
 import de.maikmerten.spu32.emu.busdevices.LEDs;
 import de.maikmerten.spu32.emu.busdevices.RAM;
+import de.maikmerten.spu32.emu.busdevices.Timer;
 import de.maikmerten.spu32.emu.busdevices.UART;
 import de.maikmerten.spu32.emu.cpu.CPUPanel;
 import de.maikmerten.spu32.emu.serial.SerialConnection;
@@ -36,6 +37,7 @@ public class Main {
     private LEDs leds;
     private CPU cpu;
     private UART uart;
+	private Timer timer;
 
     private SerialConnection conn;
 
@@ -57,19 +59,17 @@ public class Main {
         } catch (FileNotFoundException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-        ram = new RAM(12, fis);
 
-
+		ram = new RAM(12, fis);
         leds = new LEDs();
-
-
         uart = new UART("/dev/ttyUSB0", 115200);
+		timer = new Timer();
 
         bus.setDefaultDevice(ram);
         bus.addDevice(0xFFFFF800, 0xFFFFFF00, uart);
+		bus.addDevice(0xFFFFFD00, 0xFFFFFF00, timer);
         bus.addDevice(0xFFFFFF00, 0xFFFFFF00, leds);
-        
-        
+       
 
         cputhread = new CPUThread(cpu);
         cputhread.start();
