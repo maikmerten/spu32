@@ -4,6 +4,7 @@ import de.maikmerten.spu32.emu.interfaces.BusDevice;
 import de.maikmerten.spu32.emu.interfaces.GUIProvider;
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Toolkit;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
@@ -72,6 +73,7 @@ public class LEDs implements BusDevice, GUIProvider {
                 g.setColor(ledcolors[i]);
                 g.fillRect(((7 - i) * 20) + 8, 18, 16, 16);
             }
+			Toolkit.getDefaultToolkit().sync();
         }
 
     }
