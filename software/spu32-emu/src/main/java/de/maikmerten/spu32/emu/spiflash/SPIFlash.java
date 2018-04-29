@@ -15,7 +15,12 @@ public class SPIFlash {
 		READ(0x03),
 		FASTREAD(0x0B),
 		CHIPERASE1(0x60),
-		CHIPERASE2(0xC7);
+		CHIPERASE2(0xC7),
+		WRITEENABLE(0x06),
+		WRITEDISABLE(0x04),
+		READSTATUS1(0x05),
+		READSTATUS2(0x35),
+		PAGEPROGRAM(0x02);
 
 		private final byte cmdValue;
 
@@ -32,18 +37,29 @@ public class SPIFlash {
 		READADDR3,
 		READ,
 		CHIPERASE,
+		STATUSBYTE1,
+		STATUSBYTE2,
+		SURPLUSBYTE,
+		PROGRAMADDR1,
+		PROGRAMADDR2,
+		PROGRAMADDR3,
+		PROGRAMBUFFER,
 	}
 
 	// emulate a AT25SF041 SPI serial flash device, 4 MBit capacity
 	private byte data[] = new byte[512 * 1024];
+	private byte progbuffer[] = new byte[256];
 	private State state = State.IDLE;
 	private int addr = 0;
+	private int progstartaddr = 0;
+	private int progbyteindex = 0;
 	private boolean selected = false;
 	private boolean chiperase = false;
 	private boolean writeenabled = false;
+	private boolean progpage = false;
 	private long busyEndTime = 0;
-	
-	private Logger logger = Logger.getLogger(SPIFlash.class.getName());
+
+	private final Logger logger = Logger.getLogger(SPIFlash.class.getName());
 
 	public SPIFlash(InputStream initStream) {
 		if (initStream != null) {
@@ -81,6 +97,13 @@ public class SPIFlash {
 			busyEndTime = System.currentTimeMillis() + 800;
 			chiperase = false;
 		}
+		
+		if (progpage) {
+			writePageBufferToDataArray(progstartaddr);
+			progpage = false;
+			writeenabled = false;
+			busyEndTime = System.currentTimeMillis() + 2;
+		}
 
 		this.selected = false;
 	}
@@ -99,11 +122,21 @@ public class SPIFlash {
 				} else if (b == Command.FASTREAD.cmdValue) {
 					state = State.FASTREADDUMMY;
 				} else if (b == Command.CHIPERASE1.cmdValue || b == Command.CHIPERASE2.cmdValue) {
-					if(writeenabled) {
+					if (writeenabled) {
 						state = State.CHIPERASE;
 					} else {
 						logger.log(Level.SEVERE, "Issued chip erase command to SPI flash although writes are disabled!");
 					}
+				} else if (b == Command.WRITEENABLE.cmdValue) {
+					writeenabled = true;
+					state = State.SURPLUSBYTE;
+				} else if (b == Command.WRITEDISABLE.cmdValue) {
+					writeenabled = false;
+					state = State.SURPLUSBYTE;
+				} else if (b == Command.READSTATUS1.cmdValue) {
+					state = State.STATUSBYTE1;
+				} else if (b == Command.READSTATUS2.cmdValue) {
+					state = State.STATUSBYTE2;
 				} else {
 					logger.log(Level.SEVERE, "Unrecognized command sent to SPI flash!");
 				}
@@ -138,6 +171,49 @@ public class SPIFlash {
 				}
 				chiperase = true;
 			}
+
+			case STATUSBYTE1: {
+				// TODO: implement status bits 7 downto 2
+				if (isBusy()) {
+					result |= 0x01;
+				}
+
+				if (writeenabled) {
+					result |= 0x02;
+				}
+			}
+
+			case STATUSBYTE2: {
+				// TODO: implement this properly
+				logger.log(Level.WARNING, "status byte 2 of SPI flash is currently hardcoded to zero...");
+			}
+
+			case PROGRAMADDR1: {
+				addr = (byte) (b & 0xFF);
+				state = State.PROGRAMADDR2;
+			}
+
+			case PROGRAMADDR2: {
+				addr = (addr << 8) | (b & 0xFF);
+				state = State.PROGRAMADDR3;
+			}
+
+			case PROGRAMADDR3: {
+				addr = (addr << 8) | (b & 0xFF);
+				progstartaddr = addr;
+				copyPageToProgBuffer(progstartaddr);
+				progpage = true;
+				progbyteindex = addr & 0xFF;
+				state = State.PROGRAMBUFFER;
+			}
+
+			case PROGRAMBUFFER: {
+				pushByteToProgBuffer(b);
+			}
+
+			case SURPLUSBYTE: {
+				logger.log(Level.WARNING, "SPI flash received surplus data after command!");
+			}
 		}
 
 		return result;
@@ -149,9 +225,33 @@ public class SPIFlash {
 		this.addr = (this.addr + 1) & 0x7FFFF;
 		return result;
 	}
+
+	private void copyPageToProgBuffer(int startaddr) {
+		startaddr &= 0x7FF00;
+		for (int i = 0; i < 256; ++i) {
+			progbuffer[i] = data[startaddr + i];
+		}
+	}
+
+	private void pushByteToProgBuffer(byte data) {
+		byte origvalue = progbuffer[progbyteindex];
+		if (origvalue != (byte) 0xFF) {
+			logger.log(Level.SEVERE, "Programming memory locatin in SPI flash that was not properly cleared beforehand!");
+		}
+		data &= origvalue;
+		progbuffer[progbyteindex] = data;
+		progbyteindex = (progbyteindex + 1) & 0xFF;
+	}
 	
+	private void writePageBufferToDataArray(int pageaddr) {
+		pageaddr &= 0x7FF00;
+		for(int i = 0; i < 256; ++i) {
+			data[pageaddr + i] = progbuffer[i];
+		}
+	}
+
 	private boolean isBusy() {
-		return System.currentTimeMillis() >= busyEndTime;
+		return System.currentTimeMillis() < busyEndTime;
 	}
 
 }
