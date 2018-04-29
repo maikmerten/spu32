@@ -13,7 +13,9 @@ public class SPIFlash {
 
 	private enum Command {
 		READ(0x03),
-		FASTREAD(0x0B);
+		FASTREAD(0x0B),
+		CHIPERASE1(0x60),
+		CHIPERASE2(0xC7);
 
 		private final byte cmdValue;
 
@@ -28,7 +30,8 @@ public class SPIFlash {
 		READADDR1,
 		READADDR2,
 		READADDR3,
-		READ
+		READ,
+		CHIPERASE,
 	}
 
 	// emulate a AT25SF041 SPI serial flash device, 4 MBit capacity
@@ -36,6 +39,11 @@ public class SPIFlash {
 	private State state = State.IDLE;
 	private int addr = 0;
 	private boolean selected = false;
+	private boolean chiperase = false;
+	private boolean writeenabled = false;
+	private long busyEndTime = 0;
+	
+	private Logger logger = Logger.getLogger(SPIFlash.class.getName());
 
 	public SPIFlash(InputStream initStream) {
 		if (initStream != null) {
@@ -52,13 +60,13 @@ public class SPIFlash {
 				throw new RuntimeException(ex);
 			}
 
-			Logger.getLogger(SPIFlash.class.getName()).log(Level.INFO, "SPI flash init with " + dataaddr + " bytes");
+			logger.log(Level.INFO, "SPI flash init with " + dataaddr + " bytes");
 		}
 	}
 
 	public void select() {
 		if (this.selected) {
-			Logger.getLogger(SPIFlash.class.getName()).log(Level.WARNING, "Selecting already selected SPI flash device...");
+			logger.log(Level.WARNING, "Selecting already selected SPI flash device...");
 		} else {
 			this.selected = true;
 			this.state = State.IDLE;
@@ -66,13 +74,21 @@ public class SPIFlash {
 	}
 
 	public void deselect() {
+		if (chiperase) {
+			for (int i = 0; i < data.length; ++i) {
+				data[i] = (byte) 0xFF;
+			}
+			busyEndTime = System.currentTimeMillis() + 800;
+			chiperase = false;
+		}
+
 		this.selected = false;
 	}
 
 	public byte readWriteByte(byte b) {
 		byte result = 0;
 		if (!selected) {
-			Logger.getLogger(SPIFlash.class.getName()).log(Level.WARNING, "Interaction with SPI flash in unselected state!");
+			logger.log(Level.WARNING, "Interaction with SPI flash in unselected state!");
 			return result;
 		}
 
@@ -82,8 +98,14 @@ public class SPIFlash {
 					state = State.READADDR1;
 				} else if (b == Command.FASTREAD.cmdValue) {
 					state = State.FASTREADDUMMY;
+				} else if (b == Command.CHIPERASE1.cmdValue || b == Command.CHIPERASE2.cmdValue) {
+					if(writeenabled) {
+						state = State.CHIPERASE;
+					} else {
+						logger.log(Level.SEVERE, "Issued chip erase command to SPI flash although writes are disabled!");
+					}
 				} else {
-					Logger.getLogger(SPIFlash.class.getName()).log(Level.SEVERE, "Unrecognized command sent to SPI flash!");
+					logger.log(Level.SEVERE, "Unrecognized command sent to SPI flash!");
 				}
 			}
 
@@ -109,6 +131,13 @@ public class SPIFlash {
 			case READ: {
 				result = data[getAddrAndIncrement()];
 			}
+
+			case CHIPERASE: {
+				if (chiperase) {
+					logger.log(Level.WARNING, "Data sent to SPI flash despite chip erase already pending!");
+				}
+				chiperase = true;
+			}
 		}
 
 		return result;
@@ -119,6 +148,10 @@ public class SPIFlash {
 		// increment address, make sure the address wraps around within 19 bits
 		this.addr = (this.addr + 1) & 0x7FFFF;
 		return result;
+	}
+	
+	private boolean isBusy() {
+		return System.currentTimeMillis() >= busyEndTime;
 	}
 
 }
