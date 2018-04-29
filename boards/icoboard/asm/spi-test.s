@@ -7,6 +7,7 @@
 #define SPI_OP_READ 0x03
 
 main:
+	jal chipdeselect
     jal chipselect
 
     # send read opcode
