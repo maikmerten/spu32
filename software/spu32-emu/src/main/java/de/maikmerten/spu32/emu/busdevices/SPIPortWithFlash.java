@@ -53,7 +53,9 @@ public class SPIPortWithFlash implements BusDevice {
 
 		switch (address) {
 			case 0: {
-				Logger.getLogger(SPIPortWithFlash.class.getName()).log(Level.SEVERE, "Writing data to SPI port that is still busy! Read ready flag before writing!");
+				if (busy) {
+					Logger.getLogger(SPIPortWithFlash.class.getName()).log(Level.SEVERE, "Writing data to SPI port that is still busy! Read ready flag before writing!");
+				}
 				rxdata = spidevice.readWriteByte(value);
 				busy = true;
 				break;
