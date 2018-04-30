@@ -328,9 +328,8 @@ public class CPU {
 					}
 
 					case FUNC_CSRRW:
-						// FIXME: Why is there a warning of the result never going to be used?
 						result = readCSR();
-						// bit 11 of immediate denotes a writable non-standard machine-mode MSR
+						// bit 11 of immediate denotes if non-standard machine-mode MSR is writable or not
 						if((this.immediate & 0x800) == 0) {
 							writeCSR(rval1);
 						}
@@ -340,8 +339,9 @@ public class CPU {
 						enterException(Cause.INVALID_INSTRUCTION);
 						return;
 				}
+				break;
 
-			default:
+			default: 
 				enterException(Cause.INVALID_INSTRUCTION);
 				return;
 
