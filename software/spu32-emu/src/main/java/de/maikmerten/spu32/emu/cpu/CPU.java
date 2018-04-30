@@ -126,6 +126,12 @@ public class CPU {
 	}
 
 	public void nextStep() {
+		this.interrupt_pending = bus.interruptRaised();
+		if(this.interrupt_pending && this.meie) {
+			enterException(Cause.EXTERNAL_INTERRUPT);
+			return;
+		}
+		
 		this.instructionword = bus_lw(this.pc);
 		int nextpc = this.pc + 4;
 
