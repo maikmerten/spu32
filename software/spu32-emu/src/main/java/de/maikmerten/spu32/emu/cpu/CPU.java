@@ -452,6 +452,7 @@ public class CPU {
 				result = this.mcause;
 				break;
 
+			case MSR_EPC:
 			default: // should be MSR_EPC
 				result = this.epc;
 				break;
@@ -474,6 +475,7 @@ public class CPU {
 				this.mcause = value;
 				break;
 
+			case MSR_EPC:
 			default: // should be MSR_EPC
 				this.epc = value;
 				break;
