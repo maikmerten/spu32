@@ -13,9 +13,8 @@ public class CPU {
 
 	private final int resetvector, trapvector;
 
-	// program counter and return vectors
+	// program counter
 	private int pc;
-	private int rettrap;
 
 	// current instruction
 	private int instructionword;
@@ -122,7 +121,7 @@ public class CPU {
 
 	public final void reset() {
 		this.pc = this.resetvector;
-		this.rettrap = this.pc;
+		this.meie = false;
 	}
 
 	public void nextStep() {
