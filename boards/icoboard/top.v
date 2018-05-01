@@ -77,7 +77,7 @@ module top(
     wire[7:0] ram_dat;
 
     ram1k_wb8 #(
-        .RAMINITFILE("./boards/icoboard/asm/spi-test.dat")
+        .RAMINITFILE("./software/asm/spi-test.dat")
     ) ram_inst (
 	    .CLK_I(clk),
 	    .STB_I(ram_stb),

@@ -22,7 +22,7 @@ help:
 	@echo
 
 top.blif: top.v
-	cd asm && make
+	cd ../../software/asm && make
 	cd ../.. && yosys -p 'synth_ice40 -blif ./boards/icoboard/top.blif' ./boards/icoboard/top.v
 
 top.asc: top.blif icoboard.pcf
