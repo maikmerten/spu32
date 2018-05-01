@@ -140,29 +140,35 @@ public class SPIFlash {
 				} else {
 					logger.log(Level.SEVERE, "Unrecognized command sent to SPI flash!");
 				}
+				break;
 			}
 
 			case FASTREADDUMMY: {
 				state = State.READADDR1;
+				break;
 			}
 
 			case READADDR1: {
 				addr = (b & 0xFF);
 				state = State.READADDR2;
+				break;
 			}
 
 			case READADDR2: {
 				addr = (addr << 8) | (b & 0xFF);
 				state = State.READADDR3;
+				break;
 			}
 
 			case READADDR3: {
 				addr = (addr << 8) | (b & 0xFF);
 				state = State.READ;
+				break;
 			}
 
 			case READ: {
 				result = data[getAddrAndIncrement()];
+				break;
 			}
 
 			case CHIPERASE: {
@@ -170,6 +176,7 @@ public class SPIFlash {
 					logger.log(Level.WARNING, "Data sent to SPI flash despite chip erase already pending!");
 				}
 				chiperase = true;
+				break;
 			}
 
 			case STATUSBYTE1: {
@@ -181,21 +188,25 @@ public class SPIFlash {
 				if (writeenabled) {
 					result |= 0x02;
 				}
+				break;
 			}
 
 			case STATUSBYTE2: {
 				// TODO: implement this properly
 				logger.log(Level.WARNING, "status byte 2 of SPI flash is currently hardcoded to zero...");
+				break;
 			}
 
 			case PROGRAMADDR1: {
 				addr = (byte) (b & 0xFF);
 				state = State.PROGRAMADDR2;
+				break;
 			}
 
 			case PROGRAMADDR2: {
 				addr = (addr << 8) | (b & 0xFF);
 				state = State.PROGRAMADDR3;
+				break;
 			}
 
 			case PROGRAMADDR3: {
@@ -205,14 +216,17 @@ public class SPIFlash {
 				progpage = true;
 				progbyteindex = addr & 0xFF;
 				state = State.PROGRAMBUFFER;
+				break;
 			}
 
 			case PROGRAMBUFFER: {
 				pushByteToProgBuffer(b);
+				break;
 			}
 
 			case SURPLUSBYTE: {
 				logger.log(Level.WARNING, "SPI flash received surplus data after command!");
+				break;
 			}
 		}
 
