@@ -5,6 +5,7 @@ import de.maikmerten.spu32.emu.cpu.CPUThread;
 import de.maikmerten.spu32.emu.cpu.CPU;
 import de.maikmerten.spu32.emu.busdevices.LEDs;
 import de.maikmerten.spu32.emu.busdevices.RAM;
+import de.maikmerten.spu32.emu.busdevices.ROM;
 import de.maikmerten.spu32.emu.busdevices.SPIPortWithFlash;
 import de.maikmerten.spu32.emu.busdevices.Timer;
 import de.maikmerten.spu32.emu.busdevices.UART;
@@ -50,12 +51,14 @@ public class Main {
 	private UART uart;
 	private Timer timer;
 	private SPIPortWithFlash spiport;
+        private ROM bootrom;
 
 	private SerialConnection conn;
 
 	private enum Preference {
 		UART_DEV("uart_dev", "/dev/ttyUSB0", "Serial device to be used for UART"),
 		RAM_INITFILE("ram_initfile", "/tmp/raminit.bin", "File with initial RAM contents"),
+                BOOTROM_INITFILE("bootrom_initfile", "/tmp/bootrominit.bin", "File with boot-ROM contents"),
 		SPIFLASH_INITFILE("spiflash_initfile", "/tmp/spiflashinit.bin", "File with initial SPI flash contents");
 		
 		private final String key;
@@ -78,7 +81,7 @@ public class Main {
 	private void setupMachine() {
 
 		bus = new Bus();
-		cpu = new CPU(bus, 0x0, 0x10);
+		cpu = new CPU(bus, 0xFFFFFB00, 0x10);
 
 		FileInputStream raminit = null;
 		try {
@@ -93,16 +96,25 @@ public class Main {
 		} catch (FileNotFoundException ex) {
 			Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
 		}
+                
+                FileInputStream bootrominit = null;
+                try {
+			bootrominit = new FileInputStream(new File(getPreferenceValue(Preference.BOOTROM_INITFILE)));
+		} catch (FileNotFoundException ex) {
+			Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+		}
 
 		ram = new RAM(12, raminit);
 		leds = new LEDs();
 		uart = new UART(getPreferenceValue(Preference.UART_DEV), 115200);
 		timer = new Timer();
 		spiport = new SPIPortWithFlash(spiflashinit);
+                bootrom = new ROM(8, bootrominit);
 
 		bus.setDefaultDevice(ram);
 		bus.addDevice(0xFFFFF800, 0xFFFFFF00, uart);
 		bus.addDevice(0xFFFFF900, 0xFFFFFF00, spiport);
+                bus.addDevice(0xFFFFFB00, 0xFFFFFF00, bootrom);
 		bus.addDevice(0xFFFFFD00, 0xFFFFFF00, timer);
 		bus.addDevice(0xFFFFFF00, 0xFFFFFF00, leds);
 

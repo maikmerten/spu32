@@ -2,3 +2,4 @@
 *.asc
 *.blif
 *.lxt
+/software/spu32-serial-bootloader/target/
