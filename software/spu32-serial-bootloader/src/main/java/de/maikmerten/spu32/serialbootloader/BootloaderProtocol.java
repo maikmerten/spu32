@@ -1,5 +1,6 @@
 package de.maikmerten.spu32.serialbootloader;
 
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -35,14 +36,36 @@ public class BootloaderProtocol {
         os.write(bytes);
     }
 
-    public void callAddress(int address) throws Exception {
-        byte a0 = (byte) ((address >> 24) & 0xFF);
-        byte a1 = (byte) ((address >> 16) & 0xFF);
-        byte a2 = (byte) ((address >> 8) & 0xFF);
-        byte a3 = (byte) (address & 0xFF);
+    private byte[] assemble32(int data) {
+        byte a0 = (byte) ((data >> 24) & 0xFF);
+        byte a1 = (byte) ((data >> 16) & 0xFF);
+        byte a2 = (byte) ((data >> 8) & 0xFF);
+        byte a3 = (byte) (data & 0xFF);
 
-        byte[] cmd = {'C', a0, a1, a2, a3};
-        bytesOut(cmd);
+        byte[] result = {a0, a1, a2, a3};
+        return result;
+    }
+
+    public void callAddress(int address) throws Exception {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        byte[] opcode = {'C'};
+        byte[] adr = assemble32(address);
+        baos.write(opcode);
+        baos.write(adr);
+
+        bytesOut(baos.toByteArray());
+    }
+
+    public void uploadWithUART(int address, byte[] data) throws Exception {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        byte[] opcode = {'U'};
+        byte[] length = assemble32(data.length);
+        baos.write(opcode);
+        baos.write(length);
+        baos.write(data);
+
+        bytesOut(baos.toByteArray());
+
     }
 
 }
