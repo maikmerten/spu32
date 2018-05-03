@@ -64,7 +64,7 @@ receive_uart_4_bytes:
 
 
 transmit_uart:
-    lb t0, DEV_UART_TX_READY(zero)
+    lbu t0, DEV_UART_TX_READY(zero)
     beqz t0, transmit_uart
     sb a0, DEV_UART_DATA(zero)
     ret
@@ -76,13 +76,13 @@ receive_uart_wait_receive:
     sub t2, t2, t1
     li t3, 500                      # 500 ms timeout
     bgeu t2, t3, timeout            # timeout detected
-    lb t0, DEV_UART_RX_READY(zero)
+    lbu t0, DEV_UART_RX_READY(zero)
     beqz t0, receive_uart_wait_receive
-    lb a0, DEV_UART_DATA(zero)
+    lbu a0, DEV_UART_DATA(zero)
     ret
 
 timeout:
-    lb t0, DEV_TIMER(zero)
+    lbu t0, DEV_TIMER(zero)
     sb t0, DEV_LED(zero)
     j main
 
