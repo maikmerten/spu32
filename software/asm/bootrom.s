@@ -20,7 +20,7 @@ main:
 
 call:
     jal receive_uart_4_bytes
-    jalr zero, 0(zero)
+    jalr a0
     j main
 
 
