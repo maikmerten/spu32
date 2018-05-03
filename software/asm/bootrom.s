@@ -50,13 +50,13 @@ load_from_uart_receive_bytes:
 receive_uart_4_bytes:
     mv t6, ra
     jal receive_uart
-    srai t5, a0, 8
+    slli t5, a0, 8
     jal receive_uart
     or t5, t5, a0
-    srai t5, t5, 8
+    slli t5, t5, 8
     jal receive_uart
     or t5, t5, a0
-    srai t5, t5, 8
+    slli t5, t5, 8
     jal receive_uart
     or a0, t5, a0
     mv ra, t6
