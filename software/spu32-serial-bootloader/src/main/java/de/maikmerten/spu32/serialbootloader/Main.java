@@ -19,6 +19,9 @@ public class Main {
         String uartDevice = args[0];
         String programFile = args[1];
         
+        System.out.println("UART device: " + uartDevice);
+        System.out.println("file to program: " + programFile);
+        
         SerialConnection conn = new SerialConnection(uartDevice, 115200);
         BootloaderProtocol bp = new BootloaderProtocol(conn);
         
@@ -35,6 +38,7 @@ public class Main {
         
         byte[] uploadData = baos.toByteArray();
         
+        System.out.println("Uploading " + uploadData.length + " bytes...");
         bp.uploadWithUART(0, uploadData);
         bp.callAddress(0);
 

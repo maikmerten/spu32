@@ -4,7 +4,7 @@
 `include "./uart/uart_wb8.v"
 `include "./spi/spi_wb8.v"
 `include "./timer/timer_wb8.v"
-
+`include "./rom/rom_wb8.v"
 
 module top(
         input clk_100mhz,
@@ -59,7 +59,9 @@ module top(
     reg[7:0] arbiter_dat_o;
     reg arbiter_ack_o;
 
-    cpu cpu_inst(
+    cpu #(
+        .VECTOR_RESET(32'hFFFFFB00)
+    ) cpu_inst(
         .CLK_I(clk),
 	    .ACK_I(arbiter_ack_o),
 	    .DAT_I(arbiter_dat_o),
@@ -77,7 +79,7 @@ module top(
     wire[7:0] ram_dat;
 
     ram1k_wb8 #(
-        .RAMINITFILE("./software/asm/spi-test.dat")
+        .RAMINITFILE("./software/asm/timer-test.dat")
     ) ram_inst (
 	    .CLK_I(clk),
 	    .STB_I(ram_stb),
@@ -86,6 +88,21 @@ module top(
 	    .DAT_I(cpu_dat),
 	    .DAT_O(ram_dat),
 	    .ACK_O(ram_ack)
+    );
+
+    wire rom_ack;
+    reg rom_stb;
+    wire[7:0] rom_dat;
+
+    rom_wb8 #(
+        .ROMINITFILE("./software/asm/bootrom.dat")
+    ) rom_inst (
+	    .CLK_I(clk),
+	    .STB_I(rom_stb),
+	    .ADR_I(cpu_adr[7:0]),
+	    .DAT_I(cpu_dat),
+	    .DAT_O(rom_dat),
+	    .ACK_O(rom_ack)
     );
 
     reg leds_stb;
@@ -174,6 +191,7 @@ module top(
         uart_stb = 0;
         spi0_stb = 0;
         timer_stb = 0;
+        rom_stb = 0;
 
         case(cpu_adr[31:11])
             21'hFFFFFF: begin // 0xFFFFF8xxx - 0xFFFFFFFF: I/O devices
@@ -191,7 +209,13 @@ module top(
                     end
 
                     // 2: 0xFFFFFAxx
-                    // 3: 0xFFFFFBxx
+
+                    3: begin // 0xFFFFFBxx: boot ROM
+                        arbiter_dat_o = rom_dat;
+                        arbiter_ack_o = rom_ack;
+                        rom_stb = cpu_stb;
+                    end
+
                     // 4: 0xFFFFFCxx 
 
                     5: begin // 0xFFFFFDxx: Timer
