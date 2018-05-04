@@ -14,22 +14,21 @@ main:
     li t0, 0x43
     beq a0, t0, call
 
-
     j main
 
 
 call:
-    jal receive_uart_4_bytes
+    jal a1, receive_uart_4_bytes
     jalr a0
     j main
 
 
 load_from_uart:
     # receive start address
-    jal receive_uart_4_bytes
+    jal a1, receive_uart_4_bytes
     mv s0, a0
     # receive number of bytes
-    jal receive_uart_4_bytes
+    jal a1, receive_uart_4_bytes
     mv s1, a0
     # init byte counter
     mv s2, zero
@@ -46,9 +45,8 @@ load_from_uart_receive_bytes:
     j load_from_uart_receive_bytes
  
 
-
+# NOTE: Expects return address in a1!
 receive_uart_4_bytes:
-    mv t6, ra
     jal receive_uart
     slli t5, a0, 8
     jal receive_uart
@@ -59,8 +57,8 @@ receive_uart_4_bytes:
     slli t5, t5, 8
     jal receive_uart
     or a0, t5, a0
-    mv ra, t6
-    ret
+    # return from address given in a1
+    jalr zero, 0(a1)
 
 
 transmit_uart:
@@ -74,16 +72,16 @@ receive_uart:
 receive_uart_wait_receive:
     lw t2, DEV_TIMER(zero)
     sub t2, t2, t1
-    li t3, 500                      # 500 ms timeout
-    bgeu t2, t3, timeout            # timeout detected
+    # 500 ms timeout
+    li t3, 500
+    # check for timeout, branch accordingly
+    bgeu t2, t3, receive_uart_timeout
     lbu t0, DEV_UART_RX_READY(zero)
     beqz t0, receive_uart_wait_receive
     lbu a0, DEV_UART_DATA(zero)
     ret
-
-timeout:
-    lbu t0, DEV_TIMER(zero)
-    sb t0, DEV_LED(zero)
+receive_uart_timeout:
+    sb t1, DEV_LED(zero)
     j main
 
 
