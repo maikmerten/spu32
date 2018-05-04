@@ -59,8 +59,10 @@ public class BootloaderProtocol {
     public void uploadWithUART(int address, byte[] data) throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         byte[] opcode = {'U'};
+		byte[] adr = assemble32(address);
         byte[] length = assemble32(data.length);
         baos.write(opcode);
+		baos.write(adr);
         baos.write(length);
         baos.write(data);
 
