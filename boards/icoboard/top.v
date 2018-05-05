@@ -60,7 +60,7 @@ module top(
     reg arbiter_ack_o;
 
     cpu #(
-        .VECTOR_RESET(32'hFFFFFB00)
+        .VECTOR_RESET(32'hFFFFF000)
     ) cpu_inst(
         .CLK_I(clk),
 	    .ACK_I(arbiter_ack_o),
@@ -99,7 +99,7 @@ module top(
     ) rom_inst (
 	    .CLK_I(clk),
 	    .STB_I(rom_stb),
-	    .ADR_I(cpu_adr[7:0]),
+	    .ADR_I(cpu_adr[8:0]),
 	    .DAT_I(cpu_dat),
 	    .DAT_O(rom_dat),
 	    .ACK_O(rom_ack)
@@ -194,7 +194,14 @@ module top(
         rom_stb = 0;
 
         case(cpu_adr[31:11])
-            21'hFFFFFF: begin // 0xFFFFF8xxx - 0xFFFFFFFF: I/O devices
+
+            {20'hFFFFF, 1'b0}: begin // 0xFFFFF000 - 0xFFFFF7FF: boot ROM
+                    arbiter_dat_o = rom_dat;
+                    arbiter_ack_o = rom_ack;
+                    rom_stb = cpu_stb;
+            end
+
+            {20'hFFFFF, 1'b1}: begin // 0xFFFFF800 - 0xFFFFFFFF: I/O devices
                 case(cpu_adr[10:8])
                     0: begin // 0xFFFFF8xx: UART
                         arbiter_dat_o = uart_dat;
@@ -210,11 +217,7 @@ module top(
 
                     // 2: 0xFFFFFAxx
 
-                    3: begin // 0xFFFFFBxx: boot ROM
-                        arbiter_dat_o = rom_dat;
-                        arbiter_ack_o = rom_ack;
-                        rom_stb = cpu_stb;
-                    end
+                    // 3: 0xFFFFFBxx:
 
                     // 4: 0xFFFFFCxx 
 
