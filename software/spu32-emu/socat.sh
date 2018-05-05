@@ -1,3 +1,3 @@
 #!/bin/sh
-socat -d -d pty,raw,echo=0 pty,raw,echo=0
+socat PTY,link=/tmp/pts1 PTY,link=/tmp/pts2
 
