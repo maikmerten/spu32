@@ -51,19 +51,20 @@ public class Main {
 	private UART uart;
 	private Timer timer;
 	private SPIPortWithFlash spiport;
-        private ROM bootrom;
+	private ROM bootrom;
 
 	private SerialConnection conn;
 
 	private enum Preference {
 		UART_DEV("uart_dev", "/dev/ttyUSB0", "Serial device to be used for UART"),
 		RAM_INITFILE("ram_initfile", "/tmp/raminit.bin", "File with initial RAM contents"),
-                BOOTROM_INITFILE("bootrom_initfile", "/tmp/bootrominit.bin", "File with boot-ROM contents"),
+		BOOTROM_INITFILE("bootrom_initfile", "/tmp/bootrominit.bin", "File with boot-ROM contents"),
 		SPIFLASH_INITFILE("spiflash_initfile", "/tmp/spiflashinit.bin", "File with initial SPI flash contents");
-		
+
 		private final String key;
 		private final String defaultval;
 		private final String description;
+
 		private Preference(String key, String defaultval, String description) {
 			this.key = key;
 			this.defaultval = defaultval;
@@ -81,7 +82,7 @@ public class Main {
 	private void setupMachine() {
 
 		bus = new Bus();
-		cpu = new CPU(bus, 0xFFFFFB00, 0x10);
+		cpu = new CPU(bus, 0xFFFFF000, 0x10);
 
 		FileInputStream raminit = null;
 		try {
@@ -96,9 +97,9 @@ public class Main {
 		} catch (FileNotFoundException ex) {
 			Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
 		}
-                
-                FileInputStream bootrominit = null;
-                try {
+
+		FileInputStream bootrominit = null;
+		try {
 			bootrominit = new FileInputStream(new File(getPreferenceValue(Preference.BOOTROM_INITFILE)));
 		} catch (FileNotFoundException ex) {
 			Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
@@ -109,12 +110,12 @@ public class Main {
 		uart = new UART(getPreferenceValue(Preference.UART_DEV), 115200);
 		timer = new Timer();
 		spiport = new SPIPortWithFlash(spiflashinit);
-                bootrom = new ROM(8, bootrominit);
+		bootrom = new ROM(9, bootrominit);
 
 		bus.setDefaultDevice(ram);
+		bus.addDevice(0xFFFFF000, 0xFFFFFF00, bootrom);
 		bus.addDevice(0xFFFFF800, 0xFFFFFF00, uart);
 		bus.addDevice(0xFFFFF900, 0xFFFFFF00, spiport);
-                bus.addDevice(0xFFFFFB00, 0xFFFFFF00, bootrom);
 		bus.addDevice(0xFFFFFD00, 0xFFFFFF00, timer);
 		bus.addDevice(0xFFFFFF00, 0xFFFFFF00, leds);
 
@@ -151,7 +152,7 @@ public class Main {
 						showPreferencesUI();
 					}
 				});
-				
+
 				prefMenu.add(prefMenuItem);
 				window.setJMenuBar(menuBar);
 
@@ -181,13 +182,13 @@ public class Main {
 
 		JFrame prefwindow = new JFrame("SPU32-emu preferences");
 		prefwindow.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		
+
 		JPanel prefpanel = new JPanel(new GridLayout(0, 2));
-		
-		for(final Preference pref : Preference.values()) {
+
+		for (final Preference pref : Preference.values()) {
 			final JLabel label = new JLabel(pref.description);
 			final JTextField field = new JTextField(getPreferenceValue(pref));
-			
+
 			field.addFocusListener(new FocusListener() {
 				@Override
 				public void focusGained(FocusEvent e) {
@@ -199,11 +200,11 @@ public class Main {
 					setPreferenceValue(pref, field.getText());
 				}
 			});
-			
+
 			prefpanel.add(label);
 			prefpanel.add(field);
 		}
-		
+
 		prefwindow.add(prefpanel);
 
 		prefwindow.pack();
@@ -211,12 +212,12 @@ public class Main {
 		prefwindow.setSize(550, 35 * Preference.values().length);
 
 	}
-	
+
 	private String getPreferenceValue(Preference pref) {
 		Preferences prefs = Preferences.userNodeForPackage(Main.class);
 		return prefs.get(pref.key, pref.defaultval);
 	}
-	
+
 	private void setPreferenceValue(Preference pref, String value) {
 		Logger.getLogger(Main.class.getName()).log(Level.INFO, "setting preference " + pref.key + " to value " + value);
 		Preferences prefs = Preferences.userNodeForPackage(Main.class);
