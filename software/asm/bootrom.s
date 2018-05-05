@@ -72,17 +72,61 @@ receive_uart:
 receive_uart_wait_receive:
     lw t2, DEV_TIMER(zero)
     sub t2, t2, t1
-    # 500 ms timeout
-    li t3, 500
+    # timeout in milliseconds
+    li t3, 3000
     # check for timeout, branch accordingly
-    bgeu t2, t3, receive_uart_timeout
+    bgeu t2, t3, load_from_spi
     lbu t0, DEV_UART_RX_READY(zero)
     beqz t0, receive_uart_wait_receive
     lbu a0, DEV_UART_DATA(zero)
     ret
-receive_uart_timeout:
-    sb t1, DEV_LED(zero)
-    j main
+
+load_from_spi:
+    # select SPI device (hopefully a flash storage with executable code...)
+    li t0, 1
+    sb t0, DEV_SPI_SELECT(zero)
+
+    # send fast read command
+    li a0, 0x0B
+    jal transmit_spi
+
+    # send address (0x0 in this case) and dummy byte for fast read
+    li t0, 4
+load_from_spi_send_address_and_dummy:    
+    li a0, 0
+    jal transmit_spi
+    addi t0, t0, -1
+    bnez t0, load_from_spi_send_address_and_dummy
+
+    # read bytes from SPI flash and write to memory, starting at address 0x0
+    mv t0, zero
+    li t1, 1024
+load_from_spi_copyloop:
+    jal transmit_spi
+    sb a0, 0(t0)
+    addi t0, t0, 1
+    bne t0, t1, load_from_spi_copyloop
+
+    # deselect SPI device
+    sb zero, DEV_SPI_SELECT(zero)
+    # start execution at 0x0
+    jr zero
+
+
+transmit_spi:
+    # wait until SPI port is ready
+transmit_spi_readyloop:
+    lbu a6, DEV_SPI_READY(zero)
+    beqz a6, transmit_spi_readyloop
+    # start transmission by writing data to SPI port
+    sb a0, DEV_SPI_DATA(zero)
+    # wait until SPI port is ready again (transmission finished)
+transmit_spi_readyloop2:
+    lbu a6, DEV_SPI_READY(zero)
+    beqz a6, transmit_spi_readyloop2
+    # write received data to a0 and return
+    lbu a0, DEV_SPI_DATA(zero)
+    ret
 
 
 .size	main, .-main
