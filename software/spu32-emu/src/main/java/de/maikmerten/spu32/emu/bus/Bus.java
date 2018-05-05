@@ -15,17 +15,18 @@ import java.util.Map;
 public class Bus implements InterruptSource {
 
     private final List<InterruptSource> interruptSources = new ArrayList<>();
-    private final Map<Integer, BusDevice> devices = new HashMap<>();
-    private final Map<Integer, Integer> masks = new HashMap<>();
+	private final List<BusDevice> devices = new ArrayList<>();
+    private final Map<BusDevice, Integer> startAddrs = new HashMap<>();
+	private final Map<BusDevice, Integer> endAddrs = new HashMap<>();
     private final List<Integer> baseAddrs = new ArrayList<>();
 
     private BusDevice defaultDevice = new DummyDevice(false);
 
-    public void addDevice(int baseAddr, int mask, BusDevice device) {
+    public void addDevice(int startAddr, int endAddr, BusDevice device) {
 
-        baseAddrs.add(baseAddr);
-        masks.put(baseAddr, mask);
-        devices.put(baseAddr, device);
+		devices.add(device);
+		startAddrs.put(device, startAddr);
+		endAddrs.put(device, endAddr);
 
         if (device instanceof InterruptSource) {
             interruptSources.add((InterruptSource) device);
@@ -48,12 +49,13 @@ public class Bus implements InterruptSource {
 
     private BusDevice getDeviceFromAddress(int address) {
        
-        for (Integer base : baseAddrs) {
-            int mask = masks.get(base);
-            if ((address & mask) == base) {
-                return devices.get(base);
-            }
-        }
+        for(BusDevice dev : devices) {
+			int start = startAddrs.get(dev);
+			int end = endAddrs.get(dev);
+			if(address >= start && address <= end) {
+				return dev;
+			}
+		}
 
         return defaultDevice;
     }

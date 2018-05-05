@@ -113,11 +113,11 @@ public class Main {
 		bootrom = new ROM(9, bootrominit);
 
 		bus.setDefaultDevice(ram);
-		bus.addDevice(0xFFFFF000, 0xFFFFFF00, bootrom);
-		bus.addDevice(0xFFFFF800, 0xFFFFFF00, uart);
-		bus.addDevice(0xFFFFF900, 0xFFFFFF00, spiport);
-		bus.addDevice(0xFFFFFD00, 0xFFFFFF00, timer);
-		bus.addDevice(0xFFFFFF00, 0xFFFFFF00, leds);
+		bus.addDevice(0xFFFFF000, 0xFFFFF7FF, bootrom);
+		bus.addDevice(0xFFFFF800, 0xFFFFF8FF, uart);
+		bus.addDevice(0xFFFFF900, 0xFFFFF9FF, spiport);
+		bus.addDevice(0xFFFFFD00, 0xFFFFFDFF, timer);
+		bus.addDevice(0xFFFFFF00, 0xFFFFFFFF, leds);
 
 		cputhread = new CPUThread(cpu);
 		cputhread.start();
