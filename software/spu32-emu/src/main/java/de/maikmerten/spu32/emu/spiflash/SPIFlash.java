@@ -31,10 +31,10 @@ public class SPIFlash {
 
 	private enum State {
 		IDLE,
-		FASTREADDUMMY,
 		READADDR1,
 		READADDR2,
 		READADDR3,
+		READDUMMY,
 		READ,
 		CHIPERASE,
 		STATUSBYTE1,
@@ -49,6 +49,7 @@ public class SPIFlash {
 	// emulate a AT25SF041 SPI serial flash device, 4 MBit capacity
 	private byte data[] = new byte[512 * 1024];
 	private byte progbuffer[] = new byte[256];
+	private byte cmd = 0;
 	private State state = State.IDLE;
 	private int addr = 0;
 	private int progstartaddr = 0;
@@ -117,10 +118,9 @@ public class SPIFlash {
 
 		switch (state) {
 			case IDLE: {
-				if (b == Command.READ.cmdValue) {
+				cmd = b;
+				if (b == Command.READ.cmdValue || b == Command.FASTREAD.cmdValue) {
 					state = State.READADDR1;
-				} else if (b == Command.FASTREAD.cmdValue) {
-					state = State.FASTREADDUMMY;
 				} else if (b == Command.CHIPERASE1.cmdValue || b == Command.CHIPERASE2.cmdValue) {
 					if (writeenabled) {
 						state = State.CHIPERASE;
@@ -143,11 +143,6 @@ public class SPIFlash {
 				break;
 			}
 
-			case FASTREADDUMMY: {
-				state = State.READADDR1;
-				break;
-			}
-
 			case READADDR1: {
 				addr = (b & 0xFF);
 				state = State.READADDR2;
@@ -162,6 +157,15 @@ public class SPIFlash {
 
 			case READADDR3: {
 				addr = (addr << 8) | (b & 0xFF);
+				if(cmd == Command.FASTREAD.cmdValue) {
+					state = State.READDUMMY;
+				} else {
+					state = State.READ;
+				}
+				break;
+			}
+			
+			case READDUMMY: {
 				state = State.READ;
 				break;
 			}
