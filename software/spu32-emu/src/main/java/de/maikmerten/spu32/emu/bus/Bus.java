@@ -15,18 +15,23 @@ import java.util.Map;
 public class Bus implements InterruptSource {
 
     private final List<InterruptSource> interruptSources = new ArrayList<>();
-	private final List<BusDevice> devices = new ArrayList<>();
-    private final Map<BusDevice, Integer> startAddrs = new HashMap<>();
-	private final Map<BusDevice, Integer> endAddrs = new HashMap<>();
-    private final List<Integer> baseAddrs = new ArrayList<>();
+	private final List<DeviceWrapper> devices = new ArrayList<>();
 
     private BusDevice defaultDevice = new DummyDevice(false);
+	
+	private class DeviceWrapper {
+		private int startAddress, endAddress;
+		private BusDevice dev;
+		private DeviceWrapper(BusDevice dev, int start, int end) {
+			this.dev = dev;
+			this.startAddress = start;
+			this.endAddress = end;
+		}
+	}
 
     public void addDevice(int startAddr, int endAddr, BusDevice device) {
 
-		devices.add(device);
-		startAddrs.put(device, startAddr);
-		endAddrs.put(device, endAddr);
+		devices.add(new DeviceWrapper(device, startAddr, endAddr));
 
         if (device instanceof InterruptSource) {
             interruptSources.add((InterruptSource) device);
@@ -49,11 +54,9 @@ public class Bus implements InterruptSource {
 
     private BusDevice getDeviceFromAddress(int address) {
        
-        for(BusDevice dev : devices) {
-			int start = startAddrs.get(dev);
-			int end = endAddrs.get(dev);
-			if(address >= start && address <= end) {
-				return dev;
+        for(DeviceWrapper wrapper : devices) {
+			if(address >= wrapper.startAddress && address <= wrapper.endAddress) {
+				return wrapper.dev;
 			}
 		}
 
