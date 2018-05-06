@@ -20,12 +20,13 @@ public class Bus implements InterruptSource {
     private BusDevice defaultDevice = new DummyDevice(false);
 	
 	private class DeviceWrapper {
-		private int startAddress, endAddress;
+		private final long startAddress, endAddress;
 		private BusDevice dev;
 		private DeviceWrapper(BusDevice dev, int start, int end) {
 			this.dev = dev;
-			this.startAddress = start;
-			this.endAddress = end;
+			// convert to long for "unsigned" comparisons later on
+			this.startAddress = start & 0xFFFFFFFFL;
+			this.endAddress = end & 0xFFFFFFFFL;
 		}
 	}
 
@@ -53,9 +54,10 @@ public class Bus implements InterruptSource {
     }
 
     private BusDevice getDeviceFromAddress(int address) {
-       
+		// convert address to long for "unsigned" comparison
+		long longAddr = address & 0xFFFFFFFFL;
         for(DeviceWrapper wrapper : devices) {
-			if(address >= wrapper.startAddress && address <= wrapper.endAddress) {
+			if(longAddr >= wrapper.startAddress && longAddr <= wrapper.endAddress) {
 				return wrapper.dev;
 			}
 		}
