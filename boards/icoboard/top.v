@@ -1,5 +1,5 @@
 `include "./cpu/cpu.v"
-`include "./ram/ram1k_wb8.v"
+`include "./ram/ram4k_wb8.v"
 `include "./leds/leds_wb8.v"
 `include "./uart/uart_wb8.v"
 `include "./spi/spi_wb8.v"
@@ -78,13 +78,13 @@ module top(
     reg ram_stb;
     wire[7:0] ram_dat;
 
-    ram1k_wb8 #(
+    ram4k_wb8 #(
         .RAMINITFILE("./software/asm/timer-test.dat")
     ) ram_inst (
 	    .CLK_I(clk),
 	    .STB_I(ram_stb),
 	    .WE_I(cpu_we),
-	    .ADR_I(cpu_adr[9:0]),
+	    .ADR_I(cpu_adr[11:0]),
 	    .DAT_I(cpu_dat),
 	    .DAT_O(ram_dat),
 	    .ACK_O(ram_ack)
@@ -181,6 +181,11 @@ module top(
         reset <= 1;
         resetcnt <= resetcnt + 1;
       end else reset <= 0;
+
+      // use button1 as reset button
+      if(button1) begin
+        resetcnt <= 1;
+      end
     end
 
 
