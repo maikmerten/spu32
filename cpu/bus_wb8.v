@@ -59,6 +59,7 @@ module bus_wb8(
 		WE_O <= 0;
 		CYC_O <= 0;
 		STB_O <= 0;
+		busy <= 0;
 
 		if(I_en) begin
 			// if enabled, act
