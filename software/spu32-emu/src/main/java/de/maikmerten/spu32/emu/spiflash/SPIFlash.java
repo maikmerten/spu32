@@ -36,7 +36,6 @@ public class SPIFlash {
 		READADDR3,
 		READDUMMY,
 		READ,
-		CHIPERASE,
 		STATUSBYTE1,
 		STATUSBYTE2,
 		SURPLUSBYTE,
@@ -123,7 +122,10 @@ public class SPIFlash {
 					state = State.READADDR1;
 				} else if (b == Command.CHIPERASE1.cmdValue || b == Command.CHIPERASE2.cmdValue) {
 					if (writeenabled) {
-						state = State.CHIPERASE;
+                                            if (chiperase) {
+                                                logger.log(Level.WARNING, "Data sent to SPI flash despite chip erase already pending!");
+                                            }
+                                            chiperase = true;
 					} else {
 						logger.log(Level.SEVERE, "Issued chip erase command to SPI flash although writes are disabled!");
 					}
@@ -172,14 +174,6 @@ public class SPIFlash {
 
 			case READ: {
 				result = data[getAddrAndIncrement()];
-				break;
-			}
-
-			case CHIPERASE: {
-				if (chiperase) {
-					logger.log(Level.WARNING, "Data sent to SPI flash despite chip erase already pending!");
-				}
-				chiperase = true;
 				break;
 			}
 
