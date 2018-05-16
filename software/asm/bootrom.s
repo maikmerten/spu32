@@ -14,6 +14,10 @@ main:
     li t0, 0x43
     beq a0, t0, call
 
+    # check for "S" (UART to SPI)
+    li t0, 0x53
+    beq a0, t0, uart_to_spi
+
     j main
 
 
@@ -43,6 +47,32 @@ load_from_uart_receive_bytes:
     # increment counter
     addi s2, s2, 1
     j load_from_uart_receive_bytes
+
+uart_to_spi:
+    # select SPI device
+    li t0, 1
+    sb t0, DEV_SPI_SELECT(zero)
+    # receive number of bytes to be exchanged
+    jal a1, receive_uart_4_bytes
+    mv s0, a0
+    mv s1, zero
+uart_to_spi_loop:
+    bgeu s1, s0, uart_to_spi_exit
+    # receive byte from UART
+    jal receive_uart
+    # push received byte to SPI device
+    jal transmit_spi
+    # push byte received from SPI to UART
+    jal transmit_uart
+    # increment counter
+    addi s1, s1, 1
+    j uart_to_spi_loop
+
+uart_to_spi_exit:
+    # deselect SPI device
+    sb zero, DEV_SPI_SELECT(zero)
+    j main
+
  
 
 # NOTE: Expects return address in a1!
