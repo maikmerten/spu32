@@ -103,7 +103,7 @@ receive_uart_wait_receive:
     lw t2, DEV_TIMER(zero)
     sub t2, t2, t1
     # timeout in milliseconds
-    li t3, 3000
+    li t3, 5000
     # check for timeout, branch accordingly
     bgeu t2, t3, load_from_spi
     lbu t0, DEV_UART_RX_READY(zero)
