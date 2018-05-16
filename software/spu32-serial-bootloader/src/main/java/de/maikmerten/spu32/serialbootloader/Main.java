@@ -25,6 +25,14 @@ public class Main {
         SerialConnection conn = new SerialConnection(uartDevice, 115200);
         BootloaderProtocol bp = new BootloaderProtocol(conn);
         
+        SPIFlasher flasher = new SPIFlasher(bp);
+        flasher.enableWrite();
+        flasher.eraseChip();
+        while(flasher.isBusy()) {
+            System.out.print(".");
+        }
+        System.out.println();
+        
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         File f = new File(programFile);
         FileInputStream fis = new FileInputStream(f);

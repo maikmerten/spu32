@@ -69,5 +69,28 @@ public class BootloaderProtocol {
         bytesOut(baos.toByteArray());
 
     }
+    
+    public byte[] writeToSPI(byte[] data) throws Exception {
+        int datalen = data.length;
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        byte[] opcode = {'S'};
+        byte[] len = assemble32(data.length);
+        baos.write(opcode);
+        baos.write(len);
+        baos.write(data);
+        bytesOut(baos.toByteArray());
+        
+        byte[] receivedData = new byte[datalen];
+        long startTime = System.currentTimeMillis();
+        while(conn.getInputStream().available() < datalen) {
+            Thread.sleep(1);
+            if(System.currentTimeMillis() - startTime > 500) {
+                throw new Exception("timeout while waiting for SPI data...");
+            }
+        }
+        conn.getInputStream().read(receivedData);
+        return receivedData;
+        
+    }
 
 }
