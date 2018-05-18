@@ -1,6 +1,8 @@
 package de.maikmerten.spu32.serialbootloader;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 
 /**
  *
@@ -81,6 +83,53 @@ public class SPIFlasher {
         }
         
         return result;
+    }
+    
+    private void clearBuffer(byte[] buf) {
+        for(int i = 0; i < buf.length; ++i) {
+            buf[i] = (byte) 0xFF;
+        }
+    }
+    
+    public void programFile(File f) throws Exception {
+        FileInputStream fis = new FileInputStream(f);
+        System.out.print("erasing chip...");
+        enableWrite();
+        eraseChip();
+        while(isBusy()) {
+            System.out.print(".");
+        }
+        System.out.println();
+        
+        byte[] buf = new byte[64];
+        clearBuffer(buf);
+        int chunk = 0;
+        int read = fis.read(buf);
+        while(read > 0) {
+            // write chunk to SPI flash
+            System.out.print("writing chunk " + chunk + " ");
+            enableWrite();
+            programChunk(chunk, buf);
+            while(isBusy()) {
+                System.out.print(".");
+            }
+            System.out.println();
+            
+            // read chunk back and compare
+            byte[] chunkData = readChunk(chunk);
+            for(int i = 0; i < buf.length; ++i) {
+                if(chunkData[i] != buf[i]) {
+                    throw new Exception("read chunk data does not match!");
+                }
+            }
+            
+            // clear buffer and read more data
+            clearBuffer(buf);
+            read = fis.read(buf);
+            chunk++;
+            
+        }
+        
     }
     
 }
