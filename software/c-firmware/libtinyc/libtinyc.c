@@ -18,6 +18,28 @@ void printf_s(char* s) {
 	while(*s) printf_c(*(s++));
 }
 
+char _read_character_uart() {
+	while(!UART_RREADY){}
+	return UART_DATA;
+}
+
+
+char *fgets(char *str, int n, void *stream) {
+	int idx = 0;
+	int maxlen = n - 1;
+	while(idx < maxlen) {
+		char c = _read_character_uart();
+		if(c == '\r' || c == '\n') {
+			break;
+		}
+		printf_c(c);
+		str[idx++] = c;
+	}
+	str[idx] = (char)0;
+
+	return str;
+}
+
 // implementation lifted from Clifford Wolf's PicoRV32 stdlib.c
 void printf_d(int i) {
 	char buf[16];
