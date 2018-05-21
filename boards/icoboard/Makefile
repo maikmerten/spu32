@@ -1,6 +1,6 @@
 
 ifeq ($(shell bash -c 'type -p icoprog'),)
-SSH_RASPI ?= ssh pi@fpgapi.local
+SSH_RASPI ?= ssh pi@fpgapi
 else
 SSH_RASPI ?= sh -c
 endif
