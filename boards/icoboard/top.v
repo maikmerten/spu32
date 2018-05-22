@@ -162,15 +162,17 @@ module top(
     reg timer_stb = 0;
     wire[7:0] timer_dat;
     wire timer_ack;
+    wire timer_interrupt;
 
     timer_wb8 timer_inst(
         .CLK_I(clk),
-        .ADR_I(cpu_adr[1:0]),
+        .ADR_I(cpu_adr[2:0]),
         .DAT_I(cpu_dat),
         .STB_I(timer_stb),
         .WE_I(cpu_we),
         .DAT_O(timer_dat),
-        .ACK_O(timer_ack)
+        .ACK_O(timer_ack),
+        .O_interrupt(timer_interrupt)
     );
 
     // The iCE40 BRAMs always return zero for a while after device program and reset:
