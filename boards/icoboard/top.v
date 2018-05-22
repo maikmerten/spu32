@@ -50,7 +50,6 @@ module top(
 
     reg reset = 1;
     reg[7:0] resetcnt = 1;
-    reg interrupt = button0;
 
     wire cpu_cyc, cpu_stb, cpu_we;
     wire[7:0] cpu_dat;
@@ -66,7 +65,7 @@ module top(
 	    .ACK_I(arbiter_ack_o),
 	    .DAT_I(arbiter_dat_o),
 	    .RST_I(reset),
-        .INTERRUPT_I(interrupt),
+        .INTERRUPT_I(timer_interrupt),
 	    .ADR_O(cpu_adr),
 	    .DAT_O(cpu_dat),
 	    .CYC_O(cpu_cyc),
