@@ -1,8 +1,11 @@
 package de.maikmerten.spu32.serialbootloader;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -59,38 +62,94 @@ public class BootloaderProtocol {
     public void uploadWithUART(int address, byte[] data) throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         byte[] opcode = {'U'};
-		byte[] adr = assemble32(address);
+        byte[] adr = assemble32(address);
         byte[] length = assemble32(data.length);
         baos.write(opcode);
-		baos.write(adr);
+        baos.write(adr);
         baos.write(length);
         baos.write(data);
 
         bytesOut(baos.toByteArray());
 
     }
-    
+
     public byte[] writeToSPI(byte[] data) throws Exception {
-        int datalen = data.length;
+        final int datalen = data.length;
+
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         byte[] opcode = {'S'};
         byte[] len = assemble32(data.length);
         baos.write(opcode);
         baos.write(len);
         baos.write(data);
-        bytesOut(baos.toByteArray());
-        
-        byte[] receivedData = new byte[datalen];
-        long startTime = System.currentTimeMillis();
-        while(conn.getInputStream().available() < datalen) {
-            Thread.sleep(1);
-            if(System.currentTimeMillis() - startTime > 500) {
-                throw new Exception("timeout while waiting for SPI data...");
-            }
+        //bytesOut(baos.toByteArray());
+        ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+        byte[] buf = new byte[32];
+
+        InputReadThread t = new InputReadThread(conn.getInputStream(), datalen);
+        t.start();
+
+        int read = bais.read(buf);
+        while (read > 0) {
+            conn.getOutputStream().write(buf, 0, read);
+            read = bais.read(buf);
         }
-        conn.getInputStream().read(receivedData);
-        return receivedData;
-        
+
+        t.join();
+
+        if (t.receivedData.length != datalen) {
+            throw new Exception("did not receive proper number of SPI bytes...");
+        }
+
+        return t.receivedData;
+
+    }
+
+    private class InputReadThread extends Thread {
+
+        private final InputStream is;
+        private final int target;
+        public byte[] receivedData;
+
+        InputReadThread(InputStream is, int target) {
+            this.is = is;
+            this.target = target;
+        }
+
+        @Override
+        public void run() {
+            try {
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                byte[] buf = new byte[64];
+                int totalRead = 0;
+                int read = is.read(buf);
+                long start = System.currentTimeMillis();
+                while (read != -1) {
+                    totalRead += read;
+                    baos.write(buf, 0, read);
+                    if (totalRead == target) {
+                        break;
+                    }
+                    if (read > 0) {
+                        start = System.currentTimeMillis();
+                    }
+
+                    if (System.currentTimeMillis() - start > 500) {
+                        throw new Exception("Timeout waiting for SPI data... " + totalRead + " of " + target);
+                    }
+
+                    Thread.sleep(1);
+
+                    read = is.read(buf);
+                }
+
+                this.receivedData = baos.toByteArray();
+
+            } catch (Exception e) {
+                Logger.getLogger(InputReadThread.class.getName()).log(Level.SEVERE, e.getMessage());
+            }
+
+        }
     }
 
 }
