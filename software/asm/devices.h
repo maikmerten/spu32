@@ -10,6 +10,7 @@
     #define DEV_SPI_READY 0xFFFFF902
 
     #define DEV_TIMER 0xFFFFFD00
+    #define DEV_TIMER_INTERRUPT 0xFFFFFD04
     #define DEV_LED 0xFFFFFF00
 
 #endif
