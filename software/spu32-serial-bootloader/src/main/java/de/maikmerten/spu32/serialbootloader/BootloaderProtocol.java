@@ -2,6 +2,8 @@ package de.maikmerten.spu32.serialbootloader;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.logging.Level;
@@ -57,6 +59,18 @@ public class BootloaderProtocol {
         baos.write(adr);
 
         bytesOut(baos.toByteArray());
+    }
+    
+    public void uploadFile(int address, File f) throws Exception {
+        FileInputStream fis = new FileInputStream(f);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        byte[] buf = new byte[512];
+        int read = fis.read(buf);
+        while(read != -1) {
+            baos.write(buf, 0, read);
+            read = fis.read(buf);
+        }
+        uploadWithUART(address, baos.toByteArray());
     }
 
     public void uploadWithUART(int address, byte[] data) throws Exception {

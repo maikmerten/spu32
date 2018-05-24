@@ -1,6 +1,14 @@
 package de.maikmerten.spu32.serialbootloader;
 
 import java.io.File;
+import java.io.InputStream;
+import java.io.OutputStream;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 
 /**
  *
@@ -9,30 +17,75 @@ import java.io.File;
 public class Main {
 
     public static void main(String[] args) throws Exception {
-        if(args.length != 2) {
-            System.out.println("Parameters: <serial device> <file to upload and execute>");
+
+        Options opts = new Options();
+        Option fileOption = new Option("f", "file", true, "file to be uploaded or programmed");
+        fileOption.setRequired(true);
+        Option deviceOption = new Option("d", "device", true, "serial device to be used");
+        Option consoleOption = new Option("c", "console", false, "enter console mode after upload/programming");
+        Option programOption = new Option("p", "program", false, "program file to SPI flash");
+
+        opts.addOption(fileOption);
+        opts.addOption(deviceOption);
+        opts.addOption(consoleOption);
+        opts.addOption(programOption);
+
+        CommandLineParser cmdParser = new DefaultParser();
+        CommandLine cmd = null;
+
+        try {
+            cmd = cmdParser.parse(opts, args);
+        } catch (Exception e) {
+            HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("(cmdname)", opts);
             System.exit(1);
         }
-        
-        String uartDevice = args[0];
-        String programFile = args[1];
-        
+
+        String uartDevice = cmd.hasOption("device") ? cmd.getOptionValue("device") : "/dev/ttyUSB0";
+        String programFile = cmd.getOptionValue("file");
+        boolean program = cmd.hasOption("program");
+        boolean console = cmd.hasOption("console");
+
         System.out.println("UART device: " + uartDevice);
-        System.out.println("file to program: " + programFile);
-        
+        System.out.println("file: " + programFile);
+        System.out.println("programming to flash: " + program);
+
         SerialConnection conn = new SerialConnection(uartDevice, 115200);
         BootloaderProtocol bp = new BootloaderProtocol(conn);
         SPIFlasher flasher = new SPIFlasher(bp);
 
         File f = new File(programFile);
-        flasher.programFile(f);
+        if (program) {
+            flasher.programFile(f);
+        } else {
+            bp.uploadFile(0, f);
+            bp.callAddress(0);
+        }
 
-        
-        
-        
-        //System.out.println("Uploading " + uploadData.length + " bytes...");
-        //bp.uploadWithUART(0, uploadData);
-        //bp.callAddress(0);
+        if (console) {
+            // knock console into raw mode
+            String[] execcmd = {"/bin/sh", "-c", "-echo", "stty raw </dev/tty"};
+            Runtime.getRuntime().exec(execcmd).waitFor();
+            
+            System.out.println();
+
+            byte[] buf = new byte[512];
+            InputStream serialInput = conn.getInputStream();
+            OutputStream serialOutput = conn.getOutputStream();
+            while (true) {
+                if (serialInput.available() > 0) {
+                    int read = serialInput.read(buf);
+                    System.out.write(buf, 0, read);
+                }
+
+                if (System.in.available() > 0) {
+                    int read = System.in.read(buf);
+                    serialOutput.write(buf, 0, read);
+                }
+
+                Thread.sleep(1);
+            }
+        }
 
     }
 
