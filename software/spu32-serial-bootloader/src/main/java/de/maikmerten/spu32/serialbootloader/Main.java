@@ -64,7 +64,7 @@ public class Main {
 
         if (console) {
             // knock console into raw mode
-            String[] execcmd = {"/bin/sh", "-c", "-echo", "stty raw </dev/tty"};
+            String[] execcmd = {"/bin/sh", "-c", "stty raw -echo </dev/tty"};
             Runtime.getRuntime().exec(execcmd).waitFor();
             
             System.out.println();
@@ -80,11 +80,17 @@ public class Main {
 
                 if (System.in.available() > 0) {
                     int read = System.in.read(buf);
+                    if(buf[0] == 3) break; // ctrl-c
                     serialOutput.write(buf, 0, read);
                 }
 
                 Thread.sleep(1);
             }
+            
+            // reset console into normal mode
+            String[] execcmd2 = {"reset"};
+            Runtime.getRuntime().exec(execcmd2).waitFor();
+            System.out.println();
         }
 
     }
