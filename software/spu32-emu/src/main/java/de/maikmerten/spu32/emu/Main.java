@@ -25,6 +25,7 @@ import javax.swing.border.TitledBorder;
  */
 public class Main {
 
+	JFrame mainwindow = new JFrame("SPU32-emu");
 	JPanel mainpanel = new JPanel();
 
 
@@ -49,16 +50,17 @@ public class Main {
 
 	public static void main(String[] args) throws Exception {
 		Main m = new Main();
-		m.setupMachine();
-		m.showUI();
-		m.startEmulation();
+		m.constructAndStartEmulation();
 	}
+	
 
 	private void setupMachine() throws Exception {
 		machine = new SPU32Machine(getPreferenceValue(Preference.UART_DEV), getPreferenceValue(Preference.RAM_INITFILE), getPreferenceValue(Preference.SPIFLASH_INITFILE), getPreferenceValue(Preference.BOOTROM_INITFILE));
 	}
 
-	private void startEmulation() {
+	private void constructAndStartEmulation() throws Exception  {
+		setupMachine();
+		showUI();
 		machine.startCPU();
 	}
 
@@ -68,9 +70,9 @@ public class Main {
 
 			@Override
 			public void run() {
-				JFrame window = new JFrame("SPU32-emu");
-				window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+				mainwindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
+				mainpanel.removeAll();
 				mainpanel.setLayout(new GridLayout(1, 3));
 				
 				for(String key : machine.getGUIPanels().keySet()) {
@@ -88,14 +90,31 @@ public class Main {
 						showPreferencesUI();
 					}
 				});
-
 				prefMenu.add(prefMenuItem);
-				window.setJMenuBar(menuBar);
+				
+				JMenu emuMenu = new JMenu("Emulation");
+				menuBar.add(emuMenu);
+				JMenuItem restartEmuMenuItem = new JMenuItem("Fresh emulation restart");
+				restartEmuMenuItem.addActionListener(new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						try {
+							machine.tearDown();
+							constructAndStartEmulation();
+						} catch(Exception exception) {
+							throw new RuntimeException(exception);
+						}
+					}
+				});
+				emuMenu.add(restartEmuMenuItem);
+				
+				
+				mainwindow.setJMenuBar(menuBar);
 
-				window.add(mainpanel);
-				window.pack();
-				window.setVisible(true);
-				window.setSize(550, 200);
+				mainwindow.add(mainpanel);
+				mainwindow.pack();
+				mainwindow.setVisible(true);
+				mainwindow.setSize(550, 200);
 			}
 
 			private JPanel createTitledPanel(JPanel panel, String title) {

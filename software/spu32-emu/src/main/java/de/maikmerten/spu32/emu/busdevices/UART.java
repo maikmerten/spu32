@@ -29,6 +29,13 @@ public class UART implements BusDevice {
             Logger.getLogger(UART.class.getName()).log(Level.SEVERE, "could not open serial connection!", ex);
         }
     }
+	
+	public void tearDown() throws Exception {
+		if(this.conn != null) {
+			this.conn.getInputStream().close();
+			this.conn.getOutputStream().close();
+		}
+	}
 
     @Override
     public byte read(int address) {

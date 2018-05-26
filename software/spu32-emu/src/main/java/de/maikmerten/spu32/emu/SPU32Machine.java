@@ -25,6 +25,11 @@ import javax.swing.JPanel;
  */
 public class SPU32Machine {
 
+	private String uartDev;
+	private String raminitfile;
+	private String spiflashinitfile;
+	private String bootrominitfile;
+	
 	private CPUThread cputhread;
 	private Bus bus;
 	private CPU cpu;
@@ -37,6 +42,15 @@ public class SPU32Machine {
 	private CPUPanel cpupanel;
 
 	public SPU32Machine(String uartDev, String raminitfile, String spiflashinitfile, String bootrominitfile) throws Exception {
+		this.uartDev = uartDev;
+		this.raminitfile = raminitfile;
+		this.spiflashinitfile = spiflashinitfile;
+		this.bootrominitfile = bootrominitfile;
+		constructMachine();
+	}
+	
+	public void constructMachine() throws Exception {
+		tearDown();
 
 		bus = new Bus();
 		cpu = new CPU(bus, 0xFFFFF000, 0x10);
@@ -81,21 +95,28 @@ public class SPU32Machine {
 		cpupanel = new CPUPanel(cputhread);
 
 	}
-	
+
 	public void startCPU() {
 		cputhread.unpause();
 	}
 
-
-	public void tearDown() {
+	public void tearDown() throws Exception {
+		if(this.uart != null) {
+			this.uart.tearDown();
+		}
+		
+		if(this.cputhread != null) {
+			this.cputhread.terminate();
+		}
 	}
 
 	public Map<String, JPanel> getGUIPanels() {
 		Map<String, JPanel> result = new LinkedHashMap<>();
 		result.put("CPU", cpupanel);
 		result.put("LEDs", leds.getGUIPanel());
-		
+
 		return result;
 	}
+
 
 }
