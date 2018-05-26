@@ -71,23 +71,23 @@ public class Timer implements BusDevice, InterruptSource {
 
 		switch (reg) {
 			case 4: {
-				millis_interrupt = (millis_interrupt & 0xFFFFFF00) | (value & 0xFF);
+				millis_interrupt = (millis_interrupt & 0xFFFFFF00l) | (value & 0xFFl);
 				break;
 			}
 			
 			case 5: {
-				millis_interrupt = (millis_interrupt & 0xFFFF00FF) | ((value << 8) & 0xFF00);
+				millis_interrupt = (millis_interrupt & 0xFFFF00FFl) | ((value << 8) & 0xFF00l);
 				break;
 			}
 			
 			case 6: {
-				millis_interrupt = (millis_interrupt & 0xFF00FFFF) | ((value << 16) & 0xFF0000);
+				millis_interrupt = (millis_interrupt & 0xFF00FFFFl) | ((value << 16) & 0xFF0000l);
 				break;
 			}
 			
 			case 7: {
 				interrupt_armed = true;
-				millis_interrupt = (millis_interrupt & 0x00FFFFFF) | ((value << 24) & 0xFF000000);
+				millis_interrupt = (millis_interrupt & 0x00FFFFFFl) | ((value << 24) & 0xFF000000l);
 				break;
 			}
 
@@ -97,8 +97,10 @@ public class Timer implements BusDevice, InterruptSource {
 
 	@Override
 	public boolean interruptRaised() {
-		if(System.currentTimeMillis() >= millis_interrupt && interrupt_armed) {
+		long now32 = System.currentTimeMillis() & 0xFFFFFFFFl;
+		if(now32 >= millis_interrupt && interrupt_armed) {
 			interrupt_latched = true;
+			interrupt_armed = false;
 		}
 		return interrupt_latched;
 	}
