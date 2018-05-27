@@ -49,10 +49,13 @@ public class Main {
         System.out.println("UART device: " + uartDevice);
         System.out.println("file: " + programFile);
         System.out.println("programming to flash: " + program);
-
+        
         SerialConnection conn = new SerialConnection(uartDevice, 115200);
         BootloaderProtocol bp = new BootloaderProtocol(conn);
         SPIFlasher flasher = new SPIFlasher(bp);
+        
+        // reset device
+        bp.signalReset();
 
         File f = new File(programFile);
         if (program) {

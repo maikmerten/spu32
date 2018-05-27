@@ -8,6 +8,7 @@ set_io --warn-no-port led3 K9
 # UART on lower row of pmod header 2
 set_io --warn-no-port uart_rx B3
 set_io --warn-no-port uart_tx B6
+set_io --warn-no-port uart_rts B7
 
 # SPI port 0 on lower row of pmod header 4
 set_io --warn-no-port spi0_clk T9
@@ -15,11 +16,10 @@ set_io --warn-no-port spi0_miso T10
 set_io --warn-no-port spi0_mosi T13
 set_io --warn-no-port spi0_cs R14
 
-# push buttons on lower row of pmod header 3
-set_io --warn-no-port button0 N9
-set_io --warn-no-port button1 P9
-set_io --warn-no-port button2 M8
-set_io --warn-no-port button3 N7
+# push buttons on icoboard
+set_io --warn-no-port button0 K11
+set_io --warn-no-port button1 P13
+
 
 set_io --warn-no-port pmod1_1  D8
 set_io --warn-no-port pmod1_2  B9

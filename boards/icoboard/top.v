@@ -11,7 +11,7 @@ module top(
         // LED outputs on pmod header 1
         output pmod1_1, pmod1_2, pmod1_3, pmod1_4, pmod1_7, pmod1_8, pmod1_9, pmod1_10,
         // UART pins on pmod header 2
-        input uart_rx,
+        input uart_rx, uart_rts,
         output uart_tx,
         // board LEDs
         output led1, led2,
@@ -19,7 +19,7 @@ module top(
         input spi0_miso,
         output spi0_clk, spi0_mosi, spi0_cs,
         // push buttons
-        input button0, button1, button2, button3
+        input button0, button1
     );
 
     wire clk_pll, pll_locked;
@@ -183,8 +183,8 @@ module top(
         resetcnt <= resetcnt + 1;
       end else reset <= 0;
 
-      // use button1 as reset button
-      if(button1) begin
+      // use button1 and UART rts (active low) for reset
+      if(button1 | !uart_rts) begin
         resetcnt <= 1;
       end
     end

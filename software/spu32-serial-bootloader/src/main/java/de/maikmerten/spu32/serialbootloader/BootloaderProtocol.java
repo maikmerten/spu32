@@ -20,6 +20,15 @@ public class BootloaderProtocol {
     public BootloaderProtocol(SerialConnection conn) {
         this.conn = conn;
     }
+    
+    public void signalReset() throws Exception{
+        // RTS line is used to trigger reset
+        conn.setRTS(true);
+        // wait a bit
+        Thread.sleep(50);
+        // clear RTS signal
+        conn.setRTS(false);
+    }
 
     private byte byteIn() throws Exception {
         InputStream is = conn.getInputStream();

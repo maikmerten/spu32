@@ -45,6 +45,14 @@ public class SerialConnection {
     public OutputStream getOutputStream() {
         return output;
     }
+    
+    public void setRTS(boolean rts) {
+        if(rts) {
+            port.setRTS();
+        } else {
+            port.clearRTS();
+        }
+    }
 
     public void close() {
         try {
