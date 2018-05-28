@@ -24,7 +24,7 @@ char _read_character_uart() {
 }
 
 
-char *fgets(char *str, int n, void *stream) {
+char *read_string(char *buf, int n, char echo) {
 	int idx = 0;
 	int maxlen = n - 1;
 	while(idx < maxlen) {
@@ -32,12 +32,53 @@ char *fgets(char *str, int n, void *stream) {
 		if(c == '\r' || c == '\n') {
 			break;
 		}
-		printf_c(c);
-		str[idx++] = c;
-	}
-	str[idx] = (char)0;
 
-	return str;
+		if(c != ((char)0x7F)) {
+			buf[idx++] = c;
+			if(echo) printf_c(c);
+		} else {
+			// handle backspace
+			if(idx > 0) {
+				idx--;
+				printf("\b \b");
+			}
+		}
+
+	}
+	buf[idx] = (char)0;
+
+	return buf;
+}
+
+int string_length(char *str) {
+	int len = 0;
+	while(*str++) len++;
+	return len;
+}
+
+int parse_int(char *str) {
+	int result = 0;
+	int negative = 0;
+	while(1) {
+		char c = *str;
+		if(!c) break;
+		if(c == '-') {
+			negative = 1;
+		}
+
+		if(c >= '0' && c <= '9') {
+			result *= 10;
+			result += (c - '0');
+		}
+
+		str++;
+	}
+
+	if(negative) {
+		result *= -1;
+	}
+
+	return result;
 }
 
 // implementation lifted from Clifford Wolf's PicoRV32 stdlib.c

@@ -15,7 +15,7 @@ all: example.bin
 	$(CC) $(CFLAGS) -o $@ crt0.s $< $(LDFLAGS)
 	$(DUMP) -d $@
 
-%.o: %.c
+%.o: %.c libtinyc/*.h libtinyc/*.c
 	cd libtinyc && $(MAKE)
 	$(CC) $(CFLAGS) -c $<
 
