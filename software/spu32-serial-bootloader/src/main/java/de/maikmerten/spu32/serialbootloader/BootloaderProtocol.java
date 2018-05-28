@@ -24,10 +24,12 @@ public class BootloaderProtocol {
     public void signalReset() throws Exception{
         // RTS line is used to trigger reset
         conn.setRTS(true);
-        // wait a bit
-        Thread.sleep(50);
+        // keep device in reset for a while
+        Thread.sleep(25);
         // clear RTS signal
         conn.setRTS(false);
+        // wait a bit for device to enter bootloader
+        Thread.sleep(5);
     }
 
     private byte byteIn() throws Exception {
