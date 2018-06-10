@@ -57,33 +57,12 @@ int string_length(char *str) {
 }
 
 int parse_int(char *str) {
-	int result = 0;
-	int negative = 0;
-	while(1) {
-		char c = *str;
-		if(!c) break;
-		if(c == '-') {
-			negative = 1;
-		}
-
-		if(c >= '0' && c <= '9') {
-			result *= 10;
-			result += (c - '0');
-		}
-
-		str++;
-	}
-
-	if(negative) {
-		result *= -1;
-	}
-
-	return result;
+	return (int) parse_long(str);
 }
 
 long long parse_long(char *str) {
 	long long result = 0;
-	int negative = 0;
+	char negative = 0;
 	while(1) {
 		char c = *str;
 		if(!c) break;
