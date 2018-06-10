@@ -8,6 +8,9 @@ void printf(const char* format, ...);
 
 char *read_string(char *buf, int n, char echo);
 
+int parse_int(char *str);
+long long parse_long(char *str);
+
 int string_length(char *str);
 
 #endif
