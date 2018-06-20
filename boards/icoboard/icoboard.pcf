@@ -57,3 +57,41 @@ set_io --warn-no-port pmod1_10 A11
 #set_io --warn-no-port pmod4_9  T10
 #set_io --warn-no-port pmod4_10 T9
 
+set_io SRAM_A0  N2 # IO21B
+set_io SRAM_A1  K5 # IO20A
+set_io SRAM_A2  J5 # IO13A
+set_io SRAM_A3  M5 # IO25B
+set_io SRAM_A4  P4 # IO54
+set_io SRAM_A5  N5 # IO56
+set_io SRAM_A6  P5 # IO58
+set_io SRAM_A7  P7 # IO77
+set_io SRAM_A8  M6 # IO22A
+set_io SRAM_A9  P6 # IO67
+set_io SRAM_A10 T8 # IO76
+set_io SRAM_A11 T1 # IO53
+set_io SRAM_A12 P2 # IO25A
+set_io SRAM_A13 R1 # IO26A
+set_io SRAM_A14 N3 # IO23B
+set_io SRAM_A15 P1 # IO24A
+
+set_io SRAM_D0  T2 # IO57
+set_io SRAM_D1  R3 # IO59
+set_io SRAM_D2  T3 # IO61
+set_io SRAM_D3  R4 # IO63
+set_io SRAM_D4  R5 # IO60
+set_io SRAM_D5  T5 # IO69
+set_io SRAM_D6  R6 # IO71
+set_io SRAM_D7  T6 # IO73
+set_io SRAM_D8  N4 # IO26B
+set_io SRAM_D9  M4 # IO24B
+set_io SRAM_D10 L6 # IO19A
+set_io SRAM_D11 M3 # IO22B
+set_io SRAM_D12 L4 # IO17A
+set_io SRAM_D13 L3 # IO19B
+set_io SRAM_D14 K4 # IO18A
+set_io SRAM_D15 K3 # IO16B
+set_io SRAM_CE  M7 # IO64
+set_io SRAM_WE  T7 # IO75
+set_io SRAM_OE  L5 # IO23A
+set_io SRAM_LB  J4 # IO12A
+set_io SRAM_UB  J3 # IO14A
