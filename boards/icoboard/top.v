@@ -5,6 +5,7 @@
 `include "./spi/spi_wb8.v"
 `include "./timer/timer_wb8.v"
 `include "./rom/rom_wb8.v"
+`include "./ram/sram64kx16_wb8.v"
 
 module top(
         input clk_100mhz,
@@ -178,6 +179,34 @@ module top(
         .O_interrupt(timer_interrupt)
     );
 
+    reg sram_stb;
+    wire[7:0] sram_dat;
+    wire sram_ack;
+    wire[15:0] sram_chip_dat;
+    assign {SRAM_D0, SRAM_D1, SRAM_D2, SRAM_D3, SRAM_D4, SRAM_D5, SRAM_D6, SRAM_D7, SRAM_D8, SRAM_D9, SRAM_D10, SRAM_D11, SRAM_D12, SRAM_D13, SRAM_D14, SRAM_D15} = sram_chip_dat;
+    wire[15:0] sram_chip_adr;
+    assign {SRAM_A0, SRAM_A1, SRAM_A2, SRAM_A3, SRAM_A4, SRAM_A5, SRAM_A6, SRAM_A7, SRAM_A8, SRAM_A9, SRAM_A10, SRAM_A11, SRAM_A12, SRAM_A13, SRAM_A14, SRAM_A15} = sram_chip_adr;
+
+    sram64kx16_wb8 sram_inst(
+        // wiring to wishbone bus
+        .CLK_I(clk),
+        .ADR_I(cpu_adr[16:0]),
+        .DAT_I(cpu_dat),
+        .STB_I(sram_stb),
+        .WE_I(cpu_we),
+        .DAT_O(sram_dat),
+        .ACK_O(sram_ack),
+        // wiring to SRAM chip
+        .IO_data(sram_chip_dat),
+		.O_address(sram_chip_adr),
+        .O_ce(SRAM_CE),
+        .O_oe(SRAM_OE),
+        .O_we(SRAM_WE),
+        .O_ub(SRAM_UB),
+        .O_lb(SRAM_LB)
+    );
+    
+
     // The iCE40 BRAMs always return zero for a while after device program and reset:
     // https://github.com/cliffordwolf/icestorm/issues/76
     // Assert reset for while until things should have settled.
@@ -202,8 +231,9 @@ module top(
         spi0_stb = 0;
         timer_stb = 0;
         rom_stb = 0;
+        sram_stb = 0;
 
-        case(cpu_adr[31:11])
+        casez(cpu_adr[31:11])
 
             {20'hFFFFF, 1'b0}: begin // 0xFFFFF000 - 0xFFFFF7FF: boot ROM
                     arbiter_dat_o = rom_dat;
@@ -245,6 +275,12 @@ module top(
                         leds_stb = cpu_stb;                      
                     end
                 endcase
+            end
+
+            {1'b1, 20'b?}: begin
+                    arbiter_dat_o = sram_dat;
+                    arbiter_ack_o = sram_ack;
+                    sram_stb = cpu_stb;
             end
 
             default: begin
