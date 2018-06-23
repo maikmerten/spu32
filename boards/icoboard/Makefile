@@ -48,7 +48,7 @@ reset_boot:
 	$(SSH_RASPI) 'icoprog -b'
 
 clean:
-	rm top.blif top.asc top.bin
+	-rm top.blif top.asc top.bin
 
 .PHONY: prog_sram prog_flash reset_halt reset_boot clean
 
