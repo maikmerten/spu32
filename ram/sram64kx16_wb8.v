@@ -24,7 +24,7 @@ module sram64kx16_wb8
 	// tristate data line to SRAM
 	assign IO_data = write ? {DAT_I, DAT_I} : 16'bz;
 	// select requested 8 bits from 16 bit data line
-	assign DAT_O = upper_byte ? IO_data[15:8] : IO_data[7:0];
+	assign DAT_O = lower_byte ? IO_data[15:8] : IO_data[7:0];
 
 	assign O_address = ADR_I[16:1];
 
