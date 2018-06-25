@@ -19,23 +19,22 @@ module sram64kx16_wb8
 	reg[7:0] dat_buf;
 	
 	wire write = STB_I & WE_I;
-	wire read = STB_I & !WE_I;
-	wire upper_byte = adr_buf[0];//ADR_I[0];
+	wire read = STB_I & !WE_I; // TODO: removing this line alters timing and leads to read/write fails...
+	wire upper_byte = adr_buf[0];
 	wire lower_byte = !upper_byte;
 
 	// tristate data line to SRAM
 	assign IO_data = write ? {dat_buf, dat_buf} : 16'bz;
-	// select requested 8 bits from 16 bit data line
-	//assign DAT_O = lower_byte ? IO_data[15:8] : IO_data[7:0];
 
-	assign O_address = adr_buf[16:1]; //ADR_I[16:1];
+	// emit buffered address
+	assign O_address = adr_buf[16:1];
 
 	// control signals are active low, thus negated
-	assign O_ce = 0; //!(write | read);
-	assign O_oe = !read;
-	assign O_we = !write;
-	assign O_lb = !lower_byte;
-	assign O_ub = !upper_byte;
+	assign O_ce = 0;
+	assign O_oe = 0;
+	assign O_we = !(write & CLK_I);
+	assign O_lb = !(lower_byte & CLK_I);
+	assign O_ub = !(upper_byte & CLK_I);
 
 	always @(posedge CLK_I) begin
 		if(STB_I) begin
