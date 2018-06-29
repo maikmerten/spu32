@@ -50,7 +50,20 @@ module top(
 	);
 
     reg clk;
-    assign clk = clk_pll;
+
+    //`define SLOWCLK 1
+    `ifdef SLOWCLK
+        reg[2:0] clockdiv = 0;
+        always @(posedge clk_pll) begin
+            clockdiv <= clockdiv + 1;
+        end
+        assign clk = clockdiv[2];
+
+        localparam CLOCKFREQ = 3125000;
+    `else
+        localparam CLOCKFREQ = 25000000;
+        assign clk = clk_pll;
+    `endif
 
 
     reg reset = 1;
@@ -128,7 +141,9 @@ module top(
     wire uart_tx, uart_ack;
     wire[7:0] uart_dat;
 
-    uart_wb8 uart_inst(
+    uart_wb8 #(
+        .CLOCKFREQ(CLOCKFREQ)
+    ) uart_inst(
         .CLK_I(clk),
         .ADR_I(cpu_adr[1:0]),
         .DAT_I(cpu_dat),
@@ -168,7 +183,9 @@ module top(
     wire timer_ack;
     wire timer_interrupt;
 
-    timer_wb8 timer_inst(
+    timer_wb8 #(
+        .CLOCKFREQ(CLOCKFREQ)
+    )timer_inst(
         .CLK_I(clk),
         .ADR_I(cpu_adr[2:0]),
         .DAT_I(cpu_dat),
