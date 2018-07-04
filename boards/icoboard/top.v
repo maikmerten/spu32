@@ -199,8 +199,11 @@ module top(
     reg sram_stb;
     wire[7:0] sram_dat;
     wire sram_ack;
-    wire[15:0] sram_chip_dat;
-    assign {SRAM_D0, SRAM_D1, SRAM_D2, SRAM_D3, SRAM_D4, SRAM_D5, SRAM_D6, SRAM_D7, SRAM_D8, SRAM_D9, SRAM_D10, SRAM_D11, SRAM_D12, SRAM_D13, SRAM_D14, SRAM_D15} = sram_chip_dat;
+    wire[15:0] sram_dat_to_chip;
+    wire[15:0] sram_dat_from_chip;
+    wire sram_output_enable;
+    //wire[15:0] sram_chip_dat;
+    //assign {SRAM_D0, SRAM_D1, SRAM_D2, SRAM_D3, SRAM_D4, SRAM_D5, SRAM_D6, SRAM_D7, SRAM_D8, SRAM_D9, SRAM_D10, SRAM_D11, SRAM_D12, SRAM_D13, SRAM_D14, SRAM_D15} = sram_chip_dat;
     wire[15:0] sram_chip_adr;
     assign {SRAM_A0, SRAM_A1, SRAM_A2, SRAM_A3, SRAM_A4, SRAM_A5, SRAM_A6, SRAM_A7, SRAM_A8, SRAM_A9, SRAM_A10, SRAM_A11, SRAM_A12, SRAM_A13, SRAM_A14, SRAM_A15} = sram_chip_adr;
 
@@ -214,15 +217,114 @@ module top(
         .DAT_O(sram_dat),
         .ACK_O(sram_ack),
         // wiring to SRAM chip
-        .IO_data(sram_chip_dat),
+        .O_data(sram_dat_to_chip),
+        .I_data(sram_dat_from_chip),
 		.O_address(sram_chip_adr),
         .O_ce(SRAM_CE),
         .O_oe(SRAM_OE),
         .O_we(SRAM_WE),
         .O_ub(SRAM_UB),
-        .O_lb(SRAM_LB)
+        .O_lb(SRAM_LB),
+        // output enable
+        .O_output_enable(sram_output_enable)
     );
     
+    SB_IO #(.PIN_TYPE(6'b 1010_01), .PULLUP(1'b 0)) io_block_instance0 (
+        .PACKAGE_PIN(SRAM_D0),
+        .OUTPUT_ENABLE(sram_output_enable),
+        .D_OUT_0(sram_dat_to_chip[0]),
+        .D_IN_0(sram_dat_from_chip[0])
+    );
+    SB_IO #(.PIN_TYPE(6'b 1010_01), .PULLUP(1'b 0)) io_block_instance1 (
+        .PACKAGE_PIN(SRAM_D1),
+        .OUTPUT_ENABLE(sram_output_enable),
+        .D_OUT_0(sram_dat_to_chip[1]),
+        .D_IN_0(sram_dat_from_chip[1])
+    );
+    SB_IO #(.PIN_TYPE(6'b 1010_01), .PULLUP(1'b 0)) io_block_instance2 (
+        .PACKAGE_PIN(SRAM_D2),
+        .OUTPUT_ENABLE(sram_output_enable),
+        .D_OUT_0(sram_dat_to_chip[2]),
+        .D_IN_0(sram_dat_from_chip[2])
+    );
+    SB_IO #(.PIN_TYPE(6'b 1010_01), .PULLUP(1'b 0)) io_block_instance3 (
+        .PACKAGE_PIN(SRAM_D3),
+        .OUTPUT_ENABLE(sram_output_enable),
+        .D_OUT_0(sram_dat_to_chip[3]),
+        .D_IN_0(sram_dat_from_chip[3])
+    );
+    SB_IO #(.PIN_TYPE(6'b 1010_01), .PULLUP(1'b 0)) io_block_instance4 (
+        .PACKAGE_PIN(SRAM_D4),
+        .OUTPUT_ENABLE(sram_output_enable),
+        .D_OUT_0(sram_dat_to_chip[4]),
+        .D_IN_0(sram_dat_from_chip[4])
+    );
+    SB_IO #(.PIN_TYPE(6'b 1010_01), .PULLUP(1'b 0)) io_block_instance5 (
+        .PACKAGE_PIN(SRAM_D5),
+        .OUTPUT_ENABLE(sram_output_enable),
+        .D_OUT_0(sram_dat_to_chip[5]),
+        .D_IN_0(sram_dat_from_chip[5])
+    );
+    SB_IO #(.PIN_TYPE(6'b 1010_01), .PULLUP(1'b 0)) io_block_instance6 (
+        .PACKAGE_PIN(SRAM_D6),
+        .OUTPUT_ENABLE(sram_output_enable),
+        .D_OUT_0(sram_dat_to_chip[6]),
+        .D_IN_0(sram_dat_from_chip[6])
+    );
+    SB_IO #(.PIN_TYPE(6'b 1010_01), .PULLUP(1'b 0)) io_block_instance7 (
+        .PACKAGE_PIN(SRAM_D7),
+        .OUTPUT_ENABLE(sram_output_enable),
+        .D_OUT_0(sram_dat_to_chip[7]),
+        .D_IN_0(sram_dat_from_chip[7])
+    );
+    SB_IO #(.PIN_TYPE(6'b 1010_01), .PULLUP(1'b 0)) io_block_instance8 (
+        .PACKAGE_PIN(SRAM_D8),
+        .OUTPUT_ENABLE(sram_output_enable),
+        .D_OUT_0(sram_dat_to_chip[8]),
+        .D_IN_0(sram_dat_from_chip[8])
+    );
+    SB_IO #(.PIN_TYPE(6'b 1010_01), .PULLUP(1'b 0)) io_block_instance9 (
+        .PACKAGE_PIN(SRAM_D9),
+        .OUTPUT_ENABLE(sram_output_enable),
+        .D_OUT_0(sram_dat_to_chip[9]),
+        .D_IN_0(sram_dat_from_chip[9])
+    );
+    SB_IO #(.PIN_TYPE(6'b 1010_01), .PULLUP(1'b 0)) io_block_instance10 (
+        .PACKAGE_PIN(SRAM_D10),
+        .OUTPUT_ENABLE(sram_output_enable),
+        .D_OUT_0(sram_dat_to_chip[10]),
+        .D_IN_0(sram_dat_from_chip[10])
+    );
+    SB_IO #(.PIN_TYPE(6'b 1010_01), .PULLUP(1'b 0)) io_block_instance11 (
+        .PACKAGE_PIN(SRAM_D11),
+        .OUTPUT_ENABLE(sram_output_enable),
+        .D_OUT_0(sram_dat_to_chip[11]),
+        .D_IN_0(sram_dat_from_chip[11])
+    );
+    SB_IO #(.PIN_TYPE(6'b 1010_01), .PULLUP(1'b 0)) io_block_instance12 (
+        .PACKAGE_PIN(SRAM_D12),
+        .OUTPUT_ENABLE(sram_output_enable),
+        .D_OUT_0(sram_dat_to_chip[12]),
+        .D_IN_0(sram_dat_from_chip[12])
+    );
+    SB_IO #(.PIN_TYPE(6'b 1010_01), .PULLUP(1'b 0)) io_block_instance13 (
+        .PACKAGE_PIN(SRAM_D13),
+        .OUTPUT_ENABLE(sram_output_enable),
+        .D_OUT_0(sram_dat_to_chip[13]),
+        .D_IN_0(sram_dat_from_chip[13])
+    );
+    SB_IO #(.PIN_TYPE(6'b 1010_01), .PULLUP(1'b 0)) io_block_instance14 (
+        .PACKAGE_PIN(SRAM_D14),
+        .OUTPUT_ENABLE(sram_output_enable),
+        .D_OUT_0(sram_dat_to_chip[14]),
+        .D_IN_0(sram_dat_from_chip[14])
+    );
+    SB_IO #(.PIN_TYPE(6'b 1010_01), .PULLUP(1'b 0)) io_block_instance15 (
+        .PACKAGE_PIN(SRAM_D15),
+        .OUTPUT_ENABLE(sram_output_enable),
+        .D_OUT_0(sram_dat_to_chip[15]),
+        .D_IN_0(sram_dat_from_chip[15])
+    );
 
     // The iCE40 BRAMs always return zero for a while after device program and reset:
     // https://github.com/cliffordwolf/icestorm/issues/76
