@@ -24,7 +24,9 @@ module top(
         // SRAM
         output SRAM_A0, SRAM_A1, SRAM_A2, SRAM_A3, SRAM_A4, SRAM_A5, SRAM_A6, SRAM_A7, SRAM_A8, SRAM_A9, SRAM_A10, SRAM_A11, SRAM_A12, SRAM_A13, SRAM_A14, SRAM_A15,
         output SRAM_CE, SRAM_WE, SRAM_OE, SRAM_UB, SRAM_LB,
-        inout SRAM_D0, SRAM_D1, SRAM_D2, SRAM_D3, SRAM_D4, SRAM_D5, SRAM_D6, SRAM_D7, SRAM_D8, SRAM_D9, SRAM_D10, SRAM_D11, SRAM_D12, SRAM_D13, SRAM_D14, SRAM_D15
+        inout SRAM_D0, SRAM_D1, SRAM_D2, SRAM_D3, SRAM_D4, SRAM_D5, SRAM_D6, SRAM_D7, SRAM_D8, SRAM_D9, SRAM_D10, SRAM_D11, SRAM_D12, SRAM_D13, SRAM_D14, SRAM_D15,
+        // some debug signals on pmod port 3
+        output debug0, debug1, debug2, debug3, debug4, debug5, debug6, debug7
     );
 
     wire clk_pll, pll_locked;
@@ -51,7 +53,7 @@ module top(
 
     reg clk;
 
-    //`define SLOWCLK 1
+    `define SLOWCLK 1
     `ifdef SLOWCLK
         reg[2:0] clockdiv = 0;
         always @(posedge clk_pll) begin
@@ -340,6 +342,16 @@ module top(
         resetcnt <= 1;
       end
     end
+
+    // assign debug output
+    assign debug0 = clk;
+    assign debug1 = cpu_we;
+    assign debug2 = SRAM_WE;
+    assign debug3 = sram_output_enable;
+    assign debug4 = SRAM_UB;
+    assign debug5 = SRAM_LB;
+    assign debug6 = sram_stb;
+
 
 
     // bus arbiter

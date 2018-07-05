@@ -23,8 +23,9 @@ module sram64kx16_wb8
 	reg[7:0] dat_buf;
 	
 	wire write = STB_I & WE_I;
+	wire read = STB_I & !WE_I;
 	wire upper_byte = adr_buf[0];
-	wire lower_byte = !upper_byte;
+	wire lower_byte = !adr_buf[0];
 
 	// tristate data line to SRAM
 	assign O_output_enable = (write & CLK_I);
@@ -37,8 +38,9 @@ module sram64kx16_wb8
 	assign O_ce = 0;
 	assign O_oe = 0;
 	assign O_we = !(write & CLK_I);
-	assign O_lb = !(lower_byte & CLK_I);
-	assign O_ub = !(upper_byte & CLK_I);
+
+	assign O_lb = !((lower_byte & CLK_I & STB_I) | read);
+	assign O_ub = !((upper_byte & CLK_I & STB_I) | read);
 
 	always @(posedge CLK_I) begin
 		if(STB_I) begin

@@ -20,6 +20,15 @@ set_io --warn-no-port spi0_cs R14
 set_io --warn-no-port button0 K11
 set_io --warn-no-port button1 P13
 
+# some debug signals on pmod3 to attach logic analyzer
+set_io --warn-no-port debug0  L9
+set_io --warn-no-port debug1  G5
+set_io --warn-no-port debug2  L7
+set_io --warn-no-port debug3  N6
+set_io --warn-no-port debug4  N9
+set_io --warn-no-port debug5  P9
+set_io --warn-no-port debug6  M8
+set_io --warn-no-port debug7  N7
 
 set_io --warn-no-port pmod1_1  D8
 set_io --warn-no-port pmod1_2  B9
