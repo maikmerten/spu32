@@ -22,12 +22,12 @@ module top(
     );
 
     wire clk_pll, pll_locked;
-    // generate 24 MHz clock
+    // generate 42 MHz clock
     SB_PLL40_CORE #(							
         .FEEDBACK_PATH("SIMPLE"),				
         .DIVR(4'b0000),         // DIVR =  0			
-        .DIVF(7'b0111111),      // DIVF = 63			
-        .DIVQ(3'b101),          // DIVQ =  5			
+        .DIVF(7'b0110111),      // DIVF = 55			
+        .DIVQ(3'b100),          // DIVQ =  4
         .FILTER_RANGE(3'b001)   // FILTER_RANGE = 1		
     ) mypll (								
         .LOCK(pll_locked),					
@@ -47,9 +47,9 @@ module top(
         end
         assign clk = clockdiv[2];
 
-        localparam CLOCKFREQ = 3000000;
+        localparam CLOCKFREQ = 5250000;
     `else
-        localparam CLOCKFREQ = 24000000;
+        localparam CLOCKFREQ = 42000000;
         assign clk = clk_pll;
     `endif
 

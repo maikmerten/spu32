@@ -16,10 +16,10 @@ top.blif: top.v
 	cd ../.. && yosys -p 'synth_ice40 -blif ./boards/hx8k-breakout/top.blif' ./boards/hx8k-breakout/top.v
 
 top.asc: top.blif hx8k-breakout.pcf
-	arachne-pnr -d 8k -p hx8k-breakout.pcf -o top.asc top.blif
+	arachne-pnr -r -d 8k -p hx8k-breakout.pcf -o top.asc top.blif
 
 top.bin: top.asc
-	icetime -d hx8k -c 25 top.asc
+	icetime -d hx8k -c 42 top.asc
 	icepack top.asc top.bin
 
 prog_sram: top.bin
