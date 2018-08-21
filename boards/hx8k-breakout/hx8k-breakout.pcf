@@ -13,7 +13,6 @@ set_io --warn-no-port spi0_mosi B1
 set_io --warn-no-port spi0_cs B2
 
 
-
 set_io led0 B5
 set_io led1 B4
 set_io led2 A2
@@ -25,3 +24,39 @@ set_io led7 C3
 
 set_io debug1 A10
 set_io debug2 A11
+
+# IO on extension board
+
+set_io sram_ce M2
+set_io sram_oe T16
+set_io sram_we K1
+set_io sram_a0 R1
+set_io sram_a1 P1
+set_io sram_a2 P2
+set_io sram_a3 N3
+set_io sram_a4 N2
+set_io sram_a5 J2
+set_io sram_a6 J1
+set_io sram_a7 H2
+set_io sram_a8 G2
+set_io sram_a9 H1
+set_io sram_a10 P8
+set_io sram_a11 R10
+set_io sram_a12 T10
+set_io sram_a13 P10
+set_io sram_a14 T11
+set_io sram_a15 T13
+set_io sram_a16 T14
+set_io sram_a17 N12
+set_io sram_a18 P13
+set_io sram_d0 M1
+set_io sram_d1 L3
+set_io sram_d2 L1
+set_io sram_d3 K3
+set_io sram_d4 M11
+set_io sram_d5 N10
+set_io sram_d6 R16
+set_io sram_d7 T15
+
+set_io eled_1 T9
+set_io eled_2 P9
