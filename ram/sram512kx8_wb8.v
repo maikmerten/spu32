@@ -9,9 +9,6 @@ module sram512kx8_wb8
 		output reg [7:0] DAT_O,
 		output reg ACK_O,
 
-		// secondary clock (delayed),
-		input I_clk_delayed,
-
 		// SRAM signals
 		input[7:0] I_data,
 		output[7:0] O_data,
@@ -23,7 +20,10 @@ module sram512kx8_wb8
 	);
 
 	
-	wire write = (STB_I & WE_I & CLK_I);
+	wire write = (stb_buf & we_buf & CLK_I);
+
+	reg we_buf = 0;
+	reg stb_buf = 0;
 
 	// control signals are active low, thus negated
 	assign O_ce = 0;
@@ -32,6 +32,8 @@ module sram512kx8_wb8
 	always @(posedge CLK_I) begin
 		O_oe <= 1; // active low
 		O_output_enable <= 0;
+		we_buf <= WE_I;
+		stb_buf <= STB_I;
 
 		if(STB_I) begin
 			O_address <= ADR_I;

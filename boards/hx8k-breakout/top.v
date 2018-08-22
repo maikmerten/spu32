@@ -220,8 +220,6 @@ module top(
         .WE_I(cpu_we),
         .DAT_O(sram_dat),
         .ACK_O(sram_ack),
-        // delayed clock
-        .I_clk_delayed(clk_delayed),
         // wiring to SRAM chip
         .O_data(sram_dat_to_chip),
         .I_data(sram_dat_from_chip),
