@@ -29,40 +29,50 @@ module top(
 
     );
 
+    // define
+    localparam CLOCKFREQ = 5250000;
+
     wire clk_pll, pll_locked;
-    // generate 42 MHz clock
+    // Instantiate a normal PLL, 15.938 MHz
+    wire clk_pll, pll_locked;
     SB_PLL40_CORE #(							
         .FEEDBACK_PATH("SIMPLE"),				
-        .DIVR(4'b0000),         // DIVR =  0			
-        .DIVF(7'b0110111),      // DIVF = 55			
-        .DIVQ(3'b100),          // DIVQ =  4
-        .FILTER_RANGE(3'b001)   // FILTER_RANGE = 1		
+        .DIVR(4'b0000),
+        .DIVF(7'b1010100),
+        .DIVQ(3'b110),
+        .FILTER_RANGE(3'b001)
     ) mypll (								
         .LOCK(pll_locked),					
         .RESETB(1'b1),						
         .BYPASS(1'b0),						
         .REFERENCECLK(clk_12mhz),				
-        .PLLOUTCORE(clk_pll)				
+        .PLLOUTGLOBAL(clk)				
     );
 
-    reg clk;
+    localparam CLOCKFREQ = 15938000;
 
-    `define SLOWCLK 1
-    `ifdef SLOWCLK
-        reg[2:0] clockdiv = 0;
-        always @(posedge clk_pll) begin
-            clockdiv <= clockdiv + 1;
-        end
-        assign clk = clockdiv[2];
+    wire pll_locked2, clk_delayed;
+    // Instantiate a PLL with delayed output, 15.938 MHz
+    SB_PLL40_CORE #(							
+        .FEEDBACK_PATH("SIMPLE"),				
+        .DELAY_ADJUSTMENT_MODE_FEEDBACK("FIXED"),
+        .FDA_FEEDBACK(0),
+        .DELAY_ADJUSTMENT_MODE_RELATIVE("FIXED"),
+        .FDA_RELATIVE(15),
+        .DIVR(4'b0000),
+        .DIVF(7'b1010100),
+        .DIVQ(3'b110),
+        .FILTER_RANGE(3'b001)
+    ) mypll2 (								
+        .LOCK(pll_locked2),					
+        .RESETB(1'b1),						
+        .BYPASS(1'b0),						
+        .REFERENCECLK(clk_12mhz),				
+        .PLLOUTGLOBAL(clk_delay)				
+    );
 
-        localparam CLOCKFREQ = 5250000;
-    `else
-        localparam CLOCKFREQ = 42000000;
-        assign clk = clk_pll;
-    `endif
-
-    assign debug1 = clk_pll;
-    assign debug2 = clk;
+    assign debug1 = clk;
+    assign debug2 = clk_delay;
 
     reg reset = 1;
     reg[7:0] resetcnt = 1;
@@ -210,6 +220,8 @@ module top(
         .WE_I(cpu_we),
         .DAT_O(sram_dat),
         .ACK_O(sram_ack),
+        // delayed clock
+        .I_clk_delayed(clk_delayed),
         // wiring to SRAM chip
         .O_data(sram_dat_to_chip),
         .I_data(sram_dat_from_chip),

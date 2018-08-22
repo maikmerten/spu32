@@ -22,7 +22,7 @@ set_io led5 C4
 set_io led6 B3
 set_io led7 C3
 
-set_io debug1 A10
+set_io debug1 C9
 set_io debug2 A11
 
 # IO on extension board
