@@ -197,7 +197,7 @@ module top(
     sram512kx8_wb8 sram_inst(
         // wiring to wishbone bus
         .CLK_I(clk),
-        .ADR_I(cpu_adr[16:0]),
+        .ADR_I(cpu_adr[18:0]),
         .DAT_I(cpu_dat),
         .STB_I(sram_stb),
         .WE_I(cpu_we),
