@@ -1,5 +1,4 @@
 `include "./cpu/cpu.v"
-`include "./ram/ram4k_wb8.v"
 `include "./leds/leds_wb8.v"
 `include "./uart/uart_wb8.v"
 `include "./spi/spi_wb8.v"
@@ -97,22 +96,6 @@ module top(
 	    .CYC_O(cpu_cyc),
 	    .STB_O(cpu_stb),
 	    .WE_O(cpu_we)
-    );
-
-    wire ram_ack;
-    reg ram_stb;
-    wire[7:0] ram_dat;
-
-    ram4k_wb8 #(
-        .RAMINITFILE("./software/asm/timer-test.dat")
-    ) ram_inst (
-	    .CLK_I(clk),
-	    .STB_I(ram_stb),
-	    .WE_I(cpu_we),
-	    .ADR_I(cpu_adr[11:0]),
-	    .DAT_I(cpu_dat),
-	    .DAT_O(ram_dat),
-	    .ACK_O(ram_ack)
     );
 
     wire rom_ack;
@@ -298,7 +281,6 @@ module top(
 
     // bus arbiter
     always @(*) begin
-        ram_stb = 0;
         leds_stb = 0;
         uart_stb = 0;
         spi0_stb = 0;
@@ -350,17 +332,12 @@ module top(
                 endcase
             end
 
-            {1'b1, 20'b?}: begin
+            default: begin
                     arbiter_dat_o = sram_dat;
                     arbiter_ack_o = sram_ack;
                     sram_stb = cpu_stb;
             end
 
-            default: begin
-                arbiter_dat_o = ram_dat;
-                arbiter_ack_o = ram_ack;
-                ram_stb = cpu_stb;
-            end
         endcase
 
     end
