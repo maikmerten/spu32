@@ -130,7 +130,7 @@ load_from_spi_send_address_and_dummy:
 
     # read bytes from SPI flash and write to memory, starting at address 0x0
     mv t0, zero
-    li t1, 1024
+    li t1, (128 * 1024) # amount of bytes to be copied
 load_from_spi_copyloop:
     jal transmit_spi
     sb a0, 0(t0)
