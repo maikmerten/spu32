@@ -15,6 +15,9 @@ public class SPIFlasher {
     private final byte CMD_PAGE_PROGRAM = (byte) 0x02;
     private final byte CMD_READ_STATUS = (byte) 0x05;
     private final byte CMD_WRITE_ENABLE = (byte) 0x06;
+    
+    private final int CHUNKSHIFT = 5;
+    private final int CHUNKSIZE = 32;
 
     private final BootloaderProtocol bp;
     
@@ -49,11 +52,11 @@ public class SPIFlasher {
     }
     
     public void programChunk(int chunknum, byte[] data) throws Exception {
-        if(data.length != 64) {
-            throw new IllegalArgumentException("chunk programming requires 64 bytes of data");
+        if(data.length != CHUNKSIZE) {
+            throw new IllegalArgumentException("chunk programming requires " + CHUNKSIZE + " bytes of data");
         }
         byte[] op = {CMD_PAGE_PROGRAM};
-        byte[] addr = addr24(chunknum << 6);
+        byte[] addr = addr24(chunknum << CHUNKSHIFT);
         
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         baos.write(op);
@@ -64,16 +67,16 @@ public class SPIFlasher {
     }
     
     public byte[] readChunk(int chunknum) throws Exception {
-        byte[] result = new byte[64];
+        byte[] result = new byte[CHUNKSIZE];
         
         byte[] op = {CMD_FASTREAD};
-        byte[] addr = addr24(chunknum << 6);
+        byte[] addr = addr24(chunknum << CHUNKSHIFT);
         
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         baos.write(op);
         baos.write(addr);
         baos.write(op); // dummy byte
-        baos.write(result); // 64 dummy bytes
+        baos.write(result); // dummy bytes
         
         byte[] received = bp.writeToSPI(baos.toByteArray());
         
@@ -101,7 +104,7 @@ public class SPIFlasher {
         }
         System.out.println();
         
-        byte[] buf = new byte[64];
+        byte[] buf = new byte[CHUNKSIZE];
         clearBuffer(buf);
         int chunk = 0;
         int read = fis.read(buf);
