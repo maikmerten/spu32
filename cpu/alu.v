@@ -22,21 +22,21 @@ module alu(
 	assign O_data = result;
 	
 	always @(*) begin
-		sum <= I_dataS1 + I_dataS2;
-		sub <= {1'b0, I_dataS1} - {1'b0, I_dataS2};
+		sum = I_dataS1 + I_dataS2;
+		sub = {1'b0, I_dataS1} - {1'b0, I_dataS2};
 		
-		myor <= I_dataS1 | I_dataS2;
-		myxor <= I_dataS1 ^ I_dataS2;
-		myand <= I_dataS1 & I_dataS2;
+		myor = I_dataS1 | I_dataS2;
+		myxor = I_dataS1 ^ I_dataS2;
+		myand = I_dataS1 & I_dataS2;
 	end
 	
 	always @(*) begin
 		// unsigned comparison: simply look at underflow bit
-		ltu <= (sub[32] === 1'b1);
+		ltu = (sub[32] === 1'b1);
 		// signed comparison: xor underflow bit with xored sign bit
-		lt <= ((sub[32] ^ myxor[31]) === 1'b1);
+		lt = ((sub[32] ^ myxor[31]) === 1'b1);
 		
-		eq <= (sub === 33'b0);
+		eq = (sub === 33'b0);
 	end
 	
 	always @(posedge I_clk) begin
@@ -44,7 +44,7 @@ module alu(
 			busy <= 0;
 		end else if(I_en) begin
 			case(I_aluop)
-				`ALUOP_ADD: result <= sum;
+				default: result <= sum; // ALUOP_ADD
 				`ALUOP_SUB: result <= sub[31:0];		
 				`ALUOP_AND: result <= myand;
 				`ALUOP_OR:  result <= myor;
