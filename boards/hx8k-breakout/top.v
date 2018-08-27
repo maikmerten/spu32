@@ -28,50 +28,42 @@ module top(
 
     );
 
-    // define
-    localparam CLOCKFREQ = 5250000;
-
     wire clk_pll, pll_locked;
-    // Instantiate a normal PLL, 15.938 MHz
-    wire clk_pll, pll_locked;
-    SB_PLL40_CORE #(							
-        .FEEDBACK_PATH("SIMPLE"),				
-        .DIVR(4'b0000),
-        .DIVF(7'b1010100),
-        .DIVQ(3'b110),
-        .FILTER_RANGE(3'b001)
-    ) mypll (								
-        .LOCK(pll_locked),					
-        .RESETB(1'b1),						
-        .BYPASS(1'b0),						
-        .REFERENCECLK(clk_12mhz),				
-        .PLLOUTGLOBAL(clk)				
-    );
+    `ifdef SLOWCLK
+        // Instantiate a normal PLL, 15.938 MHz
+        SB_PLL40_CORE #(							
+            .FEEDBACK_PATH("SIMPLE"),				
+            .DIVR(4'b0000),
+            .DIVF(7'b1010100),
+            .DIVQ(3'b110),
+            .FILTER_RANGE(3'b001)
+        ) mypll (								
+            .LOCK(pll_locked),					
+            .RESETB(1'b1),						
+            .BYPASS(1'b0),						
+            .REFERENCECLK(clk_12mhz),				
+            .PLLOUTGLOBAL(clk)				
+        );
+        localparam CLOCKFREQ = 15938000;
+    `else
+        // Instantiate a normal PLL, 25.125 MHz
+        SB_PLL40_CORE #(							
+            .FEEDBACK_PATH("SIMPLE"),				
+            .DIVR(4'b0000),
+            .DIVF(7'b1000010),
+            .DIVQ(3'b101),
+            .FILTER_RANGE(3'b001)
+        ) mypll (								
+            .LOCK(pll_locked),					
+            .RESETB(1'b1),						
+            .BYPASS(1'b0),						
+            .REFERENCECLK(clk_12mhz),				
+            .PLLOUTGLOBAL(clk)				
+        );
+        localparam CLOCKFREQ = 25125000;
+    `endif
 
-    localparam CLOCKFREQ = 15938000;
 
-    wire pll_locked2, clk_delayed;
-    // Instantiate a PLL with delayed output, 15.938 MHz
-    SB_PLL40_CORE #(							
-        .FEEDBACK_PATH("SIMPLE"),				
-        .DELAY_ADJUSTMENT_MODE_FEEDBACK("FIXED"),
-        .FDA_FEEDBACK(0),
-        .DELAY_ADJUSTMENT_MODE_RELATIVE("FIXED"),
-        .FDA_RELATIVE(15),
-        .DIVR(4'b0000),
-        .DIVF(7'b1010100),
-        .DIVQ(3'b110),
-        .FILTER_RANGE(3'b001)
-    ) mypll2 (								
-        .LOCK(pll_locked2),					
-        .RESETB(1'b1),						
-        .BYPASS(1'b0),						
-        .REFERENCECLK(clk_12mhz),				
-        .PLLOUTGLOBAL(clk_delay)				
-    );
-
-    assign debug1 = clk;
-    assign debug2 = clk_delay;
 
     reg reset = 1;
     reg[7:0] resetcnt = 1;
