@@ -54,6 +54,10 @@ module bus_wb8(
 		endcase
 	end
 
+	always @(*) begin
+		mysign = DAT_I[7] & signextend;
+	end
+
 
 	always @(posedge CLK_I) begin
 		WE_O <= 0;
@@ -72,7 +76,7 @@ module bus_wb8(
 				// output addresses and receive ACKs
 				if(addrcnt != byte_target) begin
 					STB_O <= 1;
-					ADR_O <= I_addr + addrcnt;
+					ADR_O <= I_addr + {{29{1'b0}},addrcnt};
 
 					// put data on bus for current address
 					case(addrcnt)
@@ -87,7 +91,6 @@ module bus_wb8(
 				end
 
 				if(ACK_I) begin
-					mysign = DAT_I[7] & signextend;
 					// yay, ACK received, read data and put into buffer
 					case (ackcnt)
 						0:			buffer <= {{24{mysign}}, DAT_I};	
