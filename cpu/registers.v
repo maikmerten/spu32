@@ -18,7 +18,7 @@ module registers(
 	assign write = I_we & (I_rd != 0);
 
 	initial begin
-		regfile[0] <= 0;
+		regfile[0] = 0;
 	end
 	
 	always @ (posedge I_clk) begin
