@@ -2,7 +2,6 @@
 `include "./cpu/bus_wb8.v"
 `include "./cpu/decoder.v"
 `include "./cpu/registers.v"
-`include "./cpu/muxers.v"
 
 
 module cpu
@@ -42,7 +41,8 @@ module cpu
     // ALU instance
     reg alu_en = 0;
     reg[3:0] alu_op = 0;
-    wire[31:0] alu_dataS1, alu_dataS2, alu_dataout;
+    wire[31:0] alu_dataout;
+    reg[31:0] alu_dataS1, alu_dataS2;
     wire alu_busy, alu_lt, alu_ltu, alu_eq;
 
     alu alu_inst(
@@ -61,11 +61,13 @@ module cpu
     
     reg bus_en = 0;
     reg[2:0] bus_op = 0;
-    wire[31:0] bus_dataout, bus_addr;
+    wire[31:0] bus_dataout;
+    reg[31:0] bus_addr;
     wire bus_busy;
 
     reg reg_we = 0, reg_re = 0;
-    wire[31:0] reg_val1, reg_val2, reg_datain;
+    wire[31:0] reg_val1, reg_val2;
+    reg[31:0] reg_datain;
 
     // Bus instance
     bus_wb8 bus_inst(
@@ -124,40 +126,40 @@ module cpu
     localparam MUX_ALUDAT1_REGVAL1 = 0;
     localparam MUX_ALUDAT1_PC      = 1;
     reg mux_alu_s1_sel = MUX_ALUDAT1_REGVAL1;
-    mux32x2 mux_alu_s1(
-        .port0(reg_val1),
-        .port1(pc),
-        .sel(mux_alu_s1_sel),
-        .out(alu_dataS1)
-    );
+    always @(*) begin
+        case(mux_alu_s1_sel)
+            MUX_ALUDAT1_REGVAL1: alu_dataS1 = reg_val1;
+            default:             alu_dataS1 = pc; // MUX_ALUDAT1_PC
+        endcase
+    end
 
     // Muxer for second operand of ALU
     localparam MUX_ALUDAT2_REGVAL2 = 0;
     localparam MUX_ALUDAT2_IMM     = 1;
     localparam MUX_ALUDAT2_INSTLEN = 2;
     reg[1:0] mux_alu_s2_sel = MUX_ALUDAT2_REGVAL2;
-    mux32x3 mux_alu_s2(
-        .port0(reg_val2),
-        .port1(dec_imm),
-        .port2(4),
-        .sel(mux_alu_s2_sel),
-        .out(alu_dataS2)
-    );
+    always @(*) begin
+        case(mux_alu_s2_sel)
+            MUX_ALUDAT2_REGVAL2: alu_dataS2 = reg_val2;
+            MUX_ALUDAT2_IMM:     alu_dataS2 = dec_imm;
+            default:             alu_dataS2 = 4; // MUX_ALUDAT2_INSTLEN
+        endcase
+    end
 
     // Muxer for bus address
     localparam MUX_BUSADDR_ALU = 0;
     localparam MUX_BUSADDR_PC  = 1;
     reg mux_bus_addr_sel = MUX_BUSADDR_ALU;
-    mux32x2 mux_bus_addr(
-        .port0(alu_dataout),
-        .port1(pc),
-        .sel(mux_bus_addr_sel),
-        .out(bus_addr)
-    );
+    always @(*) begin
+        case(mux_bus_addr_sel)
+            MUX_BUSADDR_ALU: bus_addr = alu_dataout;
+            default:         bus_addr = pc; // MUX_BUSADDR_PC
+        endcase
+    end
 
     // Muxer for MSRs
     wire[1:0] mux_msr_sel;
-    wire[31:0] msr_data;
+    reg[31:0] msr_data;
     assign mux_msr_sel = dec_imm[1:0];
     wire[31:0] mcause32;
     assign mcause32 = {mcause[4], {27{1'b0}}, mcause[3:0]};
@@ -168,14 +170,14 @@ module cpu
     localparam MSR_CAUSE   = 2'b01;
     localparam MSR_EPC     = 2'b10;
 
+    always @(*) begin
+        case(mux_msr_sel)
+            MSR_MSTATUS: msr_data = mstatus32;
+            MSR_CAUSE:   msr_data = mcause32;
+            default:     msr_data = epc; // MSR_EPC
+        endcase
+    end
 
-    mux32x3 mux_msr(
-        .port0(mstatus32),
-        .port1(mcause32),
-        .port2(epc),
-        .sel(mux_msr_sel),
-        .out(msr_data)
-    );
 
     // Muxer for register data input
     localparam MUX_REGINPUT_ALU = 0;
@@ -183,14 +185,14 @@ module cpu
     localparam MUX_REGINPUT_IMM = 2;
     localparam MUX_REGINPUT_MSR = 3;
     reg[1:0] mux_reg_input_sel = MUX_REGINPUT_ALU;
-    mux32x4 mux_reg_input(
-        .port0(alu_dataout),
-        .port1(bus_dataout),
-        .port2(dec_imm),
-        .port3(msr_data),
-        .sel(mux_reg_input_sel),
-        .out(reg_datain)
-    );
+    always @(*) begin
+        case(mux_reg_input_sel)
+            MUX_REGINPUT_ALU: reg_datain = alu_dataout;
+            MUX_REGINPUT_BUS: reg_datain = bus_dataout;
+            MUX_REGINPUT_IMM: reg_datain = dec_imm;
+            default:          reg_datain = msr_data; // MUX_REGINPUT_MSR
+        endcase
+    end
 
     localparam STATE_RESET          = 0;
     localparam STATE_FETCH          = 1;
