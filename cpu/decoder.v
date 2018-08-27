@@ -1,7 +1,9 @@
 `include "./cpu/riscvdefs.vh"
 
 module decoder(
+	/* verilator lint_off UNUSED */
 	input[31:0] I_instr,
+	/* verilator lint_on UNUSED */
 	output reg[4:0]	 O_rs1, O_rs2, O_rd,
 	output reg[31:0] O_imm,
 	output reg[4:0] O_opcode,
