@@ -338,7 +338,7 @@ module cpu
                     `FUNC_LH:   bus_op <= `BUSOP_READH;
                     `FUNC_LW:   bus_op <= `BUSOP_READW;
                     `FUNC_LBU:  bus_op <= `BUSOP_READBU;
-                    `FUNC_LHU:  bus_op <= `BUSOP_READHU;
+                    default:    bus_op <= `BUSOP_READHU; // FUNC_LHU
                 endcase
                 nextstate <= STATE_REGWRITEBUS;
             end
@@ -357,7 +357,7 @@ module cpu
                 case(dec_funct3)
                     `FUNC_SB:   bus_op <= `BUSOP_WRITEB;
                     `FUNC_SH:   bus_op <= `BUSOP_WRITEH;
-                    `FUNC_SW:   bus_op <= `BUSOP_WRITEW;
+                    default:    bus_op <= `BUSOP_WRITEW; // FUNC_SW
                 endcase
                 nextstate <= STATE_PCNEXT;
             end
@@ -392,7 +392,7 @@ module cpu
                     `FUNC_BLT:  if(alu_lt)   nextstate <= STATE_PCIMM;
                     `FUNC_BGE:  if(!alu_lt)  nextstate <= STATE_PCIMM;
                     `FUNC_BLTU: if(alu_ltu)  nextstate <= STATE_PCIMM;
-                    `FUNC_BGEU: if(!alu_ltu) nextstate <= STATE_PCIMM;
+                    default:    if(!alu_ltu) nextstate <= STATE_PCIMM; // FUNC_BGEU
                 endcase
             end
 

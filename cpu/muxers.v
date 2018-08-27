@@ -7,8 +7,8 @@ module mux32x2(
 
     always @(*) begin
       case(sel)
-        0:          out <= port0;
-        default:    out <= port1;
+        0:          out = port0;
+        default:    out = port1;
       endcase
     end
 
@@ -25,9 +25,9 @@ module mux32x3(
 
     always @(*) begin
       case(sel)
-        0:          out <= port0;
-        1:          out <= port1;
-        default:    out <= port2;
+        0:          out = port0;
+        1:          out = port1;
+        default:    out = port2;
       endcase
     end
 
@@ -45,10 +45,10 @@ module mux32x4(
 
     always @(*) begin
       case(sel)
-        0:          out <= port0;
-        1:          out <= port1;
-        2:          out <= port2;
-        default:    out <= port3;
+        0:          out = port0;
+        1:          out = port1;
+        2:          out = port2;
+        default:    out = port3;
       endcase
     end
 
