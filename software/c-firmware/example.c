@@ -1,5 +1,11 @@
 #include <libtinyc.h>
 
+void isr()__attribute((interrupt));
+void isr() {
+	printf("isr\r\n");
+}
+
+
 int main() {
 
 	char name[16];
@@ -13,6 +19,7 @@ int main() {
 		printf("Hi %s!\r\n", name);
 		printf("Your name has %d characters!\r\n", string_length(name));
 		printf("Your name sloppily parsed as int: %d\r\n", parse_int(name));
+		printf("Location of ISR is %d\r\n", isr);
 		printf("This is message %d\r\n\r\n", i);
 
 		i++;
@@ -20,3 +27,4 @@ int main() {
 
 	return 0;
 }
+
