@@ -76,7 +76,7 @@ public class SPU32Machine {
 			Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
 		}
 
-		ram = new RAM(12, raminit);
+		ram = new RAM(19, raminit);
 		leds = new LEDs();
 		uart = new UART(uartDev, 115200);
 		timer = new Timer();
