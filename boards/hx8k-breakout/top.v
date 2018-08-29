@@ -42,7 +42,7 @@ module top(
             .RESETB(1'b1),						
             .BYPASS(1'b0),						
             .REFERENCECLK(clk_12mhz),				
-            .PLLOUTGLOBAL(clk)				
+            .PLLOUTCORE(clk)				
         );
         localparam CLOCKFREQ = 15938000;
     `else
@@ -58,7 +58,7 @@ module top(
             .RESETB(1'b1),						
             .BYPASS(1'b0),						
             .REFERENCECLK(clk_12mhz),				
-            .PLLOUTGLOBAL(clk)				
+            .PLLOUTCORE(clk)				
         );
         localparam CLOCKFREQ = 25125000;
     `endif
