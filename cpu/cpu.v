@@ -28,6 +28,7 @@ module cpu
 
     // MSRS
     reg[31:0] instr, pc, epc;
+    reg[31:0] evect = VECTOR_EXCEPTION;
      // current and previous machine-mode external interrupt enable
     reg meie = 0, meie_prev = 0;
      // machine cause register, mcause[4] denotes interrupt, mcause[3:0] encodes exception code
@@ -169,12 +170,14 @@ module cpu
     localparam MSR_MSTATUS = 2'b00;
     localparam MSR_CAUSE   = 2'b01;
     localparam MSR_EPC     = 2'b10;
+    localparam MSR_EVECT   = 2'b11;
 
     always @(*) begin
         case(mux_msr_sel)
             MSR_MSTATUS: msr_data = mstatus32;
             MSR_CAUSE:   msr_data = mcause32;
-            default:     msr_data = epc; // MSR_EPC
+            MSR_EPC:     msr_data = epc;
+            default:     msr_data = evect;
         endcase
     end
 
@@ -248,6 +251,7 @@ module cpu
                 pc <= VECTOR_RESET;
                 meie <= 0; // disable machine-mode external interrupt
                 nextstate <= STATE_FETCH;
+                evect <= VECTOR_EXCEPTION;
             end
 
             STATE_FETCH: begin
@@ -444,7 +448,7 @@ module cpu
                 meie_prev <= meie;
                 meie <= 0;
                 epc <= pc;
-                pc <= VECTOR_EXCEPTION;
+                pc <= evect;
 
                 nextstate <= STATE_FETCH;
             end
@@ -466,7 +470,7 @@ module cpu
                             meie <= reg_val1[0];
                             meie_prev <= reg_val1[1];
                         end
-                        default: begin end
+                        MSR_EVECT: evect <= reg_val1;
                     endcase
                 end
                 nextstate <= STATE_PCNEXT;

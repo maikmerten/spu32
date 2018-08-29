@@ -83,3 +83,10 @@ This status-register contains the address of the instruction where the last inte
 **Please note**: In case of software interrupts/exceptions, this status-register will point to the instruction that caused the interrupt/exception. When directly issuing `mret`, execution will resume at exactly the same instruction, which means that yet another interrupt/exception will be raised immediately. To resume normal program flow, one needs to increment the value of `MSR_EPC` by `4` (i.e., by the length of one instruction) to resume execution a the next instruction. This can be detected by `MSR_CAUSE[31]`.
 
 External interrupts directly resume execution at the address stored in `MSR_EPC`, so no increment is needed prior to `mret`.
+
+#### MSR_EVECT
+
+* read-only address: `0xFC3`
+* read-write address: `0x7C3`
+
+This status-register specifies the memory address the CPU will jump to when an interrupt/exception occurs. By default initialized to `VECTOR_EXCEPTION`, but may be changed to any memory address where an interrupt service routine is located.

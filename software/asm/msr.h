@@ -12,4 +12,7 @@
 
     #define MSR_EPC_R 0xFC2
     #define MSR_EPC_RW 0x7C2
+
+    #define MSR_EVECT_R 0xFC3
+    #define MSR_EVECT_RW 0x7C3
 #endif
