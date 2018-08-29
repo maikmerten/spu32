@@ -1,6 +1,6 @@
 CC=riscv32-unknown-elf-gcc
-CFLAGS=-I./libtinyc -march=rv32i -static -nostdlib -fno-builtin-printf -Os -fPIC
-LDFLAGS=-L./libtinyc -ltinyc -Tlink.ld
+CFLAGS=-I./libtinyc -I./libspu32 -march=rv32i -static -nostdlib -fno-builtin-printf -Os -fPIC
+LDFLAGS=-L./libtinyc -ltinyc -L./libspu32 -lspu32 -Tlink.ld
 # useful additions for LDFLAGS if linking fails: -Xlinker --verbose 
 
 DUMP=riscv32-unknown-elf-objdump
@@ -15,8 +15,9 @@ all: example.bin
 	$(CC) $(CFLAGS) -o $@ crt0.s $< $(LDFLAGS)
 	$(DUMP) -d $@
 
-%.o: %.c libtinyc/*.h libtinyc/*.c
+%.o: %.c libtinyc/*.h libtinyc/*.c libspu32/*.h libspu32/*.c
 	cd libtinyc && $(MAKE)
+	cd libspu32 && $(MAKE)
 	$(CC) $(CFLAGS) -c $<
 
 clean:
