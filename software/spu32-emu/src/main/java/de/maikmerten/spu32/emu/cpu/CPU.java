@@ -42,6 +42,7 @@ public class CPU {
 
 	private int mcause;
 	private int epc = 0; // Exception pc
+	private int evect = 0;
 	private boolean meie = false;
 	private boolean meie_prev = false;
 	private boolean interrupt_pending = false;
@@ -109,6 +110,7 @@ public class CPU {
 	private final int MSR_MSTATUS = 0x0;
 	private final int MSR_CAUSE = 0x1;
 	private final int MSR_EPC = 0x2;
+	private final int MSR_EVECT = 0x3;
 
 	public CPU(Bus bus, int resetvector, int trapvector) {
 		super();
@@ -121,6 +123,7 @@ public class CPU {
 
 	public final void reset() {
 		this.pc = this.resetvector;
+		this.evect = this.trapvector;
 		this.meie = false;
 	}
 
@@ -426,7 +429,7 @@ public class CPU {
 		this.epc = this.pc;
 		this.meie_prev = this.meie;
 		this.meie = false;
-		this.pc = trapvector;
+		this.pc = this.evect;
 	}
 
 	private void returnFromException() {
@@ -452,8 +455,11 @@ public class CPU {
 				break;
 
 			case MSR_EPC:
-			default: // should be MSR_EPC
 				result = this.epc;
+				break;
+			
+			case MSR_EVECT:
+				result = this.evect;
 				break;
 		}
 
@@ -475,8 +481,11 @@ public class CPU {
 				break;
 
 			case MSR_EPC:
-			default: // should be MSR_EPC
 				this.epc = value;
+				break;
+			
+			case MSR_EVECT:
+				this.evect = value;
 				break;
 		}
 
