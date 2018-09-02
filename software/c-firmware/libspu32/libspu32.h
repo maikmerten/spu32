@@ -8,17 +8,17 @@
         CAUSE_ECALL = 0x0000000B
     };
 
-    inline int read_msr_status();
-    inline int write_msr_status();
+    int read_msr_status();
+    int write_msr_status();
 
-    inline int read_msr_cause();
-    inline int write_msr_cause();
+    int read_msr_cause();
+    int write_msr_cause();
 
-    inline int read_msr_epc();
-    inline int write_msr_epc();
+    int read_msr_epc();
+    int write_msr_epc();
 
-    inline int read_msr_evect();
-    inline int write_msr_evect(int vec);
+    int read_msr_evect();
+    int write_msr_evect(int vec);
 
     int get_interrupt_enabled();
     void enable_interrupt();
