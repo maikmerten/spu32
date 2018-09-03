@@ -25,5 +25,12 @@
     void disable_interrupt();
     int get_interrupt_pending();
 
+    int get_milli_time();
+    void request_milli_time_interrupt(int timeoffset);
+    void ack_milli_time_interrupt();
+
+    char get_leds_value();
+    void set_leds_value(char value);
+
 
 #endif

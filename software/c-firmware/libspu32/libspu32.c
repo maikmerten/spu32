@@ -71,3 +71,31 @@ int get_interrupt_pending() {
     int status = read_msr_status();
     return status & 0x00000004;
 }
+
+int get_milli_time() {
+	volatile int* dev = (int*)DEV_TIMER;
+	return *dev;
+}
+
+void request_milli_time_interrupt(int timeoffset) {
+	volatile int* dev = (int*)DEV_TIMER;
+	int now = *dev;
+	now += timeoffset;
+	dev = (int*)DEV_TIMER_INTERRUPT;
+	*dev = now;
+}
+
+void ack_milli_time_interrupt() {
+	volatile char* dev = (char*)DEV_TIMER_INTERRUPT;
+	char val = *dev;
+}
+
+char get_leds_value() {
+	volatile char* dev = (char*)DEV_LED;
+	return *dev;
+}
+
+void set_leds_value(char value) {
+	volatile char* dev = (char*)DEV_LED;
+	*dev = value;
+}
