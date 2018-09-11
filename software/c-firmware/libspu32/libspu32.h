@@ -32,5 +32,8 @@
     char get_leds_value();
     void set_leds_value(char value);
 
+    int get_prng_value();
+    void set_prng_seed(int seed);
+
 
 #endif

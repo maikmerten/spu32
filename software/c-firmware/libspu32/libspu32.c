@@ -99,3 +99,13 @@ void set_leds_value(char value) {
 	volatile char* dev = (char*)DEV_LED;
 	*dev = value;
 }
+
+int get_prng_value() {
+	volatile int* dev = (int*)DEV_PRNG;
+	return *dev;
+}
+
+void set_prng_seed(int seed) {
+	volatile int* dev = (int*)DEV_PRNG;
+	*dev = seed;
+}

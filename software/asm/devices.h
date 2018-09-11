@@ -13,4 +13,6 @@
     #define DEV_TIMER_INTERRUPT 0xFFFFFD04
     #define DEV_LED 0xFFFFFF00
 
+    #define DEV_PRNG 0xFFFFFE00
+
 #endif

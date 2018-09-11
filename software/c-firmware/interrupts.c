@@ -4,13 +4,15 @@
 void isr()__attribute((interrupt));
 void isr() {
 	ack_milli_time_interrupt();
-	printf("isr!\r\n");
+	printf("isr! predictable random number: %d\r\n", get_prng_value());
 
 	request_milli_time_interrupt(500);
 }
 
 
 int main() {
+
+	set_prng_seed(1337);
 
 	// set MSR_EVECT to interrupt service routine
 	write_msr_evect(isr);

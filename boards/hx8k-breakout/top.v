@@ -5,7 +5,7 @@
 `include "./timer/timer_wb8.v"
 `include "./rom/rom_wb8.v"
 `include "./ram/sram512kx8_wb8.v"
-
+`include "./prng/prng_wb8.v"
 
 module top(
         input clk_12mhz,
@@ -177,6 +177,20 @@ module top(
         .O_interrupt(timer_interrupt)
     );
 
+    reg prng_stb = 0;
+    wire[7:0] prng_dat;
+    wire prng_ack;
+
+    prng_wb8 prng_inst(
+        .CLK_I(clk),
+        .ADR_I(cpu_adr[1:0]),
+        .DAT_I(cpu_dat),
+        .STB_I(prng_stb),
+        .WE_I(cpu_we),
+        .DAT_O(prng_dat),
+        .ACK_O(prng_ack)
+    );
+
     reg sram_stb;
     wire[7:0] sram_dat;
     wire sram_ack;
@@ -279,6 +293,7 @@ module top(
         timer_stb = 0;
         rom_stb = 0;
         sram_stb = 0;
+        prng_stb =0;
 
         casez(cpu_adr[31:11])
 
@@ -314,7 +329,11 @@ module top(
                         timer_stb = cpu_stb;
                     end
 
-                    // 6: 0xFFFFFExx
+                    6: begin // 0xFFFFFExx: predictable random number generator
+                        arbiter_dat_o = prng_dat;
+                        arbiter_ack_o = prng_ack;
+                        prng_stb = cpu_stb;
+                    end
 
                     default: begin // default I/O device: LEDs
                         arbiter_dat_o = leds_dat;
