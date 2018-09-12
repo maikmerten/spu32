@@ -17,7 +17,7 @@ _interrupt:
 
 _init:
 	# set up stack pointer
-	li sp,(128 * 1024)
+	li sp,(512 * 1024)
 
 	# call main function
 	jal ra,main
