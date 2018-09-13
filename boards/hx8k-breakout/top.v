@@ -295,52 +295,47 @@ module top(
         sram_stb = 0;
         prng_stb =0;
 
-        casez(cpu_adr[31:11])
+        casez(cpu_adr[31:0])
 
-            {20'hFFFFF, 1'b0}: begin // 0xFFFFF000 - 0xFFFFF7FF: boot ROM
+            {20'hFFFFF, 1'b0, {11{1'b?}}}: begin // 0xFFFFF000 - 0xFFFFF7FF: boot ROM
                     arbiter_dat_o = rom_dat;
                     arbiter_ack_o = rom_ack;
                     rom_stb = cpu_stb;
             end
 
-            {20'hFFFFF, 1'b1}: begin // 0xFFFFF800 - 0xFFFFFFFF: I/O devices
-                case(cpu_adr[10:8])
-                    0: begin // 0xFFFFF8xx: UART
-                        arbiter_dat_o = uart_dat;
-                        arbiter_ack_o = uart_ack;
-                        uart_stb = cpu_stb;
-                    end
+            {32'hFFFFF8??}: begin // 0xFFFFF8xx: UART
+                arbiter_dat_o = uart_dat;
+                arbiter_ack_o = uart_ack;
+                uart_stb = cpu_stb;
+            end
 
-                    1: begin // 0xFFFFF9xx: SPI port 0
-                        arbiter_dat_o = spi0_dat;
-                        arbiter_ack_o = spi0_ack;
-                        spi0_stb = cpu_stb;
-                    end
+            {32'hFFFFF9??}: begin // 0xFFFFF9xx: SPI port 0
+                arbiter_dat_o = spi0_dat;
+                arbiter_ack_o = spi0_ack;
+                spi0_stb = cpu_stb;
+            end
 
-                    // 2: 0xFFFFFAxx
+            // reserved:
+            // 0xFFFFFAxx
+            // 0xFFFFFBxx
+            // 0xFFFFFCxx 
 
-                    // 3: 0xFFFFFBxx:
+            {32'hFFFFFD??}: begin // 0xFFFFFDxx: Timer
+                arbiter_dat_o = timer_dat;
+                arbiter_ack_o = timer_ack;
+                timer_stb = cpu_stb;
+            end
 
-                    // 4: 0xFFFFFCxx 
+            {32'hFFFFFE??}: begin // 0xFFFFFExx: predictable random number generator
+                arbiter_dat_o = prng_dat;
+                arbiter_ack_o = prng_ack;
+                prng_stb = cpu_stb;
+            end
 
-                    5: begin // 0xFFFFFDxx: Timer
-                        arbiter_dat_o = timer_dat;
-                        arbiter_ack_o = timer_ack;
-                        timer_stb = cpu_stb;
-                    end
-
-                    6: begin // 0xFFFFFExx: predictable random number generator
-                        arbiter_dat_o = prng_dat;
-                        arbiter_ack_o = prng_ack;
-                        prng_stb = cpu_stb;
-                    end
-
-                    default: begin // default I/O device: LEDs
-                        arbiter_dat_o = leds_dat;
-                        arbiter_ack_o = leds_ack;
-                        leds_stb = cpu_stb;                      
-                    end
-                endcase
+            {32'hFFFFFF??}: begin // 0xFFFFFFxx LEDs
+                arbiter_dat_o = leds_dat;
+                arbiter_ack_o = leds_ack;
+                leds_stb = cpu_stb;                      
             end
 
             default: begin
