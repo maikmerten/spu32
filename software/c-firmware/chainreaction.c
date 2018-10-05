@@ -491,7 +491,7 @@ void gamemenu() {
 	printf(ANSI_COLOR_YELLOW);
 	printf("Newly aquired fields may in turn explode, possibly causing a chain reaction.\n\n\r");
 	printf(ANSI_COLOR_RESET);
-	printf("A player wins of no fields are left to the other player.\n\n\r");
+	printf("A player wins if no fields are left to the other player.\n\n\r");
 	printf("Enter number of players (1 or 2): ");
 	char buf[2];
 	read_string(buf, sizeof(buf), 1);
