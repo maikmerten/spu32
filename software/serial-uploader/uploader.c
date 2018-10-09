@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <ctype.h>
+#include <signal.h>
 
 struct termios termsave;
 int fd_tty;
@@ -270,12 +271,18 @@ void cleanup() {
     close(fd_tty);
     tcsetattr(0, 0, &termsave);
     printf("bye.\n\r");
+    exit(0);
+}
+
+void sigint() {
+    exit(0);
 }
 
 
 int main(int argc, char *argv[])
 {
     atexit(cleanup);
+    signal(SIGINT, sigint);
     // save terminal state
     tcgetattr(0, &termsave);
 

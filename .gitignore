@@ -10,3 +10,4 @@
 *.elf
 *.bak
 *.dat
+software/serial-uploader/uploader
