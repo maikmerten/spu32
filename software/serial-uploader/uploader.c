@@ -72,21 +72,28 @@ void uploadFile(char *filename, int address) {
         return;
     }
 
-    char filebuf[1024*1024];
-    int file_read = read(fd, filebuf, sizeof filebuf);
-    printf("read %d bytes for upload\n\r", file_read);
-    close(fd);
-
     char cmd_upload[9];
     cmd_upload[0] = 'U';
-    assemble32(&cmd_upload[1], 0); // upload address
-    assemble32(&cmd_upload[5], file_read); // upload size
 
-    toggleRTS(fd_tty);
+    char filebuf[256];
+    int n = read(fd, filebuf, sizeof filebuf);
+    while(n > 0) {
+        assemble32(&cmd_upload[1], address); // upload address
+        assemble32(&cmd_upload[5], n); // upload size
 
-    write(fd_tty, cmd_upload, sizeof cmd_upload);
-    write(fd_tty, filebuf, file_read);
+        write(fd_tty, cmd_upload, sizeof cmd_upload);
+        write(fd_tty, filebuf, n);
+
+        address += n;
+        n = read(fd, filebuf, sizeof filebuf);
+        usleep(10 * 1000);
+    }
+
+    printf("uploaded %d bytes\n\r", address);
+
+    close(fd);
 }
+
 
 void callAddress(int address) {
     char cmd_call[5];
