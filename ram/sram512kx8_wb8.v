@@ -11,12 +11,13 @@ module sram512kx8_wb8
 
 		// SRAM signals
 		input[7:0] I_data,
-		output[7:0] O_data,
-		output[18:0] O_address,
-		output O_ce, O_oe, O_we,
+		output reg [7:0] O_data,
+		output reg [18:0] O_address,
+		output reg O_oe,
+		output O_ce, O_we,
 
 		// tristate control
-		output O_output_enable
+		output reg O_output_enable
 	);
 
 	
