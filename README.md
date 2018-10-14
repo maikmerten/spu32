@@ -2,9 +2,14 @@
 
 This is SPU32 ("Small Processing Unit 32"), a compact RISC-V processor implementing the RV32I instruction set.
 
-A demo-SoC is also included, featuring an UART, SPI-port, LED-output and RAM.
+A demo-SoC is also included, featuring some peripherals.
 
 The project ist writting in Verilog and is designed to be synthesizable using the open-source [Yosys open synthesis suite](http://www.clifford.at/yosys/).
+
+An overview of the SoC:
+
+<img src="./soc.svg" width="95%">
+
 
 ## CPU
 
