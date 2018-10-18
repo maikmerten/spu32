@@ -33,6 +33,9 @@ int main() {
 
 
 		printf("Location of ISR is %d\r\n", isr);
+
+		printf("strcmp('Hello', name) is %d\n\r", strcmp("Hello", name));
+
 		printf("This is message %d\r\n\r\n", i);
 
 		i++;

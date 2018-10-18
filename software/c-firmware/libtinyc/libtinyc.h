@@ -1,6 +1,8 @@
 #ifndef TINYLIB
 #define TINYLIB
 
+#include <stddef.h>
+
 void printf_c(char c);
 void printf_s(char* s);
 void printf_d(int i);
@@ -12,5 +14,10 @@ int parse_int(char *str);
 long long parse_long(char *str);
 
 int string_length(char *str);
+
+void *memcpy(void *str1, const void *str2, size_t n);
+char *strcpy(char *dest, const char *src);
+int strcmp(char *str1, char *str2);
+
 
 #endif

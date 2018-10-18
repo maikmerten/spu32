@@ -140,4 +140,51 @@ void printf(const char *format, ...) {
 	va_end(ap);
 }
 
+void *memcpy(void *str1, const void *str2, size_t n) {
+	char* src = (char*)str1;
+	char* dest = (char*)str2;
+	for(int i = 0; i < n; ++i) {
+		dest[i] = src[i];
+	}
+
+	return str1;
+}
+
+char *strcpy(char *dest, const char *src) {
+	char* dst = dest;
+	while(1) {
+		char c = *src;
+		if(c == 0) {
+			break;
+		}
+		*dst = c;
+		src++;
+		dst++;
+	}
+
+	return dest;
+}
+
+int strcmp(char *str1, char *str2) {
+
+	while(1) {
+		char c1 = *str1;
+		char c2 = *str2;
+
+		if(c1 > c2) {
+			return 1;
+		} else if(c1 < c2) {
+			return -1;
+		}
+
+		// c1 == c2, so we don't need to check c2 for zeroness
+		if(c1 == 0) {
+			break;
+		}
+		str1++;
+		str2++;
+	}
+
+	return 0;
+}
 
