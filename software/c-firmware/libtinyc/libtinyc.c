@@ -154,10 +154,10 @@ char *strcpy(char *dest, const char *src) {
 	char* dst = dest;
 	while(1) {
 		char c = *src;
+		*dst = c;
 		if(c == 0) {
 			break;
-		}
-		*dst = c;
+		}		
 		src++;
 		dst++;
 	}
@@ -168,23 +168,16 @@ char *strcpy(char *dest, const char *src) {
 int strcmp(char *str1, char *str2) {
 
 	while(1) {
-		char c1 = *str1;
-		char c2 = *str2;
+		char c1 = *(str1++);
+		char c2 = *(str2++);
 
-		if(c1 > c2) {
-			return 1;
-		} else if(c1 < c2) {
-			return -1;
-		}
-
-		// c1 == c2, so we don't need to check c2 for zeroness
-		if(c1 == 0) {
+		if(c1 != c2) {
+			return c1 < c2 ? -1 : 1;
+		} else if(!c1) {
 			break;
 		}
-		str1++;
-		str2++;
-	}
 
+	}
 	return 0;
 }
 
