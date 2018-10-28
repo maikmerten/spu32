@@ -141,12 +141,11 @@ void printf(const char *format, ...) {
 }
 
 void *memcpy(void *str1, const void *str2, size_t n) {
-	char* src = (char*)str1;
-	char* dest = (char*)str2;
-	for(int i = 0; i < n; ++i) {
-		dest[i] = src[i];
+	char *a = str1;
+	const char *b = str2;
+	while (n--) {
+ 		*(a++) = *(b++);
 	}
-
 	return str1;
 }
 
