@@ -225,10 +225,15 @@ module cpu
     localparam STATE_CSRRW2         = 25;
 
 
-    reg[4:0] state = 0, nextstate = STATE_RESET;
+    reg[4:0] state, prevstate = STATE_RESET, nextstate = STATE_RESET;
 
     wire busy;
     assign busy = alu_busy | bus_busy;
+
+    // only transition to new state if not busy
+    always @(*) begin
+        state = busy ? prevstate : nextstate;
+    end
 
     always @(negedge clk) begin
 
@@ -243,8 +248,8 @@ module cpu
 
         alu_op <= `ALUOP_ADD;
 
-        if(!busy) state = nextstate; // assume new state NOW!
-        
+        // remember currently active state to return to if busy
+        prevstate <= state;
 
         case(state)
             STATE_RESET: begin
@@ -528,7 +533,7 @@ module cpu
 
 
         if(reset) begin
-            state <= STATE_RESET;
+            prevstate <= STATE_RESET;
             nextstate <= STATE_RESET;
         end
 
