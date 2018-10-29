@@ -28,7 +28,7 @@ module top(
 
     );
 
-    wire clk_pll, pll_locked;
+    wire clk, clk_pll, pll_locked;
     `ifdef SLOWCLK
         // Instantiate a normal PLL, 15.938 MHz
         SB_PLL40_CORE #(							
