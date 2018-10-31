@@ -1,4 +1,5 @@
 #include <stdarg.h>
+#include <stdint.h>
 #include "libtinyc.h"
 #include "../../asm/devices.h"
 
@@ -164,19 +165,49 @@ char *strcpy(char *dest, const char *src) {
 	return dest;
 }
 
-int strcmp(char *str1, char *str2) {
+// implementation lifted from Clifford Wolf's PicoRV32 stdlib.c
+int strcmp(const char *s1, const char *s2) {
+	while ((((uint32_t)s1 | (uint32_t)s2) & 3) != 0) {
+		char c1 = *(s1++);
+		char c2 = *(s2++);
 
-	while(1) {
-		char c1 = *(str1++);
-		char c2 = *(str2++);
+		if (c1 != c2)
+			return c1 < c2 ? -1 : +1;
+		else if (!c1)
+			return 0;
+	}
 
-		if(c1 != c2) {
-			return c1 < c2 ? -1 : 1;
-		} else if(!c1) {
-			break;
+	while (1) {
+		uint32_t v1 = *(uint32_t*)s1;
+		uint32_t v2 = *(uint32_t*)s2;
+
+		if (__builtin_expect(v1 != v2, 0)) {
+			char c1, c2;
+
+			c1 = v1 & 0xff, c2 = v2 & 0xff;
+			if (c1 != c2) return c1 < c2 ? -1 : +1;
+			if (!c1) return 0;
+			v1 = v1 >> 8, v2 = v2 >> 8;
+
+			c1 = v1 & 0xff, c2 = v2 & 0xff;
+			if (c1 != c2) return c1 < c2 ? -1 : +1;
+			if (!c1) return 0;
+			v1 = v1 >> 8, v2 = v2 >> 8;
+
+			c1 = v1 & 0xff, c2 = v2 & 0xff;
+			if (c1 != c2) return c1 < c2 ? -1 : +1;
+			if (!c1) return 0;
+			v1 = v1 >> 8, v2 = v2 >> 8;
+
+			c1 = v1 & 0xff, c2 = v2 & 0xff;
+			if (c1 != c2) return c1 < c2 ? -1 : +1;
+			return 0;
 		}
 
-	}
-	return 0;
-}
+		if (__builtin_expect((((v1) - 0x01010101UL) & ~(v1) & 0x80808080UL), 0))
+			return 0;
 
+		s1 += 4;
+		s2 += 4;
+	}
+}

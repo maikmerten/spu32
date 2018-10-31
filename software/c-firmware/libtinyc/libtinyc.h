@@ -17,7 +17,7 @@ int string_length(char *str);
 
 void *memcpy(void *str1, const void *str2, size_t n);
 char *strcpy(char *dest, const char *src);
-int strcmp(char *str1, char *str2);
+int strcmp(const char *str1, const char *str2);
 
 
 #endif
