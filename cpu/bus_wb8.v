@@ -91,7 +91,7 @@ module bus_wb8(
 			CYC_O <= 1;
 			busy <= 1;
 
-			//`define CACHE 1
+			`define CACHE 1
 			`ifdef CACHE
 			if(addrcnt == 1 && I_op == `BUSOP_READW && cache_hit) begin
 				busy <= 0;
