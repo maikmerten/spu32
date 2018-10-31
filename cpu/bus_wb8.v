@@ -1,4 +1,5 @@
 `include "./cpu/busdefs.vh"
+`include "./cpu/cache.v"
 
 module bus_wb8(
 		input I_en,
@@ -28,10 +29,28 @@ module bus_wb8(
 	assign O_busy = busy;
 
 	reg[2:0] addrcnt = 0, ackcnt = 0, byte_target = 0;
+	wire[31:0] busaddr;
+	assign busaddr = I_addr + {{29{1'b0}}, addrcnt};
 	reg signextend = 0;
 	reg write = 0;
 
 	reg mysign = 0;
+
+	wire[31:0] cache_data;
+	wire cache_hit;
+	reg offer_data_to_cache = 0;
+	cache cache_inst(
+		.I_clk(CLK_I),
+		.I_en(I_en),
+		.I_reset(RST_I),
+		.I_offer_data(offer_data_to_cache),
+		.I_busop(I_op),
+		.I_addr(I_addr),
+		.I_invalidate_addr(busaddr),
+		.I_data(buffer),
+		.O_data(cache_data),
+		.O_hit(cache_hit)
+	);
 
 	always @(*) begin
 		// determine number of bytes to be processed
@@ -64,19 +83,29 @@ module bus_wb8(
 		CYC_O <= 0;
 		STB_O <= 0;
 		busy <= 0;
+		offer_data_to_cache <= 0;
 
 		if(I_en) begin
 			// if enabled, act
 			WE_O <= write;
 			CYC_O <= 1;
 			busy <= 1;
-					
+
+			//`define CACHE 1
+			`ifdef CACHE
+			if(addrcnt == 1 && I_op == `BUSOP_READW && cache_hit) begin
+				busy <= 0;
+				ackcnt <= 0;
+				addrcnt <= 0;
+				buffer <= cache_data;
+			end else
+			`endif
 			if(ackcnt != byte_target) begin
 				// we haven't yet received the proper number of ACKs, so we need to
 				// output addresses and receive ACKs
 				if(addrcnt != byte_target) begin
 					STB_O <= 1;
-					ADR_O <= I_addr + {{29{1'b0}},addrcnt};
+					ADR_O <= busaddr;
 
 					// put data on bus for current address
 					case(addrcnt)
@@ -96,7 +125,12 @@ module bus_wb8(
 						0:			buffer <= {{24{mysign}}, DAT_I};	
 						1:			buffer[31:8] <= {{16{mysign}}, DAT_I};	
 						2:			buffer[23:16] <= DAT_I;
-						default:	buffer[31:24] <= DAT_I;
+						default: begin
+							buffer[31:24] <= DAT_I;
+							`ifdef CACHE
+							offer_data_to_cache <= 1;
+							`endif
+						end
 					endcase
 					ackcnt <= ackcnt + 1;
 				end
