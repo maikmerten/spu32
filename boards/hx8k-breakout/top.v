@@ -66,7 +66,7 @@ module top(
 
 
     reg reset = 1;
-    reg[8:0] resetcnt = 1;
+    reg[10:0] resetcnt = 1;
 
     wire cpu_cyc, cpu_stb, cpu_we;
     wire[7:0] cpu_dat;
