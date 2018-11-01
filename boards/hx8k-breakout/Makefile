@@ -19,7 +19,7 @@ top.asc: top.blif hx8k-breakout.pcf
 	arachne-pnr -r -d 8k -p hx8k-breakout.pcf -o top.asc top.blif
 
 top.bin: top.asc
-	icetime -d hx8k -c 42 top.asc
+	icetime -d hx8k -c 40 top.asc
 	icepack top.asc top.bin
 
 prog_sram: top.bin
