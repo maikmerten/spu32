@@ -14,7 +14,7 @@ module cache(
 	);
 
 	// ENTRYBITS determines the size of the cache, everything else is computed from this
-	localparam ENTRYBITS = 10;
+	localparam ENTRYBITS = 9;
 	localparam ENTRIES = 2**ENTRYBITS;
 	localparam ENTRYLOBIT = 2;
 	localparam ENTRYHIBIT = ENTRYBITS + 1;

@@ -91,8 +91,7 @@ module bus_wb8(
 			CYC_O <= 1;
 			busy <= 1;
 
-			`define CACHE 1
-			`ifdef CACHE
+			`ifdef ENABLE_CACHE
 			if(addrcnt == 1 && I_op == `BUSOP_READW && cache_hit) begin
 				busy <= 0;
 				ackcnt <= 0;
@@ -127,7 +126,7 @@ module bus_wb8(
 						2:			buffer[23:16] <= DAT_I;
 						default: begin
 							buffer[31:24] <= DAT_I;
-							`ifdef CACHE
+							`ifdef ENABLE_CACHE
 							offer_data_to_cache <= 1;
 							`endif
 						end
