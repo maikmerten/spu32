@@ -17,8 +17,8 @@ inline void set_prng_seed(int seed) {
 int detectMemsize() {
 	int memsize = 4096;
 	while(1) {
-		volatile unsigned char *zeroPtr = (unsigned char*) 0;
-		volatile unsigned char *endPtr = (unsigned char*) (memsize);
+		volatile unsigned char *zeroPtr = (volatile unsigned char*) 0;
+		volatile unsigned char *endPtr = (volatile unsigned char*) (memsize);
 		// read byte from memory location 0
 		unsigned char c1 = *zeroPtr;
 		// write modified value beyond last address of suspected memory size
@@ -53,12 +53,12 @@ int main()
 		int error = 0;
 
 
-		bytePtr = (char*)base;
+		bytePtr = (volatile unsigned char*)base;
 		for(int i = 0; i < 256; ++i) {
 			*bytePtr++ = i;
 		}
 
-		bytePtr = (char*)base;
+		bytePtr = (volatile unsigned char*)base;
 		for(int i = 0; i < 256; ++i) {
 			int read = *bytePtr++;
 			printf("%d read as %d\n\r", i, read);
@@ -80,7 +80,7 @@ int main()
 
 			set_prng_seed(pass);
 			// write predictable random numbers to memory
-			for(intPtr = (int*)base;(int)intPtr < end; intPtr += sizeof(int)) {
+			for(intPtr = (volatile unsigned int*)base;(int)intPtr < end; intPtr += sizeof(int)) {
 				int prn = get_prng_value();
 				*intPtr = prn;
 			}
@@ -88,7 +88,7 @@ int main()
 			// reset predictable number generator
 			set_prng_seed(pass);
 			// read memory contents and compare
-			for(intPtr = (int*)base;(int)intPtr < end; intPtr += sizeof(int)) {
+			for(intPtr = (volatile unsigned int*)base;(int)intPtr < end; intPtr += sizeof(int)) {
 				int prn = get_prng_value();
 				int val = *intPtr;
 				if(prn != val) {
