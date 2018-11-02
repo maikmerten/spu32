@@ -11,13 +11,42 @@ inline void set_prng_seed(int seed) {
 	*dev = seed;
 }
 
+// dial down on the optimizations to prevent GCC from optimizing this to nothing
+#pragma GCC push_options
+#pragma GCC optimize ("Og")
+int detectMemsize() {
+	int memsize = 4096;
+	while(1) {
+		volatile unsigned char *zeroPtr = (unsigned char*) 0;
+		volatile unsigned char *endPtr = (unsigned char*) (memsize);
+		// read byte from memory location 0
+		unsigned char c1 = *zeroPtr;
+		// write modified value beyond last address of suspected memory size
+		*endPtr = c1 ^ 0xFF;
+		// read back value from memory location 0
+		unsigned char c2 = *zeroPtr;
+		// if value at location 0 changed, then we found the proper memory size
+		if(c1 != c2) {
+			break;
+		}
+		// otherwise increase suspected memory size and repeat
+		memsize +=1024;
+	}
+
+	return memsize;
+}
+#pragma GCC pop_options
 
 int main()
 {
+
+	int memsize = detectMemsize();
+	printf("Detected memory size: %d bytes\n\r", memsize);
+
 	while (1)
 	{
 		const int base = (4 * 1024); // start at 4K, don't overwrite memtest program
-		const int end = (510*1024); // leave top 2K intact, don't trash the stack
+		const int end = (memsize - 1024); // leave top 1K intact, don't trash the stack
 
 		volatile unsigned char *bytePtr;
 		volatile unsigned int *intPtr;
