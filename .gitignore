@@ -2,6 +2,7 @@
 *.asc
 *.blif
 *.lxt
+*.json
 /software/spu32-serial-bootloader/target/
 /software/spu32-emu/target
 *.class
