@@ -47,6 +47,8 @@ int parse_int(char *str) {
 #define ANSI_COLOR_MAGENTA "\x1b[35m"
 #define ANSI_COLOR_CYAN    "\x1b[36m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
+#define ANSI_BG_RED        "\x1b[41m"
+#define ANSI_BG_BLUE       "\x1b[44m"
 
 // dimensions of playing field
 #define SIZEX 6
@@ -205,22 +207,22 @@ void drawLegend() {
 void drawRow(char field[SIZEX][SIZEY], char y) {
     char x;
     printf(ANSI_COLOR_RESET);
-    printf("  %d   ", (y+1));
+    printf("  %d  ", (y+1));
     for(x = 0; x < SIZEX; ++x) {
         char a = getAtoms(field, x, y);
         char p = getOwner(field, x, y);
         if(p == 1) {
-            printf(ANSI_COLOR_RED);
+            printf(ANSI_BG_RED);
         } else if (p == 2)  {
-            printf(ANSI_COLOR_BLUE);
+            printf(ANSI_BG_BLUE);
         } else {
             printf(ANSI_COLOR_RESET);
         }
 
-        printf("%d  ", a);
+        printf(" %d ", a);
     }
     printf(ANSI_COLOR_RESET);
-    printf(" %d\n\r", (y+1));
+    printf("  %d\n\r", (y+1));
 }
 
 
@@ -251,9 +253,10 @@ int readPlayerMove(char p) {
     while(invalid) {
         invalid = 0;
 
-        printf(p == 1 ? ANSI_COLOR_RED : ANSI_COLOR_BLUE);
-        printf("\r\nPlayer %d, your move: ", p);
+        printf(p == 1 ? ANSI_BG_RED : ANSI_BG_BLUE);
+        printf("\r\nPlayer %d, your move:", p);
         printf(ANSI_COLOR_RESET);
+		printf(" ");
         read_string(buf, sizeof(buf), 1);
         printf("\r\n");
 
