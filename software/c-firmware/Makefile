@@ -6,7 +6,7 @@ LDFLAGS=-L./libtinyc -ltinyc -L./libspu32 -lspu32 -Tlink.ld
 DUMP=riscv32-unknown-elf-objdump
 COPY=riscv32-unknown-elf-objcopy
 
-all: example.bin interrupts.bin
+all: example.bin interrupts.bin chainreaction.bin memtest.bin
 
 %.bin: %.elf
 	$(COPY) -O binary $< $@
