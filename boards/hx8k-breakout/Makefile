@@ -16,7 +16,7 @@ CHECK := $(foreach exec,$(EXECS),\
     $(if $(shell which $(exec)),some string,$(error "No $(exec) in PATH. yosys, icestorm and nextpnr are needed)))
 
 
-top.json: top.v
+top.json: config-local.vh top.v
 	cd ../../software/asm && make
 	cd ../.. && yosys -p 'synth_ice40 -json ./boards/hx8k-breakout/top.json' ./boards/hx8k-breakout/top.v
 
@@ -31,6 +31,9 @@ prog_sram: top.bin
 
 prog_flash: top.bin
 	iceprog top.bin
+
+config-local.vh: config-defaults.vh
+	tail -n +8 config-defaults.vh > config-local.vh
 
 
 clean:

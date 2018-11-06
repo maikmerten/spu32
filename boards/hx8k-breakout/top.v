@@ -1,6 +1,4 @@
-`define EXTENSION_PRESENT 1
-`define ENABLE_CACHE 1
-
+`include "./boards/hx8k-breakout/config-local.vh"
 
 `include "./cpu/cpu.v"
 `include "./leds/leds_wb8.v"

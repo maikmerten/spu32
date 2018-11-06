@@ -12,3 +12,5 @@
 *.bak
 *.dat
 software/serial-uploader/uploader
+*config-local.vh
+cpu/tests/testgen/testcollection.s
