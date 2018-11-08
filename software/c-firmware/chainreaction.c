@@ -197,32 +197,39 @@ void putAtom(char f[SIZEX][SIZEY], char p, char x, char y, char draw) {
 void drawLegend() {
     char c = 'a';
     printf("\n\r     ");
+	printf(ANSI_COLOR_YELLOW);
     for(char i = 0; i < SIZEX; ++i) {
-        printf(" %c ", c++);
+        printf("  %c  ", c++);
     }
+	printf(ANSI_COLOR_YELLOW);
     printf("\n\r\n\r");
+	printf(ANSI_COLOR_RESET);
 }
 
 
 void drawRow(char field[SIZEX][SIZEY], char y) {
     char x;
-    printf(ANSI_COLOR_RESET);
-    printf("  %d  ", (y+1));
-    for(x = 0; x < SIZEX; ++x) {
-        char a = getAtoms(field, x, y);
-        char p = getOwner(field, x, y);
-        if(p == 1) {
-            printf(ANSI_BG_RED);
-        } else if (p == 2)  {
-            printf(ANSI_BG_BLUE);
-        } else {
-            printf(ANSI_COLOR_RESET);
-        }
-
-        printf(" %d ", a);
-    }
-    printf(ANSI_COLOR_RESET);
-    printf("  %d\n\r", (y+1));
+	for(int line = 0; line < 3; ++line) {
+    	printf(ANSI_COLOR_YELLOW);
+    	printf(line & 0x1 ? "  %d  " : "     ", (y+1));
+		printf(ANSI_COLOR_RESET);
+    	for(x = 0; x < SIZEX; ++x) {
+        	char a = getAtoms(field, x, y);
+        	char p = getOwner(field, x, y);
+        	if(p == 1) {
+	           printf(ANSI_BG_RED);
+    	    } else if (p == 2)  {
+        	    printf(ANSI_BG_BLUE);
+        	} else {
+            	printf(ANSI_COLOR_RESET);
+        	}
+        	printf(line & 0x1 ? "  %d  " : "     ", a);
+    	}
+		printf(ANSI_COLOR_RESET);
+		printf(ANSI_COLOR_YELLOW);
+    	printf(line & 0x1 ? "  %d\n\r" : "\n\r", (y+1));
+    	printf(ANSI_COLOR_RESET);
+	}
 }
 
 
@@ -246,40 +253,33 @@ void drawField(char field[SIZEX][SIZEY], char clear) {
 
 int readPlayerMove(char p) {
     char buf[3];
-    char invalid = 1;
-
     char x, y;
 
-    while(invalid) {
-        invalid = 0;
+    printf(p == 1 ? ANSI_BG_RED : ANSI_BG_BLUE);
+    printf("\r\nPlayer %d, your move:", p);
+    printf(ANSI_COLOR_RESET);
+	printf(" ");
+    read_string(buf, sizeof(buf), 1);
+    printf("\033[3D   \r\n"); // move cursor back and remove input
 
-        printf(p == 1 ? ANSI_BG_RED : ANSI_BG_BLUE);
-        printf("\r\nPlayer %d, your move:", p);
-        printf(ANSI_COLOR_RESET);
-		printf(" ");
-        read_string(buf, sizeof(buf), 1);
-        printf("\r\n");
-
-        char c = 'a';
-        x = 0;
-        while(c != buf[0]) {
-            c++;
-            x++;
-            if(x > MAXX) {
-                x = 0;
-                invalid = 1;
-                break;
-            }
+    char c = 'a';
+    x = 0;
+    while(c != buf[0]) {
+        c++;
+        x++;
+        if(x > MAXX) {
+            x = 0;
+            return -1;
+            break;
         }
-
-        int parsed = parse_int(buf);
-        if(parsed < 1 || parsed > SIZEY) {
-            invalid = 1;
-            continue;
-        }
-
-        y = (char) (parsed - 1);
     }
+
+	int parsed = parse_int(buf);
+    if(parsed < 1 || parsed > SIZEY) {
+        return -1;
+    }
+
+    y = (char) (parsed - 1);
     
     return (x << 8) | y;
 }
@@ -451,16 +451,18 @@ void gameloop() {
 
 	char winner = 0;
 
+	printf(ANSI_CLEAR_SCREEN);
 	while(!winner) {
-        drawField(field, 1);
-        int playermove = 0;
-
-		if(player == 1 || !ki) {
-			// puny human
-            playermove = readPlayerMove(player);
-		} else {
-			// mighty computer
-			playermove = thinkAI(field);
+        int playermove = -1;
+		while(playermove < 0) {
+        	drawField(field, 0);
+			if(player == 1 || !ki) {
+				// puny human
+            	playermove = readPlayerMove(player);
+			} else {
+				// mighty computer
+				playermove = thinkAI(field);
+			}
 		}
         posx = (char)(playermove >> 8);
         posy = (char)(playermove & 0xFF);
