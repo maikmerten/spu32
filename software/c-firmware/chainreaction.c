@@ -288,15 +288,6 @@ int readPlayerMove(char p) {
 // AI
 // --------------------
 
-void copyField(char dest[SIZEX][SIZEY], char src[SIZEX][SIZEY]) {
-    for(int x = 0; x < SIZEX; ++x) {
-        for(int y = 0; y < SIZEY; ++y) {
-            dest[x][y] = src[x][y];
-        }
-    }
-}
-
-
 char isCritical(char f[SIZEX][SIZEY], char x, char y) {
 	if(getAtoms(f, x, y) == getCapacity(x, y)) {
 		return 1;
@@ -387,7 +378,7 @@ int thinkAI(char field[SIZEX][SIZEY]) {
 			owner = getOwner(field, x, y);
 			if(owner == PLAYERAI || owner == 0) {
 				// we can use this cell
-				copyField(fieldAI, field); // create working copy
+				memcpy(fieldAI, field, sizeof fieldAI); // create working copy
 				tmp = 0;
 				
 				// it makes little sense to add atoms to endangered cells
