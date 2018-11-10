@@ -251,7 +251,7 @@ void drawField(char field[SIZEX][SIZEY], char clear) {
 // input
 // -----------------
 
-int readPlayerMove(char p) {
+int readPlayerMove(char f[SIZEX][SIZEY], char p) {
     char buf[3];
     char x, y;
 
@@ -280,6 +280,11 @@ int readPlayerMove(char p) {
     }
 
     y = (char) (parsed - 1);
+
+	char owner = getOwner(f, x, y);
+	if(owner != p && owner != 0) {
+		return -1;
+	}
     
     return (x << 8) | y;
 }
@@ -365,12 +370,10 @@ signed int evaluateField(char f[SIZEX][SIZEY], char p) {
 
 int thinkAI(char field[SIZEX][SIZEY]) {
 	char fieldAI[SIZEX][SIZEY];
-	unsigned char x,y,size,owner;
+	unsigned char x,y,owner;
 	signed int tmp,score;
 	unsigned int result;
-	
 
-	size = SIZEX * SIZEY;
 	// compute the field score for the opposing player
 	score = -32000;
 	for(x = 0; x < SIZEX; ++x) {
@@ -429,9 +432,6 @@ char checkWinner(char f[SIZEX][SIZEY]) {
 void gameloop() {
 	char field[SIZEX][SIZEY];
 	signed char posx,posy; // signed for simple detection of underflow
-	char owner;
-	int airesult;
-	char textbuf[28];
 	int move = 1;
 
 	clearField(field);
@@ -449,7 +449,7 @@ void gameloop() {
         	drawField(field, 0);
 			if(player == 1 || !ki) {
 				// puny human
-            	playermove = readPlayerMove(player);
+            	playermove = readPlayerMove(field, player);
 			} else {
 				// mighty computer
 				playermove = thinkAI(field);
