@@ -111,6 +111,21 @@ receive_uart_wait_receive:
     lbu a0, DEV_UART_DATA(zero)
     ret
 
+# detect memory size, result is in t1 (load_from_spi expects it there)
+detect_memory_size:
+    li t1, 4096         # first assume 4K of memory
+    lbu t2, 0(zero)     # load value at address zero
+    neg t2, t2          # invert value
+    andi t2, t2, 255    # zero out topmost 24 bits
+detect_memory_size_loop:
+    sb t2, 0(t1)        # store value at suspected wraparound
+    lbu t3, 0(zero)     # read value at address zero... has it changed?
+    beq t2, t3, detect_memory_size_end
+    addi t1, t1, 1024
+    j detect_memory_size_loop
+detect_memory_size_end:
+    ret
+
 load_from_spi:
     # select SPI device (hopefully a flash storage with executable code...)
     li t0, 1
@@ -130,7 +145,8 @@ load_from_spi_send_address_and_dummy:
 
     # read bytes from SPI flash and write to memory, starting at address 0x0
     mv t0, zero
-    li t1, (128 * 1024) # amount of bytes to be copied
+    # detect memory size, result is in t1
+    jal detect_memory_size
 load_from_spi_copyloop:
     jal transmit_spi
     sb a0, 0(t0)
