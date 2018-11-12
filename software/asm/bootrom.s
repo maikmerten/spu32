@@ -148,7 +148,15 @@ load_from_spi_send_address_and_dummy:
     # detect memory size, result is in t1
     jal detect_memory_size
 load_from_spi_copyloop:
-    jal transmit_spi
+    # the following is a partial copy of transmit_spi
+    # for performance reasons, we want a tight loop here
+    # if size ever becomes a concern, use a jal transmit_spi instead
+    sb zero, DEV_SPI_DATA(zero) # write dummy bits to receive data
+load_from_spi_copyloop2:
+    lbu t2, DEV_SPI_READY(zero)
+    beqz t2, load_from_spi_copyloop2
+    # read byte via SPI, write to memory location
+    lbu a0, DEV_SPI_DATA(zero)
     sb a0, 0(t0)
     addi t0, t0, 1
     bne t0, t1, load_from_spi_copyloop
