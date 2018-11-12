@@ -354,7 +354,10 @@ int main(int argc, char *argv[])
         while(isBusy()) {}
         printf("... aaaand it's gone!\n");
         printf("\n\r");
+        printf("writing data...\n");
         programFile(filename);
+        printf("... aaaand it's done!\n");
+        printf("\n\r");
     } else {
         uploadFile(filename, 0);
         callAddress(0);
