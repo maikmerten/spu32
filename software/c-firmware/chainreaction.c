@@ -251,7 +251,7 @@ void drawField(char field[SIZEX][SIZEY], char clear) {
 // input
 // -----------------
 
-int readPlayerMove(char p) {
+int readPlayerMove(char f[SIZEX][SIZEY], char p) {
     char buf[3];
     char x, y;
 
@@ -280,6 +280,11 @@ int readPlayerMove(char p) {
     }
 
     y = (char) (parsed - 1);
+
+	char owner = getOwner(f, x, y);
+	if(owner != p && owner != 0) {
+		return -1;
+	}
     
     return (x << 8) | y;
 }
@@ -287,15 +292,6 @@ int readPlayerMove(char p) {
 // --------------------
 // AI
 // --------------------
-
-void copyField(char dest[SIZEX][SIZEY], char src[SIZEX][SIZEY]) {
-    for(int x = 0; x < SIZEX; ++x) {
-        for(int y = 0; y < SIZEY; ++y) {
-            dest[x][y] = src[x][y];
-        }
-    }
-}
-
 
 char isCritical(char f[SIZEX][SIZEY], char x, char y) {
 	if(getAtoms(f, x, y) == getCapacity(x, y)) {
@@ -374,12 +370,10 @@ signed int evaluateField(char f[SIZEX][SIZEY], char p) {
 
 int thinkAI(char field[SIZEX][SIZEY]) {
 	char fieldAI[SIZEX][SIZEY];
-	unsigned char x,y,size,owner;
+	unsigned char x,y,owner;
 	signed int tmp,score;
 	unsigned int result;
-	
 
-	size = SIZEX * SIZEY;
 	// compute the field score for the opposing player
 	score = -32000;
 	for(x = 0; x < SIZEX; ++x) {
@@ -387,7 +381,7 @@ int thinkAI(char field[SIZEX][SIZEY]) {
 			owner = getOwner(field, x, y);
 			if(owner == PLAYERAI || owner == 0) {
 				// we can use this cell
-				copyField(fieldAI, field); // create working copy
+				memcpy(fieldAI, field, sizeof fieldAI); // create working copy
 				tmp = 0;
 				
 				// it makes little sense to add atoms to endangered cells
@@ -438,9 +432,6 @@ char checkWinner(char f[SIZEX][SIZEY]) {
 void gameloop() {
 	char field[SIZEX][SIZEY];
 	signed char posx,posy; // signed for simple detection of underflow
-	char owner;
-	int airesult;
-	char textbuf[28];
 	int move = 1;
 
 	clearField(field);
@@ -458,7 +449,7 @@ void gameloop() {
         	drawField(field, 0);
 			if(player == 1 || !ki) {
 				// puny human
-            	playermove = readPlayerMove(player);
+            	playermove = readPlayerMove(field, player);
 			} else {
 				// mighty computer
 				playermove = thinkAI(field);
