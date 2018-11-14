@@ -150,7 +150,7 @@ load_from_spi_send_address_and_dummy:
 load_from_spi_copyloop:
     # the following is a partial copy of transmit_spi
     # for performance reasons, we want a tight loop here
-    # if size ever becomes a concern, use a jal transmit_spi instead
+    # in case size ever becomes a concern, use a jal transmit_spi instead
     sb zero, DEV_SPI_DATA(zero) # write dummy bits to receive data
 load_from_spi_copyloop2:
     lbu t2, DEV_SPI_READY(zero)
