@@ -18,9 +18,19 @@ module alu(
 	reg eq, lt, ltu, busy = 0;
 	reg[4:0] shiftcnt;
 
-	assign O_busy = busy;
 	assign O_data = result;
-	
+
+//`define SINGLE_CYCLE_SHIFTER
+`ifdef SINGLE_CYCLE_SHIFTER
+	wire[31:0] sll, srl, sra;
+	assign sll = (I_dataS1 << I_dataS2[4:0]);
+	assign srl = (I_dataS1 >> I_dataS2[4:0]);
+	assign sra = (I_dataS1 >>> I_dataS2[4:0]);
+	assign O_busy = 0;
+`else
+	assign O_busy = busy;
+`endif
+
 	always @(*) begin
 		sum = I_dataS1 + I_dataS2;
 		sub = {1'b0, I_dataS1} - {1'b0, I_dataS2};
@@ -60,6 +70,8 @@ module alu(
 					if(ltu) result[0] <= 1;
 				end
 
+				`ifndef SINGLE_CYCLE_SHIFTER
+				// multi-cycle shifting, slow, but compact
 				`ALUOP_SLL, `ALUOP_SRL, `ALUOP_SRA: begin
 					if(!busy) begin
 						busy <= 1;
@@ -76,6 +88,12 @@ module alu(
 						busy <= 0;
 					end
 				end
+				`else
+				// single-cycle shifting
+				`ALUOP_SLL: result <= sll;
+				`ALUOP_SRA: result <= sra;
+				`ALUOP_SRL: result <= srl;
+				`endif
 			endcase
 
 			O_lt <= lt;
