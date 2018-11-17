@@ -42,9 +42,9 @@ module alu(
 	
 	always @(*) begin
 		// unsigned comparison: simply look at underflow bit
-		ltu = (sub[32] === 1'b1);
+		ltu = sub[32];
 		// signed comparison: xor underflow bit with xored sign bit
-		lt = ((sub[32] ^ myxor[31]) === 1'b1);
+		lt = (sub[32] ^ myxor[31]);
 		
 		eq = (sub === 33'b0);
 	end
