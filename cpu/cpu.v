@@ -27,7 +27,7 @@ module cpu
     assign reset = RST_I;
 
     // MSRS
-    reg[31:0] instr, pc, epc;
+    reg[31:0] pc, epc;
     reg[31:0] evect = VECTOR_EXCEPTION;
      // current and previous machine-mode external interrupt enable
     reg meie = 0, meie_prev = 0;
@@ -96,9 +96,12 @@ module cpu
     wire[4:0] dec_opcode;
     wire[2:0] dec_funct3;
     wire[6:0] dec_funct7;
+    reg dec_en;
 
     decoder dec_inst(
-        .I_instr(instr),
+        .I_clk(clk),
+        .I_en(dec_en),
+        .I_instr(bus_dataout),
         .O_rs1(dec_rs1),
         .O_rs2(dec_rs2),
         .O_rd(dec_rd),
@@ -239,6 +242,7 @@ module cpu
 
         alu_en <= 0;
         bus_en <= 0;
+        dec_en <= 0;
         reg_re <= 0;
         reg_we <= 0;
 
@@ -267,7 +271,7 @@ module cpu
             end
 
             STATE_DECODE: begin
-                instr <= bus_dataout;
+                dec_en <= 1;
                 nextstate <= STATE_REGREAD;
 
                 // checking for interrupt here because no bus operations are active here
