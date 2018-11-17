@@ -21,13 +21,13 @@ module uart_wb8
 
     localparam baudclocks = CLOCKFREQ/BAUDRATE;
 
-    `define READ_IDLE 0
-    `define READ_READ 1
-    reg readstate = `READ_IDLE;
+    localparam READ_IDLE = 0;
+    localparam READ_READ = 1;
+    reg readstate = READ_IDLE;
 
-    `define WRITE_IDLE 0
-    `define WRITE_WRITE 1
-    reg writestate = `WRITE_IDLE;
+    localparam WRITE_IDLE = 0;
+    localparam WRITE_WRITE = 1;
+    reg writestate = WRITE_IDLE;
 
     reg[7:0] inputbuf, readbuf, writebuf = 0;
     reg[2:0] edgefilter = 3'b111;
@@ -40,17 +40,17 @@ module uart_wb8
     always @(posedge CLK_I) begin
 
         case (readstate)
-            `READ_IDLE: begin
+            READ_IDLE: begin
                 edgefilter <= {I_rx, edgefilter[2:1]};
                 if({I_rx, edgefilter} == 0) begin
-                    readstate <= `READ_READ;
+                    readstate <= READ_READ;
                     readclkcnt <= 0;
                     readbitcnt <= 0;
                     edgefilter <= 3'b111;
                 end            
             end 
 
-            `READ_READ: begin
+            READ_READ: begin
                 // sample mid-baud
                 if(readclkcnt == baudclocks/2) begin
                     if(readbitcnt != 9) begin
@@ -58,7 +58,7 @@ module uart_wb8
                     end else begin
                         readbuf <= inputbuf;
                         read_ready <= 1;
-                        readstate <= `READ_IDLE;
+                        readstate <= READ_IDLE;
                     end
                     readbitcnt <= readbitcnt + 1;
                 end
@@ -69,10 +69,10 @@ module uart_wb8
         endcase
 
         case(writestate)
-            `WRITE_IDLE: begin
+            WRITE_IDLE: begin
                 O_tx <= 1; // output high on idle
                 if(do_write) begin
-                  writestate <= `WRITE_WRITE;
+                  writestate <= WRITE_WRITE;
                   writeclkcnt <= 0;
                   writebitcnt <= 0;
                   O_tx <= 0; // start bit
@@ -80,14 +80,14 @@ module uart_wb8
               
             end
 
-            `WRITE_WRITE: begin
+            WRITE_WRITE: begin
                 writeclkcnt <= writeclkcnt + 1;
                 if(writeclkcnt == (baudclocks - 1)) begin
                     // write next bit
                     writeclkcnt <= 0;
                     writebitcnt <= writebitcnt + 1;
                     if(writebitcnt == 9) begin
-                        writestate <= `WRITE_IDLE;
+                        writestate <= WRITE_IDLE;
                         do_write <= 0;
                     end
                     O_tx <= writebuf[0];
