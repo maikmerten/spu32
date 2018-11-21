@@ -413,13 +413,20 @@ module cpu
 
             STATE_BRANCH2: begin
                 nextstate <= STATE_PCNEXT; // by default assume we don't branch
+
+                // use idle ALU to compute PC+immediate - in case we branch
+                alu_en <= 1;
+                alu_op <= `ALUOP_ADD;
+                mux_alu_s1_sel <= MUX_ALUDAT1_PC;
+                mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
+
                 case(dec_funct3)
-                    `FUNC_BEQ:  if(alu_eq)   nextstate <= STATE_PCIMM;
-                    `FUNC_BNE:  if(!alu_eq)  nextstate <= STATE_PCIMM;
-                    `FUNC_BLT:  if(alu_lt)   nextstate <= STATE_PCIMM;
-                    `FUNC_BGE:  if(!alu_lt)  nextstate <= STATE_PCIMM;
-                    `FUNC_BLTU: if(alu_ltu)  nextstate <= STATE_PCIMM;
-                    default:    if(!alu_ltu) nextstate <= STATE_PCIMM; // FUNC_BGEU
+                    `FUNC_BEQ:  if(alu_eq)   nextstate <= STATE_PCUPDATE_FETCH;
+                    `FUNC_BNE:  if(!alu_eq)  nextstate <= STATE_PCUPDATE_FETCH;
+                    `FUNC_BLT:  if(alu_lt)   nextstate <= STATE_PCUPDATE_FETCH;
+                    `FUNC_BGE:  if(!alu_lt)  nextstate <= STATE_PCUPDATE_FETCH;
+                    `FUNC_BLTU: if(alu_ltu)  nextstate <= STATE_PCUPDATE_FETCH;
+                    default:    if(!alu_ltu) nextstate <= STATE_PCUPDATE_FETCH; // FUNC_BGEU
                 endcase
             end
 
