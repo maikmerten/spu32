@@ -220,12 +220,10 @@ module cpu
     localparam STATE_REGWRITEBUS    = 17;
     localparam STATE_REGWRITEALU    = 18;
     localparam STATE_PCNEXT         = 19;
-    localparam STATE_PCREGIMM       = 20;
-    localparam STATE_PCIMM          = 21;
-    localparam STATE_PCUPDATE_FETCH = 22;
-    localparam STATE_SYSTEM         = 23;
-    localparam STATE_CSRRW1         = 24;
-    localparam STATE_CSRRW2         = 25;
+    localparam STATE_PCUPDATE_FETCH = 20;
+    localparam STATE_SYSTEM         = 21;
+    localparam STATE_CSRRW1         = 22;
+    localparam STATE_CSRRW2         = 23;
 
 
     reg[4:0] state, prevstate = STATE_RESET, nextstate = STATE_RESET;
@@ -400,7 +398,13 @@ module cpu
             STATE_JAL_JALR2: begin // write return address to register file
                 reg_we <= 1;
                 mux_reg_input_sel <= MUX_REGINPUT_ALU;
-                nextstate <= (dec_opcode[1]) ? STATE_PCIMM : STATE_PCREGIMM;
+
+                // compute jal/jalr address
+                alu_en <= 1;
+                alu_op <= `ALUOP_ADD;
+                mux_alu_s1_sel <= (dec_opcode[1]) ? MUX_ALUDAT1_PC : MUX_ALUDAT1_REGVAL1;
+                mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
+                nextstate <= STATE_PCUPDATE_FETCH;
             end
 
             STATE_BRANCH1: begin // use ALU for comparisons
@@ -530,22 +534,6 @@ module cpu
                 // advance to next instruction
                 pc <= pcnext;
                 nextstate <= STATE_FETCH;
-            end
-
-            STATE_PCREGIMM: begin // compute REGVAL1 + IMM
-                alu_en <= 1;
-                alu_op <= `ALUOP_ADD;
-                mux_alu_s1_sel <= MUX_ALUDAT1_REGVAL1;
-                mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
-                nextstate <= STATE_PCUPDATE_FETCH;
-            end
-
-            STATE_PCIMM: begin // compute PC + IMM
-                alu_en <= 1;
-                alu_op <= `ALUOP_ADD;
-                mux_alu_s1_sel <= MUX_ALUDAT1_PC;
-                mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
-                nextstate <= STATE_PCUPDATE_FETCH;
             end
 
             STATE_PCUPDATE_FETCH: begin
