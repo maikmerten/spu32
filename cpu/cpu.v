@@ -27,7 +27,7 @@ module cpu
     assign reset = RST_I;
 
     // MSRS
-    reg[31:0] pc, epc;
+    reg[31:0] pc, pcnext, epc;
     reg[31:0] evect = VECTOR_EXCEPTION;
      // current and previous machine-mode external interrupt enable
     reg meie = 0, meie_prev = 0;
@@ -274,6 +274,11 @@ module cpu
                 dec_en <= 1;
                 nextstate <= STATE_REGREAD;
 
+                // ALU is unused... let's compute PC+4!
+                alu_en <= 1;
+                mux_alu_s1_sel <= MUX_ALUDAT1_PC;
+                mux_alu_s2_sel <= MUX_ALUDAT2_INSTLEN;
+
                 // checking for interrupt here because no bus operations are active here
                 // TODO: find a proper place that doesn't let an instruction fetch go to waste
                 if(meie & INTERRUPT_I) begin
@@ -284,7 +289,12 @@ module cpu
             end
 
             STATE_REGREAD: begin
+                // read from registers
                 reg_re <= 1;
+
+                // ALU output is PC+4... store it in pcnext
+                pcnext <= alu_dataout;
+
                 case(dec_opcode)
                     `OP_OP:         nextstate <= STATE_OP;
                     `OP_OPIMM:      nextstate <= STATE_OPIMM;
@@ -374,7 +384,9 @@ module cpu
                     `FUNC_SH:   bus_op <= `BUSOP_WRITEH;
                     default:    bus_op <= `BUSOP_WRITEW; // FUNC_SW
                 endcase
-                nextstate <= STATE_PCNEXT;
+                // advance to next instruction
+                pc <= pcnext;
+                nextstate <= STATE_FETCH;
             end
 
             STATE_JAL_JALR1: begin // compute return address on ALU
@@ -414,7 +426,9 @@ module cpu
             STATE_LUI: begin
                 reg_we <= 1;
                 mux_reg_input_sel <= MUX_REGINPUT_IMM;
-                nextstate <= STATE_PCNEXT;
+                // advance to next instruction
+                pc <= pcnext;
+                nextstate <= STATE_FETCH;
             end
 
             STATE_AUIPC: begin // compute PC + IMM on ALU
@@ -482,28 +496,33 @@ module cpu
                         MSR_EVECT: evect <= reg_val1;
                     endcase
                 end
-                nextstate <= STATE_PCNEXT;
+                // advance to next instruction
+                pc <= pcnext;
+                nextstate <= STATE_FETCH;
             end
 
 
             STATE_REGWRITEBUS: begin
                 reg_we <= 1;
                 mux_reg_input_sel <= MUX_REGINPUT_BUS;
-                nextstate <= STATE_PCNEXT;
+                // advance to next instruction
+                pc <= pcnext;
+                nextstate <= STATE_FETCH;
             end
 
             STATE_REGWRITEALU: begin
                 reg_we <= 1;
                 mux_reg_input_sel <= MUX_REGINPUT_ALU;
-                nextstate <= STATE_PCNEXT;
+
+                // advance to next instruction
+                pc <= pcnext;
+                nextstate <= STATE_FETCH;
             end
 
-            STATE_PCNEXT: begin // compute PC + INSTLEN
-                alu_en <= 1;
-                alu_op <= `ALUOP_ADD;
-                mux_alu_s1_sel <= MUX_ALUDAT1_PC;
-                mux_alu_s2_sel <= MUX_ALUDAT2_INSTLEN;
-                nextstate <= STATE_PCUPDATE_FETCH;
+            STATE_PCNEXT: begin
+                // advance to next instruction
+                pc <= pcnext;
+                nextstate <= STATE_FETCH;
             end
 
             STATE_PCREGIMM: begin // compute REGVAL1 + IMM
