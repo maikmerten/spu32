@@ -112,8 +112,6 @@ module cpu
 	);
 
     // Registers instance
-
-
     registers reg_inst(
         .I_clk(clk),
         .I_data(reg_datain),
@@ -203,7 +201,7 @@ module cpu
     localparam STATE_RESET          = 0;
     localparam STATE_FETCH          = 1;
     localparam STATE_DECODE         = 2;
-    localparam STATE_REGREAD        = 3;
+    localparam STATE_EXEC           = 3;
     localparam STATE_JAL_JALR1      = 4;
     localparam STATE_JAL_JALR2      = 5;
     localparam STATE_LUI            = 6;
@@ -270,7 +268,10 @@ module cpu
 
             STATE_DECODE: begin
                 dec_en <= 1;
-                nextstate <= STATE_REGREAD;
+                nextstate <= STATE_EXEC;
+
+                // read registers
+                reg_re <= 1;
 
                 // ALU is unused... let's compute PC+4!
                 alu_en <= 1;
@@ -286,10 +287,7 @@ module cpu
 
             end
 
-            STATE_REGREAD: begin
-                // read from registers
-                reg_re <= 1;
-
+            STATE_EXEC: begin
                 // ALU output is PC+4... store it in pcnext
                 pcnext <= alu_dataout;
 

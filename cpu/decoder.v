@@ -6,7 +6,8 @@ module decoder(
 	/* verilator lint_off UNUSED */
 	input[31:0] I_instr,
 	/* verilator lint_on UNUSED */
-	output reg[4:0]	 O_rs1, O_rs2, O_rd,
+	output[4:0]	O_rs1, O_rs2,
+	output reg[4:0] O_rd,
 	output reg[31:0] O_imm,
 	output reg[4:0] O_opcode,
 	output reg[2:0] O_funct3,
@@ -15,6 +16,11 @@ module decoder(
 
 	reg[4:0] opcode;
 	reg[31:0] imm;
+
+	// combinatorial decode of source register information to allow for register read during decode
+	assign O_rs1 = I_instr[19:15];
+	assign O_rs2 = I_instr[24:20];
+
 
 	always @(*) begin
 		opcode = I_instr[6:2];
@@ -34,8 +40,6 @@ module decoder(
 			O_opcode <= opcode;
 			O_funct3 <= I_instr[14:12];
 			O_funct7 <= I_instr[31:25];
-			O_rs1 <= I_instr[19:15];
-			O_rs2 <= I_instr[24:20];
 			O_rd <= I_instr[11:7];
 			O_imm <= imm;
 		end
