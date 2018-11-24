@@ -206,9 +206,7 @@ module cpu
     localparam STATE_JAL_JALR2      = 5;
     localparam STATE_LUI            = 6;
     localparam STATE_AUIPC          = 7;
-    localparam STATE_STORE1         = 10;
     localparam STATE_STORE2         = 11;
-    localparam STATE_LOAD1          = 12;
     localparam STATE_LOAD2          = 13;
     localparam STATE_BRANCH1        = 14;
     localparam STATE_BRANCH2        = 15;
@@ -326,9 +324,22 @@ module cpu
                         nextstate <= STATE_REGWRITEALU;
                     end
 
+                    `OP_LOAD: begin // compute load address on ALU
+                        alu_en <= 1;
+                        alu_op <= `ALUOP_ADD;
+                        mux_alu_s1_sel <= MUX_ALUDAT1_REGVAL1;
+                        mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
+                        nextstate <= STATE_LOAD2;
+                    end
 
-                    `OP_LOAD:       nextstate <= STATE_LOAD1;
-                    `OP_STORE:      nextstate <= STATE_STORE1;
+                    `OP_STORE:  begin // compute store address on ALU
+                        alu_en <= 1;
+                        alu_op <= `ALUOP_ADD;
+                        mux_alu_s1_sel <= MUX_ALUDAT1_REGVAL1;
+                        mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
+                        nextstate <= STATE_STORE2;
+                    end
+
                     `OP_JAL:        nextstate <= STATE_JAL_JALR1;
                     `OP_JALR:       nextstate <= STATE_JAL_JALR1;
                     `OP_BRANCH:     nextstate <= STATE_BRANCH1;
@@ -340,14 +351,6 @@ module cpu
                 endcase
             end
 
-
-            STATE_LOAD1: begin // compute load address on ALU
-                alu_en <= 1;
-                alu_op <= `ALUOP_ADD;
-                mux_alu_s1_sel <= MUX_ALUDAT1_REGVAL1;
-                mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
-                nextstate <= STATE_LOAD2;
-            end
 
             STATE_LOAD2: begin // load from computed address
                 bus_en <= 1;
@@ -362,13 +365,6 @@ module cpu
                 nextstate <= STATE_REGWRITEBUS;
             end
 
-            STATE_STORE1: begin // compute store address on ALU
-                alu_en <= 1;
-                alu_op <= `ALUOP_ADD;
-                mux_alu_s1_sel <= MUX_ALUDAT1_REGVAL1;
-                mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
-                nextstate <= STATE_STORE2;
-            end
 
             STATE_STORE2: begin // store to computed address
                 bus_en <= 1;
