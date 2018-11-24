@@ -208,7 +208,6 @@ module cpu
     localparam STATE_AUIPC          = 7;
     localparam STATE_STORE2         = 11;
     localparam STATE_LOAD2          = 13;
-    localparam STATE_BRANCH1        = 14;
     localparam STATE_BRANCH2        = 15;
     localparam STATE_TRAP1          = 16;
     localparam STATE_REGWRITEBUS    = 17;
@@ -342,7 +341,15 @@ module cpu
 
                     `OP_JAL:        nextstate <= STATE_JAL_JALR1;
                     `OP_JALR:       nextstate <= STATE_JAL_JALR1;
-                    `OP_BRANCH:     nextstate <= STATE_BRANCH1;
+
+                    `OP_BRANCH: begin // use ALU for comparisons
+                        alu_en <= 1;
+                        alu_op <= `ALUOP_ADD; // doesn't really matter
+                        mux_alu_s1_sel <= MUX_ALUDAT1_REGVAL1;
+                        mux_alu_s2_sel <= MUX_ALUDAT2_REGVAL2;
+                        nextstate <= STATE_BRANCH2;
+                    end
+
                     `OP_LUI:        nextstate <= STATE_LUI;
                     `OP_AUIPC:      nextstate <= STATE_AUIPC;
                     `OP_MISCMEM:    nextstate <= STATE_PCNEXT; // nop
@@ -397,14 +404,6 @@ module cpu
                 mux_alu_s1_sel <= (dec_opcode[1]) ? MUX_ALUDAT1_PC : MUX_ALUDAT1_REGVAL1;
                 mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
                 nextstate <= STATE_PCUPDATE_FETCH;
-            end
-
-            STATE_BRANCH1: begin // use ALU for comparisons
-                alu_en <= 1;
-                alu_op <= `ALUOP_ADD; // doesn't really matter
-                mux_alu_s1_sel <= MUX_ALUDAT1_REGVAL1;
-                mux_alu_s2_sel <= MUX_ALUDAT2_REGVAL2;
-                nextstate <= STATE_BRANCH2;
             end
 
             STATE_BRANCH2: begin
