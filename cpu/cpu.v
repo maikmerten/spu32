@@ -202,7 +202,6 @@ module cpu
     localparam STATE_FETCH          = 1;
     localparam STATE_DECODE         = 2;
     localparam STATE_EXEC           = 3;
-    localparam STATE_LUI            = 4;
     localparam STATE_STORE2         = 5;
     localparam STATE_LOAD2          = 6;
     localparam STATE_BRANCH2        = 7;
@@ -365,7 +364,12 @@ module cpu
                         nextstate <= STATE_REGWRITEALU;
                     end
 
-                    `OP_LUI:        nextstate <= STATE_LUI;
+                    `OP_LUI: begin
+                        reg_we <= 1;
+                        mux_reg_input_sel <= MUX_REGINPUT_IMM;
+                        nextstate <= STATE_PCNEXT;
+                    end
+
                     `OP_MISCMEM:    nextstate <= STATE_PCNEXT; // nop
                     `OP_SYSTEM:     nextstate <= STATE_SYSTEM;
                     default:        nextstate <= STATE_TRAP1;
@@ -417,14 +421,6 @@ module cpu
                     `FUNC_BLTU: if(alu_ltu)  nextstate <= STATE_PCUPDATE_FETCH;
                     default:    if(!alu_ltu) nextstate <= STATE_PCUPDATE_FETCH; // FUNC_BGEU
                 endcase
-            end
-
-            STATE_LUI: begin
-                reg_we <= 1;
-                mux_reg_input_sel <= MUX_REGINPUT_IMM;
-                // advance to next instruction
-                pc <= pcnext;
-                nextstate <= STATE_FETCH;
             end
 
             STATE_SYSTEM: begin
