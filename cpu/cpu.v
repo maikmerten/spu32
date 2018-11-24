@@ -202,8 +202,6 @@ module cpu
     localparam STATE_FETCH          = 1;
     localparam STATE_DECODE         = 2;
     localparam STATE_EXEC           = 3;
-    localparam STATE_JAL_JALR1      = 4;
-    localparam STATE_JAL_JALR2      = 5;
     localparam STATE_LUI            = 6;
     localparam STATE_STORE2         = 11;
     localparam STATE_LOAD2          = 13;
@@ -338,8 +336,18 @@ module cpu
                         nextstate <= STATE_STORE2;
                     end
 
-                    `OP_JAL:        nextstate <= STATE_JAL_JALR1;
-                    `OP_JALR:       nextstate <= STATE_JAL_JALR1;
+                    `OP_JAL, `OP_JALR: begin
+                        // return address computed during decode, write to register
+                        reg_we <= 1;
+                        mux_reg_input_sel <= MUX_REGINPUT_ALU;
+
+                        // compute jal/jalr address
+                        alu_en <= 1;
+                        alu_op <= `ALUOP_ADD;
+                        mux_alu_s1_sel <= (dec_opcode[1]) ? MUX_ALUDAT1_PC : MUX_ALUDAT1_REGVAL1;
+                        mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
+                        nextstate <= STATE_PCUPDATE_FETCH;
+                    end
 
                     `OP_BRANCH: begin // use ALU for comparisons
                         alu_en <= 1;
@@ -390,26 +398,6 @@ module cpu
                 // advance to next instruction
                 pc <= pcnext;
                 nextstate <= STATE_FETCH;
-            end
-
-            STATE_JAL_JALR1: begin // compute return address on ALU
-                alu_en <= 1;
-                alu_op <= `ALUOP_ADD;
-                mux_alu_s1_sel <= MUX_ALUDAT1_PC;
-                mux_alu_s2_sel <= MUX_ALUDAT2_INSTLEN;
-                nextstate <= STATE_JAL_JALR2;
-            end
-
-            STATE_JAL_JALR2: begin // write return address to register file
-                reg_we <= 1;
-                mux_reg_input_sel <= MUX_REGINPUT_ALU;
-
-                // compute jal/jalr address
-                alu_en <= 1;
-                alu_op <= `ALUOP_ADD;
-                mux_alu_s1_sel <= (dec_opcode[1]) ? MUX_ALUDAT1_PC : MUX_ALUDAT1_REGVAL1;
-                mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
-                nextstate <= STATE_PCUPDATE_FETCH;
             end
 
             STATE_BRANCH2: begin
