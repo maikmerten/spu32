@@ -202,21 +202,21 @@ module cpu
     localparam STATE_FETCH          = 1;
     localparam STATE_DECODE         = 2;
     localparam STATE_EXEC           = 3;
-    localparam STATE_LUI            = 6;
-    localparam STATE_STORE2         = 11;
-    localparam STATE_LOAD2          = 13;
-    localparam STATE_BRANCH2        = 15;
-    localparam STATE_TRAP1          = 16;
-    localparam STATE_REGWRITEBUS    = 17;
-    localparam STATE_REGWRITEALU    = 18;
-    localparam STATE_PCNEXT         = 19;
-    localparam STATE_PCUPDATE_FETCH = 20;
-    localparam STATE_SYSTEM         = 21;
-    localparam STATE_CSRRW1         = 22;
-    localparam STATE_CSRRW2         = 23;
+    localparam STATE_LUI            = 4;
+    localparam STATE_STORE2         = 5;
+    localparam STATE_LOAD2          = 6;
+    localparam STATE_BRANCH2        = 7;
+    localparam STATE_TRAP1          = 8;
+    localparam STATE_REGWRITEBUS    = 9;
+    localparam STATE_REGWRITEALU    = 10;
+    localparam STATE_PCNEXT         = 11;
+    localparam STATE_PCUPDATE_FETCH = 12;
+    localparam STATE_SYSTEM         = 13;
+    localparam STATE_CSRRW1         = 14;
+    localparam STATE_CSRRW2         = 15;
 
 
-    reg[4:0] state, prevstate = STATE_RESET, nextstate = STATE_RESET;
+    reg[3:0] state, prevstate = STATE_RESET, nextstate = STATE_RESET;
 
     wire busy;
     assign busy = alu_busy | bus_busy;
