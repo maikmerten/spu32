@@ -206,8 +206,6 @@ module cpu
     localparam STATE_JAL_JALR2      = 5;
     localparam STATE_LUI            = 6;
     localparam STATE_AUIPC          = 7;
-    localparam STATE_OP             = 8;
-    localparam STATE_OPIMM          = 9;
     localparam STATE_STORE1         = 10;
     localparam STATE_STORE2         = 11;
     localparam STATE_LOAD1          = 12;
@@ -288,12 +286,47 @@ module cpu
             end
 
             STATE_EXEC: begin
-                // ALU output is PC+4... store it in pcnext
-                pcnext <= alu_dataout;
+                // ALU output when coming from decode is PC+4... store it in pcnext
+                if(!busy) pcnext <= alu_dataout;
 
                 case(dec_opcode)
-                    `OP_OP:         nextstate <= STATE_OP;
-                    `OP_OPIMM:      nextstate <= STATE_OPIMM;
+                    `OP_OP: begin
+                        alu_en <= 1;
+                        mux_alu_s1_sel <= MUX_ALUDAT1_REGVAL1;
+                        mux_alu_s2_sel <= MUX_ALUDAT2_REGVAL2;
+                        case(dec_funct3)
+                            `FUNC_ADD_SUB:  alu_op <= dec_funct7[5] ? `ALUOP_SUB : `ALUOP_ADD;
+                            `FUNC_SLL:      alu_op <= `ALUOP_SLL;
+                            `FUNC_SLT:      alu_op <= `ALUOP_SLT;
+                            `FUNC_SLTU:     alu_op <= `ALUOP_SLTU;
+                            `FUNC_XOR:      alu_op <= `ALUOP_XOR;
+                            `FUNC_SRL_SRA:  alu_op <= dec_funct7[5] ? `ALUOP_SRA : `ALUOP_SRL;
+                            `FUNC_OR:       alu_op <= `ALUOP_OR;
+                            `FUNC_AND:      alu_op <= `ALUOP_AND;
+                            default:        alu_op <= `ALUOP_ADD;
+                        endcase
+                        nextstate <= STATE_REGWRITEALU;
+                    end
+
+                    `OP_OPIMM: begin
+                        alu_en <= 1;
+                        mux_alu_s1_sel <= MUX_ALUDAT1_REGVAL1;
+                        mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
+                        case(dec_funct3)
+                            `FUNC_ADDI:         alu_op <= `ALUOP_ADD;
+                            `FUNC_SLLI:         alu_op <= `ALUOP_SLL;
+                            `FUNC_SLTI:         alu_op <= `ALUOP_SLT;
+                            `FUNC_SLTIU:        alu_op <= `ALUOP_SLTU;
+                            `FUNC_XORI:         alu_op <= `ALUOP_XOR;
+                            `FUNC_SRLI_SRAI:    alu_op <= dec_funct7[5] ? `ALUOP_SRA : `ALUOP_SRL;
+                            `FUNC_ORI:          alu_op <= `ALUOP_OR;
+                            `FUNC_ANDI:         alu_op <= `ALUOP_AND;
+                            default:            alu_op <= `ALUOP_ADD;
+                        endcase
+                        nextstate <= STATE_REGWRITEALU;
+                    end
+
+
                     `OP_LOAD:       nextstate <= STATE_LOAD1;
                     `OP_STORE:      nextstate <= STATE_STORE1;
                     `OP_JAL:        nextstate <= STATE_JAL_JALR1;
@@ -307,41 +340,6 @@ module cpu
                 endcase
             end
 
-            STATE_OP: begin
-                alu_en <= 1;
-                mux_alu_s1_sel <= MUX_ALUDAT1_REGVAL1;
-                mux_alu_s2_sel <= MUX_ALUDAT2_REGVAL2;
-                case(dec_funct3)
-                    `FUNC_ADD_SUB:  alu_op <= dec_funct7[5] ? `ALUOP_SUB : `ALUOP_ADD;
-                    `FUNC_SLL:      alu_op <= `ALUOP_SLL;
-                    `FUNC_SLT:      alu_op <= `ALUOP_SLT;
-                    `FUNC_SLTU:     alu_op <= `ALUOP_SLTU;
-                    `FUNC_XOR:      alu_op <= `ALUOP_XOR;
-                    `FUNC_SRL_SRA:  alu_op <= dec_funct7[5] ? `ALUOP_SRA : `ALUOP_SRL;
-                    `FUNC_OR:       alu_op <= `ALUOP_OR;
-                    `FUNC_AND:      alu_op <= `ALUOP_AND;
-                    default:        alu_op <= `ALUOP_ADD;
-                endcase
-                nextstate <= STATE_REGWRITEALU;
-            end
-
-            STATE_OPIMM: begin
-                alu_en <= 1;
-                mux_alu_s1_sel <= MUX_ALUDAT1_REGVAL1;
-                mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
-                case(dec_funct3)
-                    `FUNC_ADDI:         alu_op <= `ALUOP_ADD;
-                    `FUNC_SLLI:         alu_op <= `ALUOP_SLL;
-                    `FUNC_SLTI:         alu_op <= `ALUOP_SLT;
-                    `FUNC_SLTIU:        alu_op <= `ALUOP_SLTU;
-                    `FUNC_XORI:         alu_op <= `ALUOP_XOR;
-                    `FUNC_SRLI_SRAI:    alu_op <= dec_funct7[5] ? `ALUOP_SRA : `ALUOP_SRL;
-                    `FUNC_ORI:          alu_op <= `ALUOP_OR;
-                    `FUNC_ANDI:         alu_op <= `ALUOP_AND;
-                    default:            alu_op <= `ALUOP_ADD;
-                endcase
-                nextstate <= STATE_REGWRITEALU;
-            end
 
             STATE_LOAD1: begin // compute load address on ALU
                 alu_en <= 1;
