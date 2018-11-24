@@ -205,7 +205,6 @@ module cpu
     localparam STATE_JAL_JALR1      = 4;
     localparam STATE_JAL_JALR2      = 5;
     localparam STATE_LUI            = 6;
-    localparam STATE_AUIPC          = 7;
     localparam STATE_STORE2         = 11;
     localparam STATE_LOAD2          = 13;
     localparam STATE_BRANCH2        = 15;
@@ -350,8 +349,15 @@ module cpu
                         nextstate <= STATE_BRANCH2;
                     end
 
+                    `OP_AUIPC: begin // compute PC + IMM on ALU
+                        alu_en <= 1;
+                        alu_op <= `ALUOP_ADD;
+                        mux_alu_s1_sel <= MUX_ALUDAT1_PC;
+                        mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
+                        nextstate <= STATE_REGWRITEALU;
+                    end
+
                     `OP_LUI:        nextstate <= STATE_LUI;
-                    `OP_AUIPC:      nextstate <= STATE_AUIPC;
                     `OP_MISCMEM:    nextstate <= STATE_PCNEXT; // nop
                     `OP_SYSTEM:     nextstate <= STATE_SYSTEM;
                     default:        nextstate <= STATE_TRAP1;
@@ -431,14 +437,6 @@ module cpu
                 // advance to next instruction
                 pc <= pcnext;
                 nextstate <= STATE_FETCH;
-            end
-
-            STATE_AUIPC: begin // compute PC + IMM on ALU
-                alu_en <= 1;
-                alu_op <= `ALUOP_ADD;
-                mux_alu_s1_sel <= MUX_ALUDAT1_PC;
-                mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
-                nextstate <= STATE_REGWRITEALU;
             end
 
             STATE_SYSTEM: begin
