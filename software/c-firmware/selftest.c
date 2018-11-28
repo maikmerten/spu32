@@ -108,6 +108,26 @@ void checkSort() {
 
 }
 
+/*
+* Third check: Fibonacci!
+*/
+
+int fib(n)  {
+    if(n < 3) return 1;
+    return fib(n-1) + fib(n-2);
+}
+
+void checkFib() {
+    int n = fib(20);
+
+    if(n != 6765) {
+        printf("fibonacci test failed %d\n\r", n);
+        error(3);
+    } else {
+        printf("fibonacci test passed\n\r");
+    }
+}
+
 
 int main() {
 
@@ -118,6 +138,7 @@ int main() {
         set_leds_value(pass++);
         checkPrime();
         checkSort();
+        checkFib();
 
     }
 
