@@ -1,5 +1,5 @@
 CC=riscv32-unknown-elf-gcc
-CFLAGS=-static -nostdlib -Os -fno-builtin-printf -fPIC
+CFLAGS=-static -nostdlib -Os -fno-builtin-printf -fPIC -fdata-sections -ffunction-sections
 
 AR=riscv32-unknown-elf-ar
 ARFLAGS=rs
