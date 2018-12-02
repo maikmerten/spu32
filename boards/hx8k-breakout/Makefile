@@ -21,7 +21,7 @@ top.json: config-local.vh top.v
 	cd ../.. && yosys -p 'synth_ice40 -json ./boards/hx8k-breakout/top.json' ./boards/hx8k-breakout/top.v
 
 top.asc: top.json hx8k-breakout.pcf
-	nextpnr-ice40 --randomize-seed --hx8k --json top.json --pcf hx8k-breakout.pcf --asc top.asc
+	nextpnr-ice40 --randomize-seed --hx8k --json top.json --pcf hx8k-breakout.pcf --asc top.asc --freq 28
 
 top.bin: top.asc
 	icepack top.asc top.bin
