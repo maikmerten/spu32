@@ -5,7 +5,7 @@
 .global _start
 
 testsuite:
-li sp,1024
+li sp,8192
 sb zero, DEV_LED(x0) # clear LEDs
 
 # jump to test collection

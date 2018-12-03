@@ -5,14 +5,14 @@ clean:
 	-rm *.bin *.dat *.o testcollection.s
 
 testcollection.s:
-	java -jar tomthumb-testgen-1.0-SNAPSHOT.jar > testcollection.s
+	java -jar tomthumb-testgen-1.0-SNAPSHOT.jar 128 > testcollection.s
 
 testsuite.o: testcollection.s testsuite.s
 	riscv32-unknown-elf-gcc -march=rv32i -O0 -nostdlib -nostartfiles -Tlink.ld -x assembler-with-cpp -o testsuite.o testsuite.s
 
 testsuite.bin: testsuite.o
 	riscv32-unknown-elf-objcopy -O binary testsuite.o testsuite.bin
-	truncate -s 1024 testsuite.bin
+	truncate -s 8192 testsuite.bin
 
 testsuite.dat: testsuite.bin
 	hexdump -v -f hexdump-format-byte testsuite.bin > testsuite.dat

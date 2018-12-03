@@ -39,7 +39,7 @@ module cpu_tb();
 	    .CLK_I(clk),
 	    .STB_I(ram_stb),
 	    .WE_I(cpu_we),
-	    .ADR_I(cpu_adr[9:0]),
+	    .ADR_I(cpu_adr[12:0]),
 	    .DAT_I(cpu_dat),
 	    .DAT_O(ram_dat),
 	    .ACK_O(ram_ack)
