@@ -12,6 +12,7 @@
 
 struct termios termsave;
 int fd_tty;
+int testrun = 0;
 
 const char CMD_CHIP_ERASE = (char) 0x60;
 const char CMD_FASTREAD = (char) 0x0B;
@@ -100,6 +101,22 @@ void callAddress(int address) {
     cmd_call[0] = 'C';
     assemble32(&cmd_call[1], 0);
     write(fd_tty, cmd_call, sizeof cmd_call);
+}
+
+int readTestResult() {
+    int tries = 500;
+
+    while(tries--) {
+        int n;
+        char c;
+        n = read(fd_tty, &c, 1);
+        if(n > 0) {
+            return (int)c;
+        }
+        usleep(1000);
+    }
+
+    return -2;
 }
 
 void console() {
@@ -300,7 +317,7 @@ int main(int argc, char *argv[])
     int c;
     opterr = 0;
 
-    while ((c = getopt (argc, argv, "cd:f:p")) != -1) {
+    while ((c = getopt (argc, argv, "cd:f:pt")) != -1) {
         switch (c) {
             case 'c':
                 enterconsole = 1;
@@ -313,6 +330,9 @@ int main(int argc, char *argv[])
                 break;
             case 'p':
                 program = 1;
+                break;
+            case 't':
+                testrun = 1;
                 break;
       
             case '?':
@@ -359,11 +379,25 @@ int main(int argc, char *argv[])
         printf("... aaaand it's done!\n");
         printf("\n\r");
     } else {
+        drainfd();
         uploadFile(filename, 0);
         callAddress(0);
     }
 
-    if(enterconsole) {
+    if(testrun) {
+        int result = readTestResult();
+        if(result >= 0) {
+            printf("TEST %d FAILED!\n\r", result);
+            return 1;
+        } else if(result == -1) {
+            printf("TESTS PASSED!\n\r");
+            return 0;
+        } else if(result == -2) {
+            printf("TESTS FAILED, READ TIMEOUT!\n\r");
+            return 1;
+        }
+
+    } else if(enterconsole) {
         console();
     }
 
