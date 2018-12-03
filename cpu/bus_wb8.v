@@ -36,6 +36,7 @@ module bus_wb8(
 
 	reg mysign = 0;
 
+	`ifdef ENABLE_CACHE
 	wire[31:0] cache_data;
 	wire cache_hit;
 	reg offer_data_to_cache = 0;
@@ -51,6 +52,7 @@ module bus_wb8(
 		.O_data(cache_data),
 		.O_hit(cache_hit)
 	);
+	`endif
 
 	always @(*) begin
 		// determine number of bytes to be processed
@@ -83,7 +85,9 @@ module bus_wb8(
 		CYC_O <= 0;
 		STB_O <= 0;
 		busy <= 0;
+		`ifdef ENABLE_CACHE
 		offer_data_to_cache <= 0;
+		`endif
 
 		if(I_en) begin
 			// if enabled, act
