@@ -2,10 +2,9 @@
 COUNTER=0;
 while true; do
 	COUNTER=$[COUNTER + 1]
-	cd ./cpu/tests/testgen
 	make clean
 	make testsuite.dat
-	cd ../../..
+	cd ../..
 	./test.sh ./cpu/tests/cpu_tb.v
 	RETCODE=$?
 	if [ "$RETCODE" == 0 ]; then
@@ -14,6 +13,8 @@ while true; do
 		echo "FAIL, run $COUNTER"
 		exit 1
 	fi
+
+	cd ./software/testgen
 
 done
 

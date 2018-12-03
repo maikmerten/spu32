@@ -34,7 +34,7 @@ module cpu_tb();
     wire[7:0] ram_dat;
 
     bram_wb8 #(
-        .RAMINITFILE("./cpu/tests/testgen/testsuite.dat")
+        .RAMINITFILE("./software/testgen/testsuite.dat")
     ) ram_inst (
 	    .CLK_I(clk),
 	    .STB_I(ram_stb),

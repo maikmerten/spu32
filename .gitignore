@@ -13,4 +13,5 @@
 *.dat
 software/serial-uploader/uploader
 *config-local.vh
-cpu/tests/testgen/testcollection.s
+software/testgen/testcollection.s
+software/testgen/.testcollection.s.swp
