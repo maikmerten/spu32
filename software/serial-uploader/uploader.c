@@ -13,6 +13,7 @@
 struct termios termsave;
 int fd_tty;
 int testrun = 0;
+int exitcode = 0;
 
 const char CMD_CHIP_ERASE = (char) 0x60;
 const char CMD_FASTREAD = (char) 0x0B;
@@ -295,11 +296,11 @@ void cleanup() {
     close(fd_tty);
     tcsetattr(0, 0, &termsave);
     printf("bye.\n\r");
-    exit(0);
+    exit(exitcode);
 }
 
 void sigint() {
-    exit(0);
+    exit(exitcode);
 }
 
 
@@ -388,13 +389,12 @@ int main(int argc, char *argv[])
         int result = readTestResult();
         if(result >= 0) {
             printf("TEST %d FAILED!\n\r", result);
-            return 1;
+            exitcode = 1;
         } else if(result == -1) {
             printf("TESTS PASSED!\n\r");
-            return 0;
         } else if(result == -2) {
             printf("TESTS FAILED, READ TIMEOUT!\n\r");
-            return 1;
+            exitcode = 1;
         }
 
     } else if(enterconsole) {
@@ -402,5 +402,5 @@ int main(int argc, char *argv[])
     }
 
 
-    return 0;
+    return exitcode;
 }
