@@ -1,6 +1,8 @@
 #include <libtinyc.h>
 #include <libspu32.h>
 
+int pass;
+
 void error(char i) {
     set_leds_value(i);
     while(1) {}
@@ -128,18 +130,55 @@ void checkFib() {
     }
 }
 
+/*
+* Fourth check: memcpy
+*/
+
+int checkMemcpy() {
+    char buf1[337];
+    char buf2[337];
+
+    set_prng_seed(pass);
+
+    for(int repeat = 0; repeat < 128; ++repeat) {
+        // fill buf1 with random valuesö
+        for(int i = 0; i < sizeof buf1; ++i) {
+            buf1[i] = (char)(get_prng_value() & 0xFF);
+        }
+        // terminate "string"
+        buf1[(sizeof buf1) - 1] = 0;
+
+        // scrub buf2
+        for(int i = 0; i < sizeof buf2; ++i) {
+            buf2[i] = 0;
+        }
+
+        // copy contents of buf1 to buf2...
+        memcpy(buf2, buf1, sizeof buf2);
+
+        // ... and compare. buf1 and buf2 should match
+        if(strcmp(buf1, buf2) != 0) {
+            printf("memcpy/strcmp failed!\n\r");
+            error(4);
+        }
+    }
+    
+    printf("memcpy/strcmp test passed\n\r");
+}
+
 
 int main() {
-
-    char pass = 0;
+    pass = 0;
 
 
     while(1) {
-        set_leds_value(pass++);
+        printf("\n\r=== Pass %d ===\n\r", pass);
+        set_leds_value(pass);
         checkPrime();
         checkSort();
         checkFib();
-
+        checkMemcpy();
+        pass++;
     }
 
 	
