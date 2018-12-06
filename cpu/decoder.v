@@ -10,13 +10,15 @@ module decoder(
 	output reg[4:0] O_rd,
 	output reg[31:0] O_imm,
 	output reg[4:0] O_opcode,
-	output reg[2:0] O_funct3,
+	output[2:0] O_funct3,
 	output reg[6:0] O_funct7,
 	output reg[5:0] O_branchmask
 	);
 
 	reg[4:0] opcode;
 	reg[31:0] imm;
+	reg[2:0] funct3;
+	assign O_funct3 = funct3;
 
 	// combinatorial decode of source register information to allow for register read during decode
 	assign O_rs1 = I_instr[19:15];
@@ -34,26 +36,25 @@ module decoder(
 			default: imm = {{20{I_instr[31]}}, I_instr[31:20]}; // I-type and R-type. Immediate has no meaning for R-type instructions
 		endcase
 
+		O_branchmask = 0;
+		case(funct3) // funct3
+            `FUNC_BEQ:  O_branchmask[0] = 1;
+            `FUNC_BNE:  O_branchmask[1] = 1;
+            `FUNC_BLT:  O_branchmask[2] = 1;
+            `FUNC_BGE:  O_branchmask[3] = 1;
+            `FUNC_BLTU: O_branchmask[4] = 1;
+            `FUNC_BGEU: O_branchmask[5] = 1;
+		endcase
+
 	end
 
 	always @(posedge I_clk) begin
 		if(I_en) begin
 			O_opcode <= opcode;
-			O_funct3 <= I_instr[14:12];
+			funct3 <= I_instr[14:12];
 			O_funct7 <= I_instr[31:25];
 			O_rd <= I_instr[11:7];
 			O_imm <= imm;
-
-			O_branchmask = 0;
-			case(I_instr[14:12]) // funct3
-                    `FUNC_BEQ:  O_branchmask[0] <= 1;
-                    `FUNC_BNE:  O_branchmask[1] <= 1;
-                    `FUNC_BLT:  O_branchmask[2] <= 1;
-                    `FUNC_BGE:  O_branchmask[3] <= 1;
-                    `FUNC_BLTU: O_branchmask[4] <= 1;
-                    default:    O_branchmask[5] <= 1; // FUNC_BGEU
-			endcase
-
 		end
 	end
 
