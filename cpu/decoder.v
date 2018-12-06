@@ -11,7 +11,8 @@ module decoder(
 	output reg[31:0] O_imm,
 	output reg[4:0] O_opcode,
 	output reg[2:0] O_funct3,
-	output reg[6:0] O_funct7
+	output reg[6:0] O_funct7,
+	output reg[5:0] O_branchmask
 	);
 
 	reg[4:0] opcode;
@@ -42,6 +43,17 @@ module decoder(
 			O_funct7 <= I_instr[31:25];
 			O_rd <= I_instr[11:7];
 			O_imm <= imm;
+
+			O_branchmask = 0;
+			case(I_instr[14:12]) // funct3
+                    `FUNC_BEQ:  O_branchmask[0] <= 1;
+                    `FUNC_BNE:  O_branchmask[1] <= 1;
+                    `FUNC_BLT:  O_branchmask[2] <= 1;
+                    `FUNC_BGE:  O_branchmask[3] <= 1;
+                    `FUNC_BLTU: O_branchmask[4] <= 1;
+                    default:    O_branchmask[5] <= 1; // FUNC_BGEU
+			endcase
+
 		end
 	end
 

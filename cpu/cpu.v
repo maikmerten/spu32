@@ -96,6 +96,7 @@ module cpu
     wire[4:0] dec_opcode;
     wire[2:0] dec_funct3;
     wire[6:0] dec_funct7;
+    wire[5:0] dec_branchmask;
     reg dec_en;
 
     decoder dec_inst(
@@ -108,7 +109,8 @@ module cpu
         .O_imm(dec_imm),
         .O_opcode(dec_opcode),
         .O_funct3(dec_funct3),
-        .O_funct7(dec_funct7)
+        .O_funct7(dec_funct7),
+        .O_branchmask(dec_branchmask)
 	);
 
     // Registers instance
@@ -220,7 +222,12 @@ module cpu
     wire busy;
     assign busy = alu_busy | bus_busy;
 
-    // only transition to new state if not busy
+    // evaluate branch conditions
+    wire branch;
+    assign branch = (dec_branchmask & {!alu_ltu, alu_ltu, !alu_lt, alu_lt, !alu_eq, alu_eq}) != 0;
+
+
+    // only transition to new state if not busy    
     always @(*) begin
         state = busy ? prevstate : nextstate;
     end
@@ -405,22 +412,13 @@ module cpu
             end
 
             STATE_BRANCH2: begin
-                nextstate <= STATE_PCNEXT; // by default assume we don't branch
-
                 // use idle ALU to compute PC+immediate - in case we branch
                 alu_en <= 1;
                 alu_op <= `ALUOP_ADD;
                 mux_alu_s1_sel <= MUX_ALUDAT1_PC;
                 mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
 
-                case(dec_funct3)
-                    `FUNC_BEQ:  if(alu_eq)   nextstate <= STATE_PCUPDATE_FETCH;
-                    `FUNC_BNE:  if(!alu_eq)  nextstate <= STATE_PCUPDATE_FETCH;
-                    `FUNC_BLT:  if(alu_lt)   nextstate <= STATE_PCUPDATE_FETCH;
-                    `FUNC_BGE:  if(!alu_lt)  nextstate <= STATE_PCUPDATE_FETCH;
-                    `FUNC_BLTU: if(alu_ltu)  nextstate <= STATE_PCUPDATE_FETCH;
-                    default:    if(!alu_ltu) nextstate <= STATE_PCUPDATE_FETCH; // FUNC_BGEU
-                endcase
+                nextstate <= branch ? STATE_PCUPDATE_FETCH : STATE_PCNEXT;
             end
 
             STATE_SYSTEM: begin
