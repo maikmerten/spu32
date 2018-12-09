@@ -28,7 +28,7 @@ module cpu
 
     // MSRS
     reg[31:0] pc, pcnext, epc;
-    reg nextpc_from_alu;
+    reg nextpc_from_alu, writeback_from_alu;
     reg[31:0] evect = VECTOR_EXCEPTION;
      // current and previous machine-mode external interrupt enable
     reg meie = 0, meie_prev = 0;
@@ -210,7 +210,6 @@ module cpu
     localparam STATE_BRANCH2        = 7;
     localparam STATE_TRAP1          = 8;
     localparam STATE_REGWRITEBUS    = 9;
-    localparam STATE_REGWRITEALU    = 10;
     localparam STATE_SYSTEM         = 13;
     localparam STATE_CSRRW1         = 14;
     localparam STATE_CSRRW2         = 15;
@@ -255,11 +254,21 @@ module cpu
                 nextstate <= STATE_FETCH;
                 evect <= VECTOR_EXCEPTION;
                 nextpc_from_alu <= 0;
+                writeback_from_alu <= 0;
             end
 
             STATE_FETCH: begin
+                // write result of previous instruction to registers if requested
+                if(writeback_from_alu) begin
+                    reg_we <= 1;
+                    mux_reg_input_sel <= MUX_REGINPUT_ALU;
+                    writeback_from_alu <= 0;
+                end
+
+                // update PC
                 pc <= nextpc_from_alu ? alu_dataout : pcnext;
 
+                // fetch next instruction 
                 bus_en <= 1;
                 bus_op <= `BUSOP_READW;
                 mux_bus_addr_sel <= MUX_BUSADDR_PC;
@@ -310,7 +319,9 @@ module cpu
                             `FUNC_AND:      alu_op <= `ALUOP_AND;
                             default:        alu_op <= `ALUOP_ADD;
                         endcase
-                        nextstate <= STATE_REGWRITEALU;
+                        // do register writeback in FETCH
+                        writeback_from_alu <= 1;
+                        nextstate <= STATE_FETCH;
                     end
 
                     `OP_OPIMM: begin
@@ -328,7 +339,9 @@ module cpu
                             `FUNC_ANDI:         alu_op <= `ALUOP_AND;
                             default:            alu_op <= `ALUOP_ADD;
                         endcase
-                        nextstate <= STATE_REGWRITEALU;
+                        // do register writeback in FETCH
+                        writeback_from_alu <= 1;
+                        nextstate <= STATE_FETCH;
                     end
 
                     `OP_LOAD: begin // compute load address on ALU
@@ -375,7 +388,9 @@ module cpu
                         alu_op <= `ALUOP_ADD;
                         mux_alu_s1_sel <= MUX_ALUDAT1_PC;
                         mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
-                        nextstate <= STATE_REGWRITEALU;
+                        // do register writeback in FETCH
+                        writeback_from_alu <= 1;
+                        nextstate <= STATE_FETCH;
                     end
 
                     `OP_LUI: begin
@@ -493,14 +508,6 @@ module cpu
             STATE_REGWRITEBUS: begin
                 reg_we <= 1;
                 mux_reg_input_sel <= MUX_REGINPUT_BUS;
-                // advance to next instruction
-                nextstate <= STATE_FETCH;
-            end
-
-            STATE_REGWRITEALU: begin
-                reg_we <= 1;
-                mux_reg_input_sel <= MUX_REGINPUT_ALU;
-
                 // advance to next instruction
                 nextstate <= STATE_FETCH;
             end
