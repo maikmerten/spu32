@@ -267,7 +267,7 @@ module cpu
             end
 
             STATE_DECODE: begin
-                // assume for now the next PC will come from nextpc
+                // assume for now the next PC will come from pcnext
                 nextpc_from_alu <= 0;
 
                 dec_en <= 1;
