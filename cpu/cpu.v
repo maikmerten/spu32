@@ -28,6 +28,7 @@ module cpu
 
     // MSRS
     reg[31:0] pc, pcnext, epc;
+    reg nextpc_from_alu;
     reg[31:0] evect = VECTOR_EXCEPTION;
      // current and previous machine-mode external interrupt enable
     reg meie = 0, meie_prev = 0;
@@ -210,8 +211,6 @@ module cpu
     localparam STATE_TRAP1          = 8;
     localparam STATE_REGWRITEBUS    = 9;
     localparam STATE_REGWRITEALU    = 10;
-    localparam STATE_PCNEXT         = 11;
-    localparam STATE_PCUPDATE_FETCH = 12;
     localparam STATE_SYSTEM         = 13;
     localparam STATE_CSRRW1         = 14;
     localparam STATE_CSRRW2         = 15;
@@ -251,13 +250,16 @@ module cpu
 
         case(state)
             STATE_RESET: begin
-                pc <= VECTOR_RESET;
+                pcnext <= VECTOR_RESET;
                 meie <= 0; // disable machine-mode external interrupt
                 nextstate <= STATE_FETCH;
                 evect <= VECTOR_EXCEPTION;
+                nextpc_from_alu <= 0;
             end
 
             STATE_FETCH: begin
+                pc <= nextpc_from_alu ? alu_dataout : pcnext;
+
                 bus_en <= 1;
                 bus_op <= `BUSOP_READW;
                 mux_bus_addr_sel <= MUX_BUSADDR_PC;
@@ -265,6 +267,9 @@ module cpu
             end
 
             STATE_DECODE: begin
+                // assume for now the next PC will come from nextpc
+                nextpc_from_alu <= 0;
+
                 dec_en <= 1;
                 nextstate <= STATE_EXEC;
 
@@ -352,7 +357,9 @@ module cpu
                         alu_op <= `ALUOP_ADD;
                         mux_alu_s1_sel <= (dec_opcode[1]) ? MUX_ALUDAT1_PC : MUX_ALUDAT1_REGVAL1;
                         mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
-                        nextstate <= STATE_PCUPDATE_FETCH;
+
+                        nextpc_from_alu <= 1;
+                        nextstate <= STATE_FETCH;
                     end
 
                     `OP_BRANCH: begin // use ALU for comparisons
@@ -374,10 +381,10 @@ module cpu
                     `OP_LUI: begin
                         reg_we <= 1;
                         mux_reg_input_sel <= MUX_REGINPUT_IMM;
-                        nextstate <= STATE_PCNEXT;
+                        nextstate <= STATE_FETCH;
                     end
 
-                    `OP_MISCMEM:    nextstate <= STATE_PCNEXT; // nop
+                    `OP_MISCMEM:    nextstate <= STATE_FETCH; // nop
                     `OP_SYSTEM:     nextstate <= STATE_SYSTEM;
                     default:        nextstate <= STATE_TRAP1;
                 endcase
@@ -407,7 +414,6 @@ module cpu
                     default:    bus_op <= `BUSOP_WRITEW; // FUNC_SW
                 endcase
                 // advance to next instruction
-                pc <= pcnext;
                 nextstate <= STATE_FETCH;
             end
 
@@ -418,7 +424,8 @@ module cpu
                 mux_alu_s1_sel <= MUX_ALUDAT1_PC;
                 mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
 
-                nextstate <= branch ? STATE_PCUPDATE_FETCH : STATE_PCNEXT;
+                nextpc_from_alu <= branch;
+                nextstate <= STATE_FETCH;
             end
 
             STATE_SYSTEM: begin
@@ -431,7 +438,7 @@ module cpu
                             `SYSTEM_EBREAK: mcause <= CAUSE_BREAK;
                             `SYSTEM_MRET: begin
                                 meie <= meie_prev;
-                                pc <= epc;
+                                pcnext <= epc;
                                 mcause <= 0;
                                 nextstate <= STATE_FETCH;
                             end
@@ -453,7 +460,7 @@ module cpu
                 meie_prev <= meie;
                 meie <= 0;
                 epc <= pc;
-                pc <= evect;
+                pcnext <= evect;
 
                 nextstate <= STATE_FETCH;
             end
@@ -479,7 +486,6 @@ module cpu
                     endcase
                 end
                 // advance to next instruction
-                pc <= pcnext;
                 nextstate <= STATE_FETCH;
             end
 
@@ -488,7 +494,6 @@ module cpu
                 reg_we <= 1;
                 mux_reg_input_sel <= MUX_REGINPUT_BUS;
                 // advance to next instruction
-                pc <= pcnext;
                 nextstate <= STATE_FETCH;
             end
 
@@ -497,25 +502,7 @@ module cpu
                 mux_reg_input_sel <= MUX_REGINPUT_ALU;
 
                 // advance to next instruction
-                pc <= pcnext;
                 nextstate <= STATE_FETCH;
-            end
-
-            STATE_PCNEXT: begin
-                // advance to next instruction
-                pc <= pcnext;
-                nextstate <= STATE_FETCH;
-            end
-
-            STATE_PCUPDATE_FETCH: begin
-                // update PC with computed address
-                pc <= alu_dataout;
-
-                // ALU output is address of next instruction. Go fetch!
-                bus_en <= 1;
-                bus_op <= `BUSOP_READW;
-                mux_bus_addr_sel <= MUX_BUSADDR_ALU;
-                nextstate <= STATE_DECODE;
             end
 
         endcase
