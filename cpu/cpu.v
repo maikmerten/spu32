@@ -238,9 +238,9 @@ module cpu
         reg_re <= 0;
         reg_we <= 0;
 
-        mux_alu_s1_sel <= 0;
-        mux_alu_s2_sel <= 0;
-        mux_reg_input_sel <= 0;
+        mux_alu_s1_sel <= MUX_ALUDAT1_REGVAL1;
+        mux_alu_s2_sel <= MUX_ALUDAT2_REGVAL2;
+        mux_reg_input_sel <= MUX_REGINPUT_ALU;
 
         alu_op <= `ALUOP_ADD;
 
@@ -259,11 +259,9 @@ module cpu
 
             STATE_FETCH: begin
                 // write result of previous instruction to registers if requested
-                if(writeback_from_alu) begin
-                    reg_we <= 1;
-                    mux_reg_input_sel <= MUX_REGINPUT_ALU;
-                    writeback_from_alu <= 0;
-                end
+                mux_reg_input_sel <= MUX_REGINPUT_ALU;
+                reg_we <= writeback_from_alu;
+                writeback_from_alu <= 0;
 
                 // update PC
                 pc <= nextpc_from_alu ? alu_dataout : pcnext;
