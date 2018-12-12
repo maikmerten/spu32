@@ -29,6 +29,10 @@ module bus_wb8(
 	assign O_busy = busy;
 
 	reg[2:0] addrcnt = 0, ackcnt = 0, byte_target = 0;
+	wire[2:0] addrcnt_next, ackcnt_next;
+	assign addrcnt_next = addrcnt + 1;
+	assign ackcnt_next = ackcnt + 1;
+
 	wire[31:0] busaddr;
 	assign busaddr = I_addr + {{29{1'b0}}, addrcnt};
 	reg signextend = 0;
@@ -119,7 +123,7 @@ module bus_wb8(
 					endcase
 
 					// TODO: only increment addrcnt when STALL_I is not asserted
-					addrcnt <= addrcnt + 1;
+					addrcnt <= addrcnt_next;
 				end
 
 				if(ACK_I) begin
@@ -135,14 +139,27 @@ module bus_wb8(
 							`endif
 						end
 					endcase
-					ackcnt <= ackcnt + 1;
+					ackcnt <= ackcnt_next;
+
+					`ifndef ENABLE_CACHE
+					// TODO: find out why this is incompatible with the cache
+					if(ackcnt_next == byte_target) begin
+						// received the correct number of ACKs, prepare for next request
+						busy <= 0;
+						ackcnt <= 0;
+						addrcnt <= 0;
+					end
+					`endif
+
 				end
-			end else begin
-				// reached the correct number of ACKs, prepare for next request
+			end
+			`ifdef ENABLE_CACHE
+			else begin
 				busy <= 0;
 				ackcnt <= 0;
 				addrcnt <= 0;
 			end
+			`endif
 
 		end
 
