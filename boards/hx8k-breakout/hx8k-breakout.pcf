@@ -60,3 +60,11 @@ set_io sram_d7 T15
 
 set_io eled_1 T9
 set_io eled_2 P9
+
+# VGA signals
+
+set_io vga_vsync K15
+set_io vga_hsync M16
+set_io vga_r K16
+set_io vga_g L16
+set_io vga_b M15

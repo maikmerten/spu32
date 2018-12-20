@@ -38,8 +38,8 @@ module vga_wb8 (
     reg[10:0] ram_text_offset = 0;
     reg[10:0] ram_text_addr = 0;
 
-    initial $readmemh("vga/cp850-font.dat", ram_font, 0, 2047);
-    initial $readmemh("vga/testtext.dat", ram_text, 0, 2047);
+    initial $readmemh("vga/font.dat", ram_font, 0, 2047);
+    initial $readmemh("vga/text.dat", ram_text, 0, 2047);
 
     reg[7:0] font_byte, text_char;
 
@@ -106,9 +106,6 @@ module vga_wb8 (
             text_col <= 0;
         end
 
-        
-
-
         // fetch text char
         text_char <= ram_text[ram_text_addr];
         font_byte <= ram_font[{text_char, row[3:1]}];
@@ -148,8 +145,28 @@ module vga_wb8 (
     end
     
     always @(posedge CLK_I) begin
-  
+        if(STB_I) begin
+            if(WE_I) begin
+                casez(ADR_I)
 
+                    //13'b01??????????? color RAM
+
+                    13'b10???????????: begin
+                        // font RAM
+                        ram_font[ADR_I[10:0]] <= DAT_I;
+                    end
+
+                    default: begin
+                        ram_text[ADR_I[10:0]] <= DAT_I;
+                    end
+
+                endcase
+            end
+        end
+
+        // ICE40 BRAM is not dual ported, so for now don't allow read access
+        DAT_O <= 8'h00;
+        ACK_O <= STB_I;
     end
 
 endmodule

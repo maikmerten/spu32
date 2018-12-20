@@ -9,6 +9,7 @@
 `include "./ram/bram_wb8.v"
 `include "./ram/sram512kx8_wb8.v"
 `include "./prng/prng_wb8.v"
+`include "./vga/vga_wb8.v"
 
 
 module top(
@@ -25,6 +26,8 @@ module top(
         output debug1, debug2,
         // LEDs on extension board. It's harmless to drive those pins even if no extension is present.
         output eled_1, eled_2,   
+
+        output vga_vsync, vga_hsync, vga_r, vga_g, vga_b,
 
         `ifdef EXTENSION_PRESENT
             // SRAM on extension board
@@ -198,6 +201,25 @@ module top(
         .ACK_O(prng_ack)
     );
 
+    reg vga_stb = 0;
+    wire[7:0] vga_dat;
+    wire vga_ack;
+    vga_wb8 vga_inst(
+        .CLK_I(clk),
+        .ADR_I(cpu_adr[12:0]),
+        .DAT_I(cpu_dat),
+        .STB_I(vga_stb),
+        .WE_I(cpu_we),
+        .DAT_O(vga_dat),
+        .ACK_O(vga_ack),
+        .I_vga_clk(clk),
+        .O_vga_vsync(vga_vsync),
+        .O_vga_hsync(vga_hsync),
+        .O_vga_r(vga_r),
+        .O_vga_g(vga_g),
+        .O_vga_b(vga_b)
+    );
+
 
     reg ram_stb;
     wire[7:0] ram_dat;
@@ -317,14 +339,22 @@ module top(
         timer_stb = 0;
         rom_stb = 0;
         ram_stb = 0;
-        prng_stb =0;
+        prng_stb = 0;
+        vga_stb = 0;
 
         casez(cpu_adr[31:0])
 
+            {16'hFFFF, 3'b000, {13{1'b?}}}: begin //0xFFFF0000 - 0xFFFF1FFF: VGA
+                arbiter_dat_o = vga_dat;
+                arbiter_ack_o = vga_ack;
+                vga_stb = cpu_stb;
+            end
+
+
             {20'hFFFFF, 1'b0, {11{1'b?}}}: begin // 0xFFFFF000 - 0xFFFFF7FF: boot ROM
-                    arbiter_dat_o = rom_dat;
-                    arbiter_ack_o = rom_ack;
-                    rom_stb = cpu_stb;
+                arbiter_dat_o = rom_dat;
+                arbiter_ack_o = rom_ack;
+                rom_stb = cpu_stb;
             end
 
             {32'hFFFFF8??}: begin // 0xFFFFF8xx: UART
