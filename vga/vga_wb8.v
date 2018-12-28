@@ -15,31 +15,31 @@ module vga_wb8 (
 
 
     localparam h_visible = 640;
-    localparam h_front_porch = 16;
+    localparam h_front_porch = 32;
     localparam h_pulse = 96;
-    localparam h_back_porch = 48;
-    localparam v_visible = 480;
-    localparam v_front_porch = 10;
-    localparam v_pulse = 2;
-    localparam v_back_porch = 33;
+    localparam h_back_porch = 32;
+    localparam v_visible = 400;
+    localparam v_front_porch = 8;
+    localparam v_pulse = 8;
+    localparam v_back_porch = 64;
 
     localparam colhi = $clog2(h_visible + h_front_porch + h_pulse + h_back_porch);
     localparam rowhi = $clog2(v_visible + v_front_porch + v_pulse + v_back_porch);
 
     localparam text_cols = 40;
-    localparam text_rows = 30;
+    localparam text_rows = 25;
 
 
     reg[colhi:0] col = 0;
     reg[rowhi:0] row = 0;
 
     reg[7:0] ram_font[2047:0];
-    reg[7:0] ram_text[2047:0];
+    reg[7:0] ram_text[1023:0];
     reg[10:0] ram_text_offset = 0;
     reg[10:0] ram_text_addr = 0;
 
     initial $readmemh("vga/font.dat", ram_font, 0, 2047);
-    initial $readmemh("vga/text.dat", ram_text, 0, 2047);
+    initial $readmemh("vga/text.dat", ram_text, 0, 1023);
 
     reg[7:0] font_byte, text_char;
 
@@ -115,8 +115,8 @@ module vga_wb8 (
             O_vga_hsync <= 0;
 
             if(row[3:0] == 4'b1111) begin
-					// we're in last column of this text row, increment memory offset
-					ram_text_offset <= ram_text_offset + text_cols;
+				// we're in last column of this text row, increment memory offset
+				ram_text_offset <= ram_text_offset + text_cols;
             end
 
         end
