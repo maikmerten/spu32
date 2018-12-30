@@ -36,13 +36,21 @@ module vga_wb8 (
 
     reg[7:0] ram_font[2047:0];
     reg[7:0] ram_text[1023:0];
+    reg[7:0] ram_color[1023:0];
     reg[10:0] ram_text_offset = 0;
     reg[10:0] ram_text_addr = 0;
+
+    reg[10:0] i;
+    initial begin
+        for(i = 0; i < 1024; i = i + 1) begin
+            ram_color[i] = i[7:0];
+        end
+    end
 
     initial $readmemh("vga/font.dat", ram_font, 0, 2047);
     initial $readmemh("vga/text.dat", ram_text, 0, 1023);
 
-    reg[7:0] font_byte, text_char;
+    reg[7:0] font_byte, color_byte, color_byte2, text_char;
 
     reg col_is_visible = 0;
     reg row_is_visible = 0;
@@ -61,6 +69,11 @@ module vga_wb8 (
             6: fontpixel = font_byte[1];
             7: fontpixel = font_byte[0];
         endcase
+    end
+
+    reg[10:0] ram_addr;
+    always @(*) begin
+        ram_addr = ram_text_offset + text_col;
     end
 
 
@@ -89,9 +102,9 @@ module vga_wb8 (
 
 
         if(col_is_visible && row_is_visible) begin
-            O_vga_r <= fontpixel;
-            O_vga_g <= fontpixel;
-            O_vga_b <= fontpixel;
+            O_vga_r <= fontpixel ? color_byte2[6] : color_byte2[2];
+            O_vga_g <= fontpixel ? color_byte2[5] : color_byte2[1];
+            O_vga_b <= fontpixel ? color_byte2[4] : color_byte2[0];
         end else begin
             {O_vga_r, O_vga_g, O_vga_b} <= 3'b000;
         end
@@ -101,7 +114,9 @@ module vga_wb8 (
         end
 
 
-        text_char <= ram_text[ram_text_offset + text_col];
+        text_char <= ram_text[ram_addr];
+        color_byte <= ram_color[ram_addr];
+        color_byte2 <= color_byte; // delay by one clock to arrive with font_byte
         font_byte <= ram_font[{text_char, row[3:1]}];
 
 
@@ -147,7 +162,10 @@ module vga_wb8 (
             if(WE_I) begin
                 casez(ADR_I)
 
-                    //13'b01??????????? color RAM
+                    13'b01???????????: begin
+                        // color RAM
+                        ram_color[ADR_I[10:0]] <= DAT_I;
+                    end
 
                     13'b10???????????: begin
                         // font RAM
