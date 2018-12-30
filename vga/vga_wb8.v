@@ -23,8 +23,9 @@ module vga_wb8 (
     localparam v_pulse = 8;
     localparam v_back_porch = 64;
 
-    localparam colhi = $clog2(h_visible + h_front_porch + h_pulse + h_back_porch);
-    localparam rowhi = $clog2(v_visible + v_front_porch + v_pulse + v_back_porch);
+
+    localparam colhi = $clog2(h_front_porch + h_pulse + h_back_porch + h_visible);
+    localparam rowhi = $clog2(v_front_porch + v_pulse + v_back_porch + v_visible);
 
     localparam text_cols = 40;
     localparam text_rows = 25;
@@ -43,29 +44,11 @@ module vga_wb8 (
 
     reg[7:0] font_byte, text_char;
 
-    reg[colhi:0] col_next;
-    reg[rowhi:0] row_next;
+    reg col_is_visible = 0;
+    reg row_is_visible = 0;
 
-    reg[5:0] text_col = 0;
+    reg[$clog2(text_cols):0] text_col = 0;
 
-    // determine next row and col
-    always @(*) begin
-        col_next = col + 1;
-        row_next = row;
-
-        if(col == (h_visible + h_front_porch + h_pulse + h_back_porch - 1)) begin
-            // got to next line
-            col_next = 0;
-            row_next = row + 1;
-        end
-
-        if(row == (v_visible + v_front_porch + v_pulse + v_back_porch - 1)) begin
-            row_next = 0;
-        end
-    end
-
-
-    // pick bit of font byte corresponding to current column
     reg fontpixel;
     always @(*) begin
         case(col[3:1])
@@ -80,67 +63,82 @@ module vga_wb8 (
         endcase
     end
 
-    // compute address into text RAM
-    always @(*) begin
-        ram_text_addr = ram_text_offset + text_col;
-    end
-
 
     always @(posedge I_vga_clk) begin
-        if(col < h_visible && row < v_visible) begin
-            O_vga_r <= fontpixel;
-            O_vga_g <= fontpixel;
-            O_vga_b <= fontpixel;
 
-            if(col[3:0] == 4'b1101) begin
-                // increment early so that the text char and then the font byte can be loaded
-                text_col <= text_col + 1;
-            end
-
-        end else begin
-            // not in visible region
-            O_vga_r <= 0;
-            O_vga_g <= 0;
-            O_vga_b <= 0;
-
-            text_col <= 0;
-        end
-
-        // fetch text char
-        text_char <= ram_text[ram_text_addr];
-        font_byte <= ram_font[{text_char, row[3:1]}];
-
-
-        if(col == (h_visible + h_front_porch - 1)) begin
+        // generate sync signals
+        if(col == h_front_porch - 1) begin
             O_vga_hsync <= 0;
-
-            if(row[3:0] == 4'b1111) begin
-				// we're in last column of this text row, increment memory offset
-				ram_text_offset <= ram_text_offset + text_cols;
-            end
-
         end
 
-        if(col == (h_visible + h_front_porch + h_pulse - 1)) begin
+        if(col == h_front_porch + h_pulse - 1) begin
             O_vga_hsync <= 1;
         end
 
+        if(col == h_front_porch + h_pulse + h_back_porch - 1) begin
+            col_is_visible <= 1;
+        end
 
-        if((row >= v_visible + v_front_porch) && row < (v_visible + v_front_porch + v_pulse)) begin
+        if(row == v_visible + v_front_porch - 1) begin
             O_vga_vsync <= 0;
-        end else begin
+        end
+
+        if(row == v_visible + v_front_porch + v_back_porch - 1) begin
             O_vga_vsync <= 1;
         end
 
-        if(row > v_visible) begin
-            // reset offset into text RAM during vertical blank
-            ram_text_offset <= 0;
+
+        if(col_is_visible && row_is_visible) begin
+            O_vga_r <= fontpixel;
+            O_vga_g <= fontpixel;
+            O_vga_b <= fontpixel;
+        end else begin
+            {O_vga_r, O_vga_g, O_vga_b} <= 3'b000;
+        end
+
+        if(col_is_visible && col[3:0] == 4'b1101) begin
+            text_col <= text_col + 1;
         end
 
 
+        text_char <= ram_text[ram_text_offset + text_col];
+        font_byte <= ram_font[{text_char, row[3:1]}];
 
-        col <= col_next;
-        row <= row_next;
+
+        // increment ram offset on new lines
+        if(col == 0 && row[3:0] == 4'b0000) begin
+            if(row == 0) begin
+                // reset offset on very first line
+                ram_text_offset <= 0;
+            end else begin
+                // otherwise increment by number of bytes per column
+                ram_text_offset <= ram_text_offset + text_cols;
+            end
+        end
+
+
+        if(col == h_front_porch + h_pulse + h_back_porch + h_visible - 1) begin
+            col <= 0;
+            col_is_visible <= 0;
+            text_col <= 0;
+
+            if(row == v_visible + v_front_porch + v_pulse + v_back_porch - 1) begin
+                // return to first line
+                row <= 0;
+                row_is_visible <= 1;
+            end else begin
+                // progress to next line
+                row <= row + 1;
+            end
+
+            if(row == v_visible - 1) begin
+                row_is_visible <= 0;
+            end
+
+        end else begin
+            col <= col + 1;
+        end
+
 
     end
     
