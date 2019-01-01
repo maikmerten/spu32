@@ -15,13 +15,13 @@ module vga_wb8 (
 
 
     localparam h_visible = 640;
-    localparam h_front_porch = 32;
+    localparam h_front_porch = 16;
     localparam h_pulse = 96;
-    localparam h_back_porch = 32;
+    localparam h_back_porch = 48;
     localparam v_visible = 400;
-    localparam v_front_porch = 8;
-    localparam v_pulse = 8;
-    localparam v_back_porch = 64;
+    localparam v_front_porch = 12;
+    localparam v_pulse = 2;
+    localparam v_back_porch = 35;
 
 
     localparam colhi = $clog2(h_front_porch + h_pulse + h_back_porch + h_visible);
