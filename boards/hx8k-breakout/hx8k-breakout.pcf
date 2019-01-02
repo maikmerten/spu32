@@ -61,6 +61,8 @@ set_io sram_d7 T15
 set_io eled_1 T9
 set_io eled_2 P9
 
+set_io reset_button T5
+
 # VGA signals
 
 set_io vga_vsync K15

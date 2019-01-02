@@ -25,7 +25,9 @@ module top(
         // debug output stuff
         output debug1, debug2,
         // LEDs on extension board. It's harmless to drive those pins even if no extension is present.
-        output eled_1, eled_2,   
+        output eled_1, eled_2, 
+        // reset button
+        input reset_button,
 
         output vga_vsync, vga_hsync, vga_r, vga_g, vga_b,
 
@@ -326,7 +328,7 @@ module top(
       end else reset <= 0;
 
       // use UART rts (active low) for reset
-      if(!uart_rts) begin
+      if(!uart_rts || !reset_button) begin
         resetcnt <= 1;
       end
     end
