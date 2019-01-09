@@ -43,7 +43,7 @@ module vga_wb8 (
     reg[10:0] i;
     initial begin
         for(i = 0; i < 1024; i = i + 1) begin
-            ram_color[i] = i[7:0];
+            ram_color[i] = 8'h70;
         end
     end
 
