@@ -10,6 +10,7 @@
 `include "./ram/sram512kx8_wb8.v"
 `include "./prng/prng_wb8.v"
 `include "./vga/vga_wb8.v"
+`include "./irdecoder/irdecoder_wb8.v"
 
 
 module top(
@@ -28,6 +29,8 @@ module top(
         output eled_1, eled_2, 
         // reset button
         input reset_button,
+        // infrared receiver
+        input ir_receiver,
 
         output vga_vsync, vga_hsync, vga_r, vga_g, vga_b,
 
@@ -222,6 +225,22 @@ module top(
         .O_vga_b(vga_b)
     );
 
+    reg irdecoder_stb = 0;
+    wire[7:0] irdecoder_dat;
+    wire irdecoder_ack;
+    irdecoder_wb8 #(
+        .CLOCKFREQ(CLOCKFREQ)
+    ) irdecoder_inst(
+        .CLK_I(clk),
+        .ADR_I(cpu_adr[2:0]),
+        .DAT_I(cpu_dat),
+        .STB_I(irdecoder_stb),
+        .WE_I(cpu_we),
+        .DAT_O(irdecoder_dat),
+        .ACK_O(irdecoder_ack),
+        .I_ir_signal(ir_receiver)
+    );
+
 
     reg ram_stb;
     wire[7:0] ram_dat;
@@ -343,6 +362,7 @@ module top(
         ram_stb = 0;
         prng_stb = 0;
         vga_stb = 0;
+        irdecoder_stb = 0;
 
         casez(cpu_adr[31:0])
 
@@ -374,7 +394,11 @@ module top(
             // reserved:
             // 0xFFFFFAxx
             // 0xFFFFFBxx
-            // 0xFFFFFCxx 
+            {32'hFFFFFC??}: begin // 0xFFFFFCxx: IR receiver
+                arbiter_dat_o = irdecoder_dat;
+                arbiter_ack_o = irdecoder_ack;
+                irdecoder_stb = cpu_stb;
+            end
 
             {32'hFFFFFD??}: begin // 0xFFFFFDxx: Timer
                 arbiter_dat_o = timer_dat;

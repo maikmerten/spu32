@@ -70,3 +70,7 @@ set_io vga_hsync M16
 set_io vga_r K16
 set_io vga_g L16
 set_io vga_b M15
+
+# infrared receiver
+
+set_io ir_receiver P15
