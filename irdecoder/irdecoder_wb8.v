@@ -36,16 +36,14 @@ module irdecoder_wb8
 
     reg[4:0] decdata = DATA_START;
 
-    reg[31:0] irdata = 0, irdata_buffer = 0;
+    reg[31:0] irdata = 0;
+    reg[23:0] readbuffer = 0;
     reg[2:0] indat = 0;
     reg[$clog2(COUNT_STOP):0] counter = 0;
     reg[5:0] bitcounter = 0;
 
     wire data_valid;
     assign data_valid = (bitcounter == 32);
-
-    wire[31:0] irdata_shift;
-    assign irdata_shift = {irdata[30:0], decdata[1]};
 
     always @(posedge CLK_I) begin
 
@@ -55,11 +53,8 @@ module irdecoder_wb8
 
             if(counter != 0) begin
                 if(decdata == DATA_0 || decdata == DATA_1) begin
-                    irdata <= irdata_shift;
+                    irdata <= {irdata[30:0], decdata[1]};
                     bitcounter <= bitcounter + 1;
-                    if(bitcounter == 31) begin
-                        irdata_buffer <= irdata_shift;
-                    end
                 end else if(decdata == DATA_SHORTPAUSE) begin
                     // repeat signal
                     bitcounter <= 32;
@@ -94,10 +89,14 @@ module irdecoder_wb8
                 bitcounter <= 0;
             end else begin
                 case(ADR_I)
-                    0 : DAT_O <= data_valid ? irdata_buffer[31:24] : 8'h00;
-                    1 : DAT_O <= data_valid ? irdata_buffer[23:16] : 8'h00;
-                    2 : DAT_O <= data_valid ? irdata_buffer[15:8] : 8'h00;
-                    default: DAT_O <= data_valid ? irdata_buffer[7:0] : 8'h00;
+                    0 : begin
+                        readbuffer <= data_valid ? irdata[23:0] : 24'h000000;
+                        DAT_O <= data_valid ? irdata[31:24] : 8'h00;
+                    end
+                     
+                    1 : DAT_O <= readbuffer[23:16];
+                    2 : DAT_O <= readbuffer[15:8];
+                    default: DAT_O <= readbuffer[7:0];
                 endcase;
             end
         end
