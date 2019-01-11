@@ -21,7 +21,6 @@ module irdecoder_wb8
     */
 
     localparam MICROCYCLES = (CLOCKFREQ / 1000000) - 1;
-    localparam MAXCOUNT = 68 * 1000 * MICROCYCLES; // a message is at most 68 ms long
     localparam COUNT_0 = 400 * MICROCYCLES; // a zero is 563 µs long
     localparam COUNT_1 = 1400 * MICROCYCLES; // a one is 1688 µs long
     localparam COUNT_SHORTPAUSE = 2000 * MICROCYCLES; // a short pause is 2.3 ms long
@@ -86,14 +85,9 @@ module irdecoder_wb8
         end
 
         if(STB_I) begin
-
             if(WE_I) begin
-                case(ADR_I)
-                    0 : irdata[31:24] <= DAT_I;
-                    1 : irdata[23:16] <= DAT_I;
-                    2 : irdata[15:8] <= DAT_I;
-                    default: irdata[7:0] <= DAT_I;
-                endcase
+                // writes are used to acknowledge and prepare for new data
+                bitcounter <= 0;
             end else begin
                 case(ADR_I)
                     0 : DAT_O <= data_valid ? irdata[31:24] : 8'h00;
@@ -102,12 +96,9 @@ module irdecoder_wb8
                     default: DAT_O <= data_valid ? irdata[7:0] : 8'h00;
                 endcase;
             end
-            
-
-            ACK_O <= 1;
-        end else begin
-            ACK_O <= 0;
         end
+
+        ACK_O <= STB_I;
     end
 
 

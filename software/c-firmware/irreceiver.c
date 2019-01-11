@@ -21,9 +21,8 @@ int main() {
         if(cmd ^ cmd_inv == 0xFF) {
             printf("addr: %d   addr_inv: %d   cmd: %d   cmd_inv: %d\n\r", addr, addr_inv, cmd, cmd_inv);
 
-            // clear received data
+            // acknowledge, prepare decoder for new data
             *IR_CMD = 0;
-            *IR_CMD_INV = 0;
         }
 
 	}
