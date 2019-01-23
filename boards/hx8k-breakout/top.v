@@ -32,7 +32,7 @@ module top(
         // infrared receiver
         input ir_receiver,
 
-        output vga_vsync, vga_hsync, vga_r, vga_g, vga_b,
+        output vga_vsync, vga_hsync, vga_r0, vga_r1, vga_g0, vga_g1, vga_b0, vga_b1,
 
         `ifdef EXTENSION_PRESENT
             // SRAM on extension board
@@ -220,10 +220,14 @@ module top(
         .I_vga_clk(clk),
         .O_vga_vsync(vga_vsync),
         .O_vga_hsync(vga_hsync),
-        .O_vga_r(vga_r),
-        .O_vga_g(vga_g),
-        .O_vga_b(vga_b)
+        .O_vga_r(vga_r0),
+        .O_vga_g(vga_g0),
+        .O_vga_b(vga_b0)
     );
+
+    assign vga_r1 = vga_r0;
+    assign vga_g1 = vga_g0;
+    assign vga_b1 = vga_b0;
 
     reg irdecoder_stb = 0;
     wire[7:0] irdecoder_dat;

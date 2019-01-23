@@ -65,11 +65,14 @@ set_io reset_button T5
 
 # VGA signals
 
-set_io vga_vsync K15
-set_io vga_hsync M16
-set_io vga_r K16
-set_io vga_g L16
-set_io vga_b M15
+set_io vga_vsync C1
+set_io vga_hsync R2
+set_io vga_r0 D1
+set_io vga_r1 R3
+set_io vga_g0 D2
+set_io vga_g1 R4
+set_io vga_b0 C2
+set_io vga_b1 T3
 
 # infrared receiver
 
