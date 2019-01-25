@@ -10,7 +10,7 @@ module vga_wb8 (
 
         // VGA signals
         input I_vga_clk,
-        output reg O_vga_vsync, O_vga_hsync, O_vga_r, O_vga_g, O_vga_b
+        output reg O_vga_vsync, O_vga_hsync, O_vga_r0, O_vga_r1, O_vga_g0, O_vga_g1, O_vga_b0, O_vga_b1
     );
 
 
@@ -43,7 +43,7 @@ module vga_wb8 (
     reg[10:0] i;
     initial begin
         for(i = 0; i < 1024; i = i + 1) begin
-            ram_color[i] = 8'h70;
+            ram_color[i] = 8'hF0;
         end
     end
 
@@ -76,6 +76,33 @@ module vga_wb8 (
         ram_addr = ram_text_offset + text_col;
     end
 
+    // default 16-color EGA palette
+    function[5:0] RGBcolor;
+        input[3:0] incolor;
+        case(incolor)
+            0: RGBcolor = 6'b000000;
+            1: RGBcolor = 6'b000010;
+            2: RGBcolor = 6'b001000;
+            3: RGBcolor = 6'b001010;
+            4: RGBcolor = 6'b100000;
+            5: RGBcolor = 6'b100010;
+            6: RGBcolor = 6'b100100;
+            7: RGBcolor = 6'b101010;
+            8: RGBcolor = 6'b010101;
+            9: RGBcolor = 6'b010111;
+            10: RGBcolor = 6'b011101;
+            11: RGBcolor = 6'b011111;
+            12: RGBcolor = 6'b110101;
+            13: RGBcolor = 6'b110111;
+            14: RGBcolor = 6'b111101;
+            15: RGBcolor = 6'b111111;
+        endcase
+    endfunction
+
+    reg[5:0] rgbvalue;
+    always @(*) begin
+        rgbvalue = fontpixel ? RGBcolor(color_byte2[7:4]) : RGBcolor(color_byte2[3:0]);
+    end
 
     always @(posedge I_vga_clk) begin
 
@@ -102,11 +129,9 @@ module vga_wb8 (
 
 
         if(col_is_visible && row_is_visible) begin
-            O_vga_r <= fontpixel ? color_byte2[6] : color_byte2[2];
-            O_vga_g <= fontpixel ? color_byte2[5] : color_byte2[1];
-            O_vga_b <= fontpixel ? color_byte2[4] : color_byte2[0];
+            {O_vga_r1, O_vga_r0, O_vga_g1, O_vga_g0, O_vga_b1, O_vga_b0} <= rgbvalue;
         end else begin
-            {O_vga_r, O_vga_g, O_vga_b} <= 3'b000;
+            {O_vga_r1, O_vga_r0, O_vga_g1, O_vga_g0, O_vga_b1, O_vga_b0} <= 6'b000000;
         end
 
         if(col_is_visible && col[3:0] == 4'b1101) begin
