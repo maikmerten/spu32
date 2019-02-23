@@ -5,14 +5,18 @@ graph spu32soc {
 	arbiter[label="Wishbone bus, 8-bit data, 32-bit address, pipelined" shape="rect" width=14];
 
 	ram[label="external SRAM\nor\nBlock-RAM" shape="component"]
-	brom[label="Boot-ROM\nreceives from UART\nor copies SPI-data to RAM" shape="component"];
+	brom[label="Boot-ROM\ninteracts with UART\nand SPI storage" shape="component"];
 	spi[label="SPI port" shape="component"];
 	uart[label="UART\n115200 baud" shape="component"];
-	timer[label="Timer\ncan generate interrupts" shape="component"];
-	prng[label="PRNG\npredictable 'random' numbers" shape="component"];
+	timer[label="Timer\ninterrupt-capable" shape="component"];
+	prng[label="PRNG\n32-bit 'random' numbers\npredictable" shape="component"];
 	leds[label="Board LEDs" shape="component"];
+	ir[label="IR decoder\nNEC protocol" shape="component"];
+	vga[label="VGA output\n40x25 text\nEGA colors" shape="component"];
 
 	spiflash[label="SPI-EEPROM/Flash device\ncontains initial RAM contents\nprogrammable via Boot-ROM routines" shape="component"];
+	irreceiver[label="IR receiver\n 38 kHz carrier" shape="component"];
+
 
 	cpu -- arbiter;
 
@@ -23,6 +27,10 @@ graph spu32soc {
 	arbiter -- timer;
 	arbiter -- prng;
 	arbiter -- leds;
+	arbiter -- ir;
+	arbiter -- vga;
 
 	spi -- spiflash;
+
+	ir -- irreceiver;
 }

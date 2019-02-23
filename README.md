@@ -8,7 +8,7 @@ The project ist writting in Verilog and is designed to be synthesizable using th
 
 An overview of the SoC:
 
-<img src="./soc.svg" width="95%">
+<img src="./soc.png" width="95%">
 
 
 ## CPU
