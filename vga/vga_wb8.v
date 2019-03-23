@@ -189,7 +189,7 @@ module vga_wb8 (
 
                     13'b01???????????: begin
                         // color RAM
-                        ram_color[ADR_I[10:0]] <= DAT_I;
+                        ram_color[ADR_I[9:0]] <= DAT_I;
                     end
 
                     13'b10???????????: begin
@@ -198,7 +198,7 @@ module vga_wb8 (
                     end
 
                     default: begin
-                        ram_text[ADR_I[10:0]] <= DAT_I;
+                        ram_text[ADR_I[9:0]] <= DAT_I;
                     end
 
                 endcase
