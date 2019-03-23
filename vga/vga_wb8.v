@@ -33,6 +33,7 @@ module vga_wb8 (
 
     reg[colhi:0] col = 0;
     reg[rowhi:0] row = 0;
+    reg[rowhi-8:0] row_msbs = 0;
 
     reg[7:0] ram_font[2047:0];
     reg[7:0] ram_text[1023:0];
@@ -42,6 +43,7 @@ module vga_wb8 (
 
     reg[10:0] i;
     initial begin
+        $display("vga_wb8: rowhi = %d, colhi = %d, row_msbs size = %d", rowhi, colhi, $size(row_msbs));
         for(i = 0; i < 1024; i = i + 1) begin
             ram_color[i] = 8'hF0;
         end
@@ -202,11 +204,33 @@ module vga_wb8 (
                     end
 
                 endcase
+            end else begin
+                // read access to status registers
+                casez(ADR_I)
+
+                    13'b1100000000000: begin
+                        // least-significant byte of current line
+                        DAT_O <= row[7:0];
+                        // save most-significant bits
+                        row_msbs <= row[rowhi:8];
+                    end
+
+                    13'b1100000000001: begin
+                        // most-significat byte of current line
+                        DAT_O[7:0] <= {{(8-$size(row_msbs)){1'b0}}, row_msbs};
+                    end
+
+                    default: begin
+                        // ICE40 BRAM is not dual ported, so for now don't allow read access
+                        // to screen contents, only status registers.
+                        DAT_O <= 8'h00;
+                    end
+
+                endcase
+
             end
         end
 
-        // ICE40 BRAM is not dual ported, so for now don't allow read access
-        DAT_O <= 8'h00;
         ACK_O <= STB_I;
     end
 
