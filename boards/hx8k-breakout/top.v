@@ -7,7 +7,7 @@
 `include "./timer/timer_wb8.v"
 `include "./rom/rom_wb8.v"
 `include "./ram/bram_wb8.v"
-`include "./ram/sram512kx8_wb8.v"
+`include "./ram/sram512kx8_wb8_vga.v"
 `include "./prng/prng_wb8.v"
 `include "./vga/vga_wb8.v"
 `include "./irdecoder/irdecoder_wb8.v"
@@ -209,6 +209,9 @@ module top(
 
     reg vga_stb = 0;
     wire[7:0] vga_dat;
+    wire[18:0] vga_ram_adr;
+    wire vga_ram_req;
+    assign vga_ram_req = 0; // TODO: Wire up to VGA logic
     wire vga_ack;
     vga_wb8 vga_inst(
         .CLK_I(clk),
@@ -257,7 +260,7 @@ module top(
         wire[18:0] sram_chip_adr;
         assign {sram_a0, sram_a1, sram_a2, sram_a3, sram_a4, sram_a5, sram_a6, sram_a7, sram_a8, sram_a9, sram_a10, sram_a11, sram_a12, sram_a13, sram_a14, sram_a15, sram_a16, sram_a17, sram_a18} = sram_chip_adr;
 
-        sram512kx8_wb8 sram_inst(
+        sram512kx8_wb8_vga sram_inst(
             // wiring to wishbone bus
             .CLK_I(clk),
             .ADR_I(cpu_adr[18:0]),
@@ -266,6 +269,9 @@ module top(
             .WE_I(cpu_we),
             .DAT_O(ram_dat),
             .ACK_O(ram_ack),
+            // VGA read port
+            .VGA_ADR_I(vga_ram_adr),
+            .VGA_REQ_I(vga_ram_req),
             // wiring to SRAM chip
             .O_data(sram_dat_to_chip),
             .I_data(sram_dat_from_chip),
