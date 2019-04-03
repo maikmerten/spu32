@@ -31,7 +31,9 @@ module bus_wb8(
 
 	reg[2:0] addrcnt = 0, ackcnt = 0, byte_target = 0;
 	wire[2:0] addrcnt_next, ackcnt_next;
-	assign addrcnt_next = addrcnt + 1;
+	
+	// do not progress to next address if STALL is asserted
+	assign addrcnt_next = addrcnt + (STALL_I ? 0 : 1);
 	assign ackcnt_next = ackcnt + 1;
 
 	wire[31:0] busaddr;
@@ -123,7 +125,7 @@ module bus_wb8(
 						default:	DAT_O <= I_data[31:24];
 					endcase
 
-					if(!STALL_I) addrcnt <= addrcnt_next;
+					addrcnt <= addrcnt_next;
 				end
 
 				if(ACK_I) begin
