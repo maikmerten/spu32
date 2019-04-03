@@ -12,6 +12,7 @@ module cpu
     (
         input CLK_I,
 	    input ACK_I,
+        input STALL_I,
 	    input[7:0] DAT_I,
 	    input RST_I,
         input INTERRUPT_I,
@@ -82,6 +83,7 @@ module cpu
 
         .CLK_I(clk),
 	    .ACK_I(ACK_I),
+        .STALL_I(STALL_I),
 	    .DAT_I(DAT_I),
 	    .RST_I(RST_I),
 	    .ADR_O(ADR_O),

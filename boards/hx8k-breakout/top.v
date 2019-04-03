@@ -88,13 +88,14 @@ module top(
     wire[31:0] cpu_adr;
 
     reg[7:0] arbiter_dat_o;
-    reg arbiter_ack_o;
+    reg arbiter_ack_o, arbiter_stall_o;
 
     cpu #(
         .VECTOR_RESET(32'hFFFFF000)
     ) cpu_inst(
         .CLK_I(clk),
 	    .ACK_I(arbiter_ack_o),
+        .STALL_I(arbiter_stall_o),
 	    .DAT_I(arbiter_dat_o),
 	    .RST_I(reset),
         .INTERRUPT_I(timer_interrupt),
@@ -366,6 +367,7 @@ module top(
         prng_stb = 0;
         vga_stb = 0;
         irdecoder_stb = 0;
+        arbiter_stall_o = 0;
 
         casez(cpu_adr[31:0])
 

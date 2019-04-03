@@ -13,6 +13,7 @@ module bus_wb8(
 		//naming of signals taken from Wishbone B4 spec
 		input CLK_I,
 		input ACK_I,
+		input STALL_I,
 		input[7:0] DAT_I,
 		input RST_I,
 		output reg[31:0] ADR_O,
@@ -122,8 +123,7 @@ module bus_wb8(
 						default:	DAT_O <= I_data[31:24];
 					endcase
 
-					// TODO: only increment addrcnt when STALL_I is not asserted
-					addrcnt <= addrcnt_next;
+					if(!STALL_I) addrcnt <= addrcnt_next;
 				end
 
 				if(ACK_I) begin

@@ -19,6 +19,7 @@ module cpu_tb();
     cpu cpu_inst(
         .CLK_I(clk),
 	    .ACK_I(arbiter_ack_o),
+        .STALL_I(1'b0),
 	    .DAT_I(arbiter_dat_o),
 	    .RST_I(reset),
         .INTERRUPT_I(interrupt),
