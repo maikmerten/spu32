@@ -33,7 +33,7 @@ module bus_wb8(
 	wire[2:0] addrcnt_next, ackcnt_next;
 	
 	// do not progress to next address if STALL is asserted
-	assign addrcnt_next = addrcnt + (STALL_I ? 0 : 1);
+	assign addrcnt_next = addrcnt + 1;
 	assign ackcnt_next = ackcnt + 1;
 
 	wire[31:0] busaddr;
@@ -88,10 +88,12 @@ module bus_wb8(
 
 
 	always @(posedge CLK_I) begin
+		busy <= I_en;
+		CYC_O <= I_en;
+
 		WE_O <= 0;
-		CYC_O <= 0;
 		STB_O <= 0;
-		busy <= 0;
+
 		`ifdef ENABLE_CACHE
 		offer_data_to_cache <= 0;
 		`endif
@@ -99,8 +101,6 @@ module bus_wb8(
 		if(I_en) begin
 			// if enabled, act
 			WE_O <= write;
-			CYC_O <= 1;
-			busy <= 1;
 
 			`ifdef ENABLE_CACHE
 			if(addrcnt == 1 && I_op == `BUSOP_READW && cache_hit) begin
@@ -110,7 +110,7 @@ module bus_wb8(
 				buffer <= cache_data;
 			end else
 			`endif
-			if(ackcnt != byte_target) begin
+			if(ackcnt != byte_target && !STALL_I) begin
 				// we haven't yet received the proper number of ACKs, so we need to
 				// output addresses and receive ACKs
 				if(addrcnt != byte_target) begin
@@ -154,6 +154,7 @@ module bus_wb8(
 					`endif
 
 				end
+
 			end
 			`ifdef ENABLE_CACHE
 			else begin
