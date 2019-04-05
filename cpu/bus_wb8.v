@@ -92,7 +92,7 @@ module bus_wb8(
 		CYC_O <= I_en;
 
 		WE_O <= 0;
-		STB_O <= 0;
+		STB_O <= (I_en && (addrcnt != byte_target || STALL_I ));
 
 		`ifdef ENABLE_CACHE
 		offer_data_to_cache <= 0;
@@ -110,10 +110,10 @@ module bus_wb8(
 				buffer <= cache_data;
 			end else
 			`endif
-			if(ackcnt != byte_target && !STALL_I) begin
+			if(ackcnt != byte_target) begin
 				// we haven't yet received the proper number of ACKs, so we need to
 				// output addresses and receive ACKs
-				if(addrcnt != byte_target) begin
+				if(addrcnt != byte_target && !STALL_I) begin
 					STB_O <= 1;
 					ADR_O <= busaddr;
 
