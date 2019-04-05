@@ -1,6 +1,6 @@
 `include "./cpu/busdefs.vh"
 `include "./cpu/bus_wb8.v"
-`include "./ram/ram1k_wb8.v"
+`include "./ram/bram_wb8.v"
 
 module bus_wb8_tb;
 
@@ -21,6 +21,8 @@ module bus_wb8_tb;
 	wire[7:0] ram_dat;
 	wire ram_ack;
 
+	wire stall = 0;
+
 	bus_wb8 mut(
 		.I_en(en),
 		.I_op(op),
@@ -31,6 +33,7 @@ module bus_wb8_tb;
 
 		.CLK_I(clk),
 		.ACK_I(ram_ack),
+		.STALL_I(stall),
 		.DAT_I(ram_dat),
 		.RST_I(reset),
 		.ADR_O(bus_addr),
@@ -41,13 +44,13 @@ module bus_wb8_tb;
 	);
 
 
-	ram1k_wb8 #(
+	bram_wb8 #(
 		.RAMINITFILE("./cpu/tests/bus_wb8_tb_raminit.dat")
 	) ram (
 		.CLK_I(clk),
 		.STB_I(bus_stb),
 		.WE_I(bus_we),
-		.ADR_I(bus_addr[9:0]),
+		.ADR_I(bus_addr[12:0]),
 		.DAT_I(bus_dat),
 		.DAT_O(ram_dat),
 		.ACK_O(ram_ack)
