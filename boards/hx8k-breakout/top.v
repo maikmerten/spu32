@@ -88,14 +88,15 @@ module top(
     wire[31:0] cpu_adr;
 
     reg[7:0] arbiter_dat_o;
-    reg arbiter_ack_o, arbiter_stall_o;
+    reg arbiter_ack_o;
+    wire ram_stall;
 
     cpu #(
         .VECTOR_RESET(32'hFFFFF000)
     ) cpu_inst(
         .CLK_I(clk),
 	    .ACK_I(arbiter_ack_o),
-        .STALL_I(arbiter_stall_o),
+        .STALL_I(ram_stall),
 	    .DAT_I(arbiter_dat_o),
 	    .RST_I(reset),
         .INTERRUPT_I(timer_interrupt),
@@ -211,7 +212,17 @@ module top(
     wire[7:0] vga_dat;
     wire[18:0] vga_ram_adr;
     wire vga_ram_req;
-    assign vga_ram_req = 0; // TODO: Wire up to VGA logic
+    
+    // This simulates SRAM accesses by the VGA unit
+    reg[1:0] vga_req_cnt = 0;
+    always @(posedge clk) begin
+        vga_req_cnt <= vga_req_cnt + 1;
+    end
+    //assign vga_ram_req = vga_req_cnt[0];
+    //assign vga_ram_req = vga_req_cnt == 3;
+    assign vga_ram_req = 0;
+    assign vga_ram_adr = 0;
+
     wire vga_ack;
     vga_wb8 vga_inst(
         .CLK_I(clk),
@@ -269,6 +280,7 @@ module top(
             .WE_I(cpu_we),
             .DAT_O(ram_dat),
             .ACK_O(ram_ack),
+            .STALL_O(ram_stall),
             // VGA read port
             .VGA_ADR_I(vga_ram_adr),
             .VGA_REQ_I(vga_ram_req),
@@ -373,7 +385,6 @@ module top(
         prng_stb = 0;
         vga_stb = 0;
         irdecoder_stb = 0;
-        arbiter_stall_o = 0;
 
         casez(cpu_adr[31:0])
 
