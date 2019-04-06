@@ -8,7 +8,7 @@ module sram512kx8_wb8_vga
 		input[7:0] DAT_I,
 		output reg [7:0] DAT_O,
 		output reg ACK_O,
-		output reg STALL_O,
+		output STALL_O,
 
 		// read port for VGA
 		input VGA_REQ_I,
@@ -34,14 +34,16 @@ module sram512kx8_wb8_vga
 	// control signals are active low, thus negated
 	assign O_ce = 0;
 	assign O_we = !(write);
+	assign STALL_O = STB_I & VGA_REQ_I;
 
 	always @(posedge CLK_I) begin
 		O_oe <= 1; // active low
 		O_output_enable <= 0;
-		we_buf <= WE_I & !VGA_REQ_I;
+		we_buf <= WE_I;
 		stb_buf <= STB_I;
 	
 		if(VGA_REQ_I) begin
+			we_buf <= 0;
 			O_address <= VGA_ADR_I;
 			O_output_enable <= 0;
 			O_oe <= 0;
@@ -53,7 +55,6 @@ module sram512kx8_wb8_vga
 		end
 
 		ACK_O <= (STB_I & !VGA_REQ_I);
-		STALL_O <= VGA_REQ_I;
 	end
 
 	always @(negedge CLK_I) begin
