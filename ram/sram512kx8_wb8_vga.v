@@ -26,29 +26,25 @@ module sram512kx8_wb8_vga
 	);
 
 	
-	wire write = (stb_buf & we_buf & CLK_I);
-
-	reg we_buf = 0;
-	reg stb_buf = 0;
+	reg write1 = 0;
+	reg write2 = 0;
 
 	// control signals are active low, thus negated
 	assign O_ce = 0;
-	assign O_we = !(write);
+	assign O_we = !(write1 != write2);
 	assign STALL_O = STB_I & VGA_REQ_I;
 
 	always @(posedge CLK_I) begin
 		O_oe <= 1; // active low
 		O_data <= DAT_I;
 		O_output_enable <= 0;
-		we_buf <= WE_I;
-		stb_buf <= STB_I;
 	
 		if(VGA_REQ_I) begin
-			we_buf <= 0;
 			O_address <= VGA_ADR_I;
 			O_output_enable <= 0;
 			O_oe <= 0;
 		end else if(STB_I) begin
+			write1 <= WE_I ? !write2 : write2;
 			O_address <= ADR_I;
 			O_oe <= !(!WE_I); // active low
 			O_output_enable <= WE_I;
@@ -59,6 +55,7 @@ module sram512kx8_wb8_vga
 
 	always @(negedge CLK_I) begin
 		DAT_O <= I_data[7:0];
+		write2 <= write1;
 	end
 
 endmodule
