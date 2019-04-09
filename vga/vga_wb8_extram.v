@@ -39,6 +39,7 @@ module vga_wb8_extram (
     reg col_is_visible = 0;
     reg row_is_visible = 0;
 
+    reg[18:0] ram_base = 128 * 1024;
     reg[18:0] ram_adr = 0;
     reg[7:0] ram_dat;
     reg ram_fetch = 0;
@@ -132,7 +133,7 @@ module vga_wb8_extram (
                 row_is_visible <= 1;
 
                 // reset RAM address to start of framebuffer
-                ram_adr <= 1024 * 256;
+                ram_adr <= ram_base;
             end else begin
                 // progress to next line
                 row <= row + 1;
