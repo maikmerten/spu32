@@ -210,32 +210,37 @@ module top(
 
     wire[7:0] ram_dat;
 
-    reg vga_stb = 0;
-    wire[7:0] vga_dat;
-    wire[18:0] vga_ram_adr;
-    wire vga_ram_req;
-    wire vga_ack;
-    vga_wb8_extram vga_inst(
-        .CLK_I(clk),
-        .ADR_I(cpu_adr[12:0]),
-        .DAT_I(cpu_dat),
-        .STB_I(vga_stb),
-        .WE_I(cpu_we),
-        .DAT_O(vga_dat),
-        .ACK_O(vga_ack),
-        .O_ram_req(vga_ram_req),
-        .O_ram_adr(vga_ram_adr),
-        .I_ram_dat(ram_dat),
-        .I_vga_clk(clk),
-        .O_vga_vsync(vga_vsync),
-        .O_vga_hsync(vga_hsync),
-        .O_vga_r1(vga_r1),
-        .O_vga_r0(vga_r0),
-        .O_vga_g1(vga_g1),
-        .O_vga_g0(vga_g0),
-        .O_vga_b1(vga_b1),
-        .O_vga_b0(vga_b0)
-    );
+
+    `ifdef EXTENSION_PRESENT
+        reg vga_stb = 0;
+        wire[7:0] vga_dat;
+        wire[18:0] vga_ram_adr;
+        wire vga_ram_req;
+        wire vga_ack;
+
+
+        vga_wb8_extram vga_inst(
+            .CLK_I(clk),
+            .ADR_I(cpu_adr[12:0]),
+            .DAT_I(cpu_dat),
+            .STB_I(vga_stb),
+            .WE_I(cpu_we),
+            .DAT_O(vga_dat),
+            .ACK_O(vga_ack),
+            .O_ram_req(vga_ram_req),
+            .O_ram_adr(vga_ram_adr),
+            .I_ram_dat(ram_dat),
+            .I_vga_clk(clk),
+            .O_vga_vsync(vga_vsync),
+            .O_vga_hsync(vga_hsync),
+            .O_vga_r1(vga_r1),
+            .O_vga_r0(vga_r0),
+            .O_vga_g1(vga_g1),
+            .O_vga_g0(vga_g0),
+            .O_vga_b1(vga_b1),
+            .O_vga_b0(vga_b0)
+        );
+    `endif
 
     reg irdecoder_stb = 0;
     wire[7:0] irdecoder_dat;
@@ -349,6 +354,7 @@ module top(
             .DAT_O(ram_dat),
             .ACK_O(ram_ack)
         );
+        assign ram_stall = 0;
     `endif
 
 
@@ -376,16 +382,19 @@ module top(
         rom_stb = 0;
         ram_stb = 0;
         prng_stb = 0;
-        vga_stb = 0;
         irdecoder_stb = 0;
+        `ifdef EXTENSION_PRESENT
+                vga_stb = 0;
+        `endif
 
         casez(cpu_adr[31:0])
-
-            {16'hFFFF, 3'b000, {13{1'b?}}}: begin //0xFFFF0000 - 0xFFFF1FFF: VGA
-                arbiter_dat_o = vga_dat;
-                arbiter_ack_o = vga_ack;
-                vga_stb = cpu_stb;
-            end
+            `ifdef EXTENSION_PRESENT
+                {16'hFFFF, 3'b000, {13{1'b?}}}: begin //0xFFFF0000 - 0xFFFF1FFF: VGA
+                    arbiter_dat_o = vga_dat;
+                    arbiter_ack_o = vga_ack;
+                    vga_stb = cpu_stb;
+                end
+            `endif
 
 
             {20'hFFFFF, 1'b0, {11{1'b?}}}: begin // 0xFFFFF000 - 0xFFFFF7FF: boot ROM
