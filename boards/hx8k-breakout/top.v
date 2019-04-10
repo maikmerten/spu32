@@ -9,7 +9,7 @@
 `include "./ram/bram_wb8.v"
 `include "./ram/sram512kx8_wb8_vga.v"
 `include "./prng/prng_wb8.v"
-`include "./vga/vga_wb8.v"
+`include "./vga/vga_wb8_extram.v"
 `include "./irdecoder/irdecoder_wb8.v"
 
 
@@ -208,23 +208,14 @@ module top(
         .ACK_O(prng_ack)
     );
 
+    wire[7:0] ram_dat;
+
     reg vga_stb = 0;
     wire[7:0] vga_dat;
     wire[18:0] vga_ram_adr;
     wire vga_ram_req;
-    
-    // This simulates SRAM accesses by the VGA unit
-    reg[1:0] vga_req_cnt = 0;
-    always @(posedge clk) begin
-        vga_req_cnt <= vga_req_cnt + 1;
-    end
-    //assign vga_ram_req = vga_req_cnt[0];
-    //assign vga_ram_req = vga_req_cnt == 3;
-    assign vga_ram_req = 0;
-    assign vga_ram_adr = 0;
-
     wire vga_ack;
-    vga_wb8 vga_inst(
+    vga_wb8_extram vga_inst(
         .CLK_I(clk),
         .ADR_I(cpu_adr[12:0]),
         .DAT_I(cpu_dat),
@@ -232,6 +223,9 @@ module top(
         .WE_I(cpu_we),
         .DAT_O(vga_dat),
         .ACK_O(vga_ack),
+        .O_ram_req(vga_ram_req),
+        .O_ram_adr(vga_ram_adr),
+        .I_ram_dat(ram_dat),
         .I_vga_clk(clk),
         .O_vga_vsync(vga_vsync),
         .O_vga_hsync(vga_hsync),
@@ -261,7 +255,6 @@ module top(
 
 
     reg ram_stb;
-    wire[7:0] ram_dat;
     wire ram_ack;
     `ifdef EXTENSION_PRESENT
         // if the extension board is present, use the external SRAM chip
