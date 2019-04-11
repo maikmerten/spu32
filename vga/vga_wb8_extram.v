@@ -39,7 +39,7 @@ module vga_wb8_extram (
     reg col_is_visible = 0;
     reg row_is_visible = 0;
 
-    reg[31:0] ram_base = 128 * 1024;
+    reg[18:0] ram_base = 128 * 1024;
     reg[18:0] ram_adr = 0;
     reg[7:0] ram_dat;
     reg ram_fetch = 0;
@@ -159,14 +159,14 @@ module vga_wb8_extram (
                     0: tmp[7:0] <= DAT_I;
                     1: tmp[15:8] <= DAT_I;
                     2: tmp[23:16] <= DAT_I;
-                    default: ram_base <= {DAT_I, tmp};
+                    default: ram_base <= tmp[18:0];
                 endcase
             end else begin
                 case(ADR_I[1:0])
                     0: DAT_O <= ram_base[7:0];
                     1: DAT_O <= ram_base[15:8];
-                    2: DAT_O <= ram_base[23:16];
-                    default: DAT_O <= ram_base[31:24];
+                    2: DAT_O <= {5'b00000, ram_base[18:16]};
+                    default: DAT_O <= 8'b0;
                 endcase
             end
         end
