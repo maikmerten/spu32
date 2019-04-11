@@ -39,10 +39,12 @@ module vga_wb8_extram (
     reg col_is_visible = 0;
     reg row_is_visible = 0;
 
-    reg[18:0] ram_base = 128 * 1024;
+    reg[31:0] ram_base = 128 * 1024;
     reg[18:0] ram_adr = 0;
     reg[7:0] ram_dat;
     reg ram_fetch = 0;
+
+    reg[23:0] tmp;
 
 
     // default 16-color EGA palette
@@ -153,9 +155,19 @@ module vga_wb8_extram (
     always @(posedge CLK_I) begin
         if(STB_I) begin
             if(WE_I) begin
-
+                case(ADR_I[1:0])
+                    0: tmp[7:0] <= DAT_I;
+                    1: tmp[15:8] <= DAT_I;
+                    2: tmp[23:16] <= DAT_I;
+                    default: ram_base <= {DAT_I, tmp};
+                endcase
             end else begin
-
+                case(ADR_I[1:0])
+                    0: DAT_O <= ram_base[7:0];
+                    1: DAT_O <= ram_base[15:8];
+                    2: DAT_O <= ram_base[23:16];
+                    default: DAT_O <= ram_base[31:24];
+                endcase
             end
         end
 
