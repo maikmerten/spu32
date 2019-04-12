@@ -70,9 +70,12 @@ module vga_wb8_extram (
         endcase
     endfunction
 
-    reg[5:0] rgbvalue;
     always @(*) begin
-        rgbvalue = RGBcolor(col[0] ? ram_dat[7:4] : ram_dat[3:0]);
+        if(col_is_visible && row_is_visible) begin
+            {O_vga_r1, O_vga_r0, O_vga_g1, O_vga_g0, O_vga_b1, O_vga_b0} = RGBcolor(col[0] ? ram_dat[7:4] : ram_dat[3:0]);
+        end else begin
+            {O_vga_r1, O_vga_r0, O_vga_g1, O_vga_g0, O_vga_b1, O_vga_b0} = 6'b000000;
+        end
     end
 
     always @(posedge I_vga_clk) begin
@@ -114,15 +117,6 @@ module vga_wb8_extram (
         if(row == v_visible + v_front_porch + v_back_porch - 1) begin
             O_vga_vsync <= 1;
         end
-
-
-        if(col_is_visible && row_is_visible) begin
-            {O_vga_r1, O_vga_r0, O_vga_g1, O_vga_g0, O_vga_b1, O_vga_b0} <= rgbvalue;
-        end else begin
-            {O_vga_r1, O_vga_r0, O_vga_g1, O_vga_g0, O_vga_b1, O_vga_b0} <= 6'b000000;
-        end
-
-
 
 
         if(col == h_front_porch + h_pulse + h_back_porch + h_visible - 1) begin
