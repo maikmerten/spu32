@@ -88,7 +88,10 @@ void uploadFile(char *filename, int address) {
 
         address += n;
         n = read(fd, filebuf, sizeof filebuf);
-        usleep(10 * 1000);
+
+        // FIXME: the write operations above need to be properly synced instead of
+        // waiting long enough for the data to be transferred.
+        usleep(40 * 1000);
     }
 
     printf("uploaded %d bytes\n\r", address);
