@@ -18,6 +18,10 @@ main:
     li t0, 0x53
     beq a0, t0, uart_to_spi
 
+    # check for "T" (UART communications test)
+    li t0, 0x54
+    beq a0, t0, test_uart
+
     j main
 
 
@@ -110,6 +114,40 @@ receive_uart_wait_receive:
     beqz t0, receive_uart_wait_receive
     lbu a0, DEV_UART_DATA(zero)
     ret
+
+
+test_uart:
+    # receive sum of all bytes
+    jal a1, receive_uart_4_bytes
+    mv s0, a0
+    # receive number of bytes
+    jal a1, receive_uart_4_bytes
+    mv s1, a0
+    # init byte-counter to zero
+    mv s2, zero
+    # set sum to zero
+    mv s3, zero
+test_uart_receive_bytes:
+    # back to main if specified number of bytes received
+    bgeu s2, s1, test_uart_check_sum
+    # get a byte
+    jal receive_uart
+    # add received byte to total sum
+    add s3, s3, a0
+    # increment counter
+    addi s2, s2, 1
+    j test_uart_receive_bytes
+test_uart_check_sum:
+    beq s3, s0, test_uart_pass
+test_uart_fail:
+    li a0, 0xFF
+    sb a0, DEV_LED(zero)
+    j test_uart_fail
+test_uart_pass:
+    li a0, 0x01
+    sb a0, DEV_LED(zero)
+    j test_uart_pass
+
 
 # detect memory size, result is in t1 (load_from_spi expects it there)
 detect_memory_size:
