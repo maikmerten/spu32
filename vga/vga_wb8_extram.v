@@ -39,8 +39,21 @@ module vga_wb8_extram (
     reg col_is_visible = 0;
     reg row_is_visible = 0;
 
+    localparam mode_text_40 = 0;
+    localparam mode_graphics = 1;
+
+    reg[1:0] mode = mode_graphics;
+
     reg[18:0] ram_base = 128 * 1024;
     reg[18:0] ram_adr = 0;
+
+    reg[18:0] font_base = 256 * 1024;
+    reg[7:0] char_byte = 0;
+    reg[0:7] font_byte = 0, font_byte2 = 0; // reversed bit order for easier lookup according to column
+    reg[7:0] color_byte = 0, color_byte2 = 0;
+
+    reg[6:0] text_col = 0;
+
     reg[7:0] ram_dat;
     reg ram_fetch = 0;
 
@@ -70,32 +83,71 @@ module vga_wb8_extram (
         endcase
     endfunction
 
+    reg[3:0] coloridx = 0;
     always @(*) begin
         if(col_is_visible && row_is_visible) begin
-            {O_vga_r1, O_vga_r0, O_vga_g1, O_vga_g0, O_vga_b1, O_vga_b0} = RGBcolor(col[0] ? ram_dat[7:4] : ram_dat[3:0]);
+            if(mode == mode_text_40) begin
+                coloridx = font_byte[col[4:1]] ? color_byte2[7:4] : color_byte2[3:0];
+            end else begin
+                coloridx = col[0] ? ram_dat[7:4] : ram_dat[3:0];
+            end
         end else begin
-            {O_vga_r1, O_vga_r0, O_vga_g1, O_vga_g0, O_vga_b1, O_vga_b0} = 6'b000000;
+            coloridx = 0;
         end
     end
 
+
     always @(posedge I_vga_clk) begin
 
-        if(row_is_visible && col == (h_front_porch + h_pulse + h_back_porch - 3)) begin
-            ram_fetch <= 1;
-        end
-        if(col == (h_front_porch + h_pulse + h_back_porch + h_visible - 3)) begin
-            ram_fetch <= 0;
-        end
+        O_ram_req <= 0;
 
-        if(ram_fetch && !col[0]) begin
-            O_ram_req <= 1;
-            O_ram_adr <= ram_adr;
-            ram_adr <= ram_adr + 1;
-            ram_dat <= I_ram_dat;
+        if(mode == mode_graphics) begin
+            if(row_is_visible && col == (h_front_porch + h_pulse + h_back_porch - 3)) begin
+                ram_fetch <= 1;
+            end
+            if(col == (h_front_porch + h_pulse + h_back_porch + h_visible - 3)) begin
+                ram_fetch <= 0;
+            end
+
+            if(ram_fetch && !col[0]) begin
+                O_ram_req <= 1;
+                O_ram_adr <= ram_adr;
+                ram_adr <= ram_adr + 1;
+                ram_dat <= I_ram_dat;
+            end
         end else begin
-            O_ram_req <= 0;
+            // 40 column text mode
+            if(row_is_visible && col == (h_front_porch + h_pulse + h_back_porch - 15)) begin
+                ram_fetch <= 1;
+            end
+            if(col == (h_front_porch + h_pulse + h_back_porch + h_visible - 15)) begin
+                ram_fetch <= 0;
+                if(row[3:0] == 15) ram_adr <= ram_adr + 80;
+            end
+
+            if(ram_fetch) begin
+                if(col[3:0] == 0) begin
+                end else if(col[3:0] == 9) begin
+                    O_ram_req <= 1;
+                    O_ram_adr <= ram_adr + {text_col, 1'b0};
+                end else if(col[3:0] == 11) begin
+                    char_byte <= I_ram_dat;
+                    O_ram_req <= 1;
+                    O_ram_adr <= ram_adr + {text_col, 1'b1};
+                    text_col <= text_col + 1;
+                end else if(col[3:0] == 13) begin
+                    color_byte <= I_ram_dat;
+                    O_ram_req <= 1;
+                    O_ram_adr <= font_base + {char_byte, row[3:1]};
+                end else if(col[3:0] == 15) begin
+                    font_byte <= I_ram_dat;
+                    color_byte2 <= color_byte;
+                end
+            end
         end
 
+
+        {O_vga_r1, O_vga_r0, O_vga_g1, O_vga_g0, O_vga_b1, O_vga_b0} <= RGBcolor(coloridx);
 
         // generate sync signals
         if(col == h_front_porch - 1) begin
@@ -122,6 +174,7 @@ module vga_wb8_extram (
         if(col == h_front_porch + h_pulse + h_back_porch + h_visible - 1) begin
             col <= 0;
             col_is_visible <= 0;
+            text_col <= 0;
 
             if(row == v_visible + v_front_porch + v_pulse + v_back_porch - 1) begin
                 // return to first line
@@ -153,14 +206,25 @@ module vga_wb8_extram (
                     0: tmp[7:0] <= DAT_I;
                     1: tmp[15:8] <= DAT_I;
                     2: tmp[23:16] <= DAT_I;
-                    default: ram_base <= tmp[18:0];
+                    3: ram_base <= tmp[18:0];
+                    4: tmp[7:0] <= DAT_I;
+                    5: tmp[15:8] <= DAT_I;
+                    6: tmp[23:16] <= DAT_I;
+                    7: font_base <= tmp[18:0];
+                    default: mode <= DAT_I[1:0];
+                    
                 endcase
             end else begin
                 case(ADR_I[1:0])
                     0: DAT_O <= ram_base[7:0];
                     1: DAT_O <= ram_base[15:8];
                     2: DAT_O <= {5'b00000, ram_base[18:16]};
-                    default: DAT_O <= 8'b0;
+                    3: DAT_O <= 8'b0;
+                    4: DAT_O <= font_base[7:0];
+                    5: DAT_O <= font_base[15:8];
+                    6: DAT_O <= {5'b00000, font_base[18:16]};
+                    7: DAT_O <= 8'b0;
+                    default: DAT_O <= {6'b000000, mode};
                 endcase
             end
         end
