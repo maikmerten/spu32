@@ -6,8 +6,8 @@ int main() {
 
     volatile uint32_t* VGA_MEM_BASE = (volatile uint32_t*) 0xFFFF0000;
 
-    uint32_t vgabase = (64*1024);
-    int32_t maxoff = (800 * 320);
+    uint32_t vgabase = (16*1024);
+    int32_t maxoff = (960 * 320);
     int32_t off = 0;
     int32_t dir = 320;
 
