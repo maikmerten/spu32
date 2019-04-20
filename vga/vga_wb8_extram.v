@@ -42,7 +42,7 @@ module vga_wb8_extram (
     localparam mode_text_40 = 0;
     localparam mode_graphics = 1;
 
-    reg[1:0] mode = mode_graphics;
+    reg[1:0] mode = mode_text_40;
 
     reg[18:0] ram_base = 128 * 1024;
     reg[18:0] ram_adr = 0;

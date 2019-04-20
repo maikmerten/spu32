@@ -4,16 +4,20 @@
 
 int main() {
 
-    volatile uint32_t* VGA_MEM_BASE = (volatile uint32_t*) 0xFFFF0000;
+    volatile uint32_t* DEV_VGA_BASE = (volatile uint32_t*) 0xFFFF0000;
+    volatile uint8_t* DEV_VGA_MODE = (volatile uint8_t*) 0xFFFF0008;
 
     uint32_t vgabase = (16*1024);
     int32_t maxoff = (960 * 320);
     int32_t off = 0;
     int32_t dir = 320;
 
+    // switch to graphics mode
+    *DEV_VGA_MODE = 1;
+
 	while(1) {
 
-        *VGA_MEM_BASE = (vgabase + off);
+        *DEV_VGA_BASE = (vgabase + off);
         off += dir;
 
         if(off == 0 && dir < 0) {
@@ -29,7 +33,7 @@ int main() {
         }
 
         for(uint32_t delay = 5000; delay > 0; --delay) {
-            uint32_t tmp = *VGA_MEM_BASE;
+            uint32_t tmp = *DEV_VGA_BASE;
         }
 	}
 
