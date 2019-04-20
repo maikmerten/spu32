@@ -206,7 +206,7 @@ module vga_wb8_extram (
     always @(posedge CLK_I) begin
         if(STB_I) begin
             if(WE_I) begin
-                case(ADR_I[1:0])
+                case(ADR_I[3:0])
                     0: tmp[7:0] <= DAT_I;
                     1: tmp[15:8] <= DAT_I;
                     2: tmp[23:16] <= DAT_I;
@@ -219,7 +219,7 @@ module vga_wb8_extram (
                     
                 endcase
             end else begin
-                case(ADR_I[1:0])
+                case(ADR_I[3:0])
                     0: DAT_O <= ram_base[7:0];
                     1: DAT_O <= ram_base[15:8];
                     2: DAT_O <= {5'b00000, ram_base[18:16]};
