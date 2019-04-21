@@ -220,13 +220,14 @@ module top(
 
 
         vga_wb8_extram vga_inst(
-            .CLK_I(clk),
-            .ADR_I(cpu_adr[12:0]),
-            .DAT_I(cpu_dat),
-            .STB_I(vga_stb),
-            .WE_I(cpu_we),
-            .DAT_O(vga_dat),
-            .ACK_O(vga_ack),
+            .I_wb_clk(clk),
+            .I_wb_adr(cpu_adr[12:0]),
+            .I_wb_dat(cpu_dat),
+            .I_wb_stb(vga_stb),
+            .I_wb_we(cpu_we),
+            .O_wb_dat(vga_dat),
+            .O_wb_ack(vga_ack),
+            .I_reset(reset),
             .O_ram_req(vga_ram_req),
             .O_ram_adr(vga_ram_adr),
             .I_ram_dat(ram_dat),

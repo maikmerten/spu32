@@ -1,12 +1,15 @@
 module vga_wb8_extram (
-        // naming according to Wisbhone B4 spec
-        input[12:0] ADR_I, // 2^13 addresses
-        input CLK_I,
-        input[7:0] DAT_I,
-        input STB_I,
-        input WE_I,
-        output reg ACK_O,
-        output reg[7:0] DAT_O,
+        // Wisbhone B4 signals
+        input[12:0] I_wb_adr, // 2^13 addresses
+        input I_wb_clk,
+        input[7:0] I_wb_dat,
+        input I_wb_stb,
+        input I_wb_we,
+        output reg O_wb_ack,
+        output reg[7:0] O_wb_dat,
+
+        // reset signal
+        input I_reset,
 
         // signals to external RAM
         output reg[18:0] O_ram_adr,
@@ -39,10 +42,10 @@ module vga_wb8_extram (
     reg col_is_visible = 0;
     reg row_is_visible = 0;
 
-    localparam mode_text_40 = 0;
-    localparam mode_graphics = 1;
+    localparam MODE_TEXT_40 = 0;
+    localparam MODE_GRAPHICS_640_640 = 1;
 
-    reg[1:0] mode = mode_text_40;
+    reg[1:0] mode = MODE_TEXT_40;
 
     reg[18:0] ram_base = 128 * 1024;
     reg[18:0] ram_adr = 0;
@@ -86,7 +89,7 @@ module vga_wb8_extram (
     reg[3:0] coloridx = 0;
     always @(*) begin
         if(col_is_visible && row_is_visible) begin
-            if(mode == mode_text_40) begin
+            if(mode == MODE_TEXT_40) begin
                 coloridx = font_byte[col[4:1]] ? color_byte2[7:4] : color_byte2[3:0];
             end else begin
                 coloridx = !col[0] ? ram_dat[7:4] : ram_dat[3:0];
@@ -101,7 +104,7 @@ module vga_wb8_extram (
 
         O_ram_req <= 0;
 
-        if(mode == mode_graphics) begin
+        if(mode == MODE_GRAPHICS_640) begin
             if(row_is_visible && col == (h_front_porch + h_pulse + h_back_porch - 4)) begin
                 ram_fetch <= 1;
             end
@@ -203,37 +206,43 @@ module vga_wb8_extram (
 
     end
     
-    always @(posedge CLK_I) begin
-        if(STB_I) begin
-            if(WE_I) begin
-                case(ADR_I[3:0])
-                    0: tmp[7:0] <= DAT_I;
-                    1: tmp[15:8] <= DAT_I;
-                    2: tmp[23:16] <= DAT_I;
+    always @(posedge I_wb_clk) begin
+        if(I_wb_stb) begin
+            if(I_wb_we) begin
+                case(I_wb_adr[3:0])
+                    0: tmp[7:0] <= I_wb_dat;
+                    1: tmp[15:8] <= I_wb_dat;
+                    2: tmp[23:16] <= I_wb_dat;
                     3: ram_base <= tmp[18:0];
-                    4: tmp[7:0] <= DAT_I;
-                    5: tmp[15:8] <= DAT_I;
-                    6: tmp[23:16] <= DAT_I;
+                    4: tmp[7:0] <= I_wb_dat;
+                    5: tmp[15:8] <= I_wb_dat;
+                    6: tmp[23:16] <= I_wb_dat;
                     7: font_base <= tmp[18:0];
-                    default: mode <= DAT_I[1:0];
+                    default: mode <= I_wb_dat[1:0];
                     
                 endcase
             end else begin
-                case(ADR_I[3:0])
-                    0: DAT_O <= ram_base[7:0];
-                    1: DAT_O <= ram_base[15:8];
-                    2: DAT_O <= {5'b00000, ram_base[18:16]};
-                    3: DAT_O <= 8'b0;
-                    4: DAT_O <= font_base[7:0];
-                    5: DAT_O <= font_base[15:8];
-                    6: DAT_O <= {5'b00000, font_base[18:16]};
-                    7: DAT_O <= 8'b0;
-                    default: DAT_O <= {6'b000000, mode};
+                case(I_wb_adr[3:0])
+                    0: O_wb_dat <= ram_base[7:0];
+                    1: O_wb_dat <= ram_base[15:8];
+                    2: O_wb_dat <= {5'b00000, ram_base[18:16]};
+                    3: O_wb_dat <= 8'b0;
+                    4: O_wb_dat <= font_base[7:0];
+                    5: O_wb_dat <= font_base[15:8];
+                    6: O_wb_dat <= {5'b00000, font_base[18:16]};
+                    7: O_wb_dat <= 8'b0;
+                    default: O_wb_dat <= {6'b000000, mode};
                 endcase
             end
         end
 
-        ACK_O <= STB_I;
+        O_wb_ack <= I_wb_stb;
+
+
+        if(I_reset) begin
+            mode <= MODE_TEXT_40;
+        end
+
     end
 
 endmodule
