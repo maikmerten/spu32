@@ -43,7 +43,7 @@ module vga_wb8_extram (
     reg row_is_visible = 0;
 
     localparam MODE_TEXT_40 = 0;
-    localparam MODE_GRAPHICS_640_640 = 1;
+    localparam MODE_GRAPHICS_640 = 1;
 
     reg[1:0] mode = MODE_TEXT_40;
 
