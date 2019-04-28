@@ -173,7 +173,7 @@ module vga_wb8_extram (
             O_vga_vsync <= 0;
         end
 
-        if(row == v_visible + v_front_porch + v_back_porch - 1) begin
+        if(row == v_visible + v_front_porch + v_pulse - 1) begin
             O_vga_vsync <= 1;
         end
 
