@@ -79,19 +79,21 @@ void uploadFile(char *filename, int address) {
 
     char filebuf[256];
     int n = read(fd, filebuf, sizeof filebuf);
+    int ret;
     while(n > 0) {
         assemble32(&cmd_upload[1], address); // upload address
         assemble32(&cmd_upload[5], n); // upload size
 
-        write(fd_tty, cmd_upload, sizeof cmd_upload);
-        write(fd_tty, filebuf, n);
+	// FIXME: evaluate return value. For error handling, d'oh!        
+	ret = write(fd_tty, cmd_upload, sizeof cmd_upload);
+        ret = write(fd_tty, filebuf, n);
 
         address += n;
         n = read(fd, filebuf, sizeof filebuf);
 
         // FIXME: the write operations above need to be properly synced instead of
         // waiting long enough for the data to be transferred.
-        usleep(40 * 1000);
+        //usleep(40 * 1000);
     }
 
     printf("uploaded %d bytes\n\r", address);
@@ -159,9 +161,25 @@ void console() {
 void drainfd() {
     char c;
     int n;
+    int flags = fcntl(fd_tty, F_GETFL, 0);
+    if(flags == -1) {
+        perror("setting NONBLOCK failed");
+	exit(-1);
+    }
+    flags |= O_NONBLOCK;
+    int ret = fcntl(fd_tty, F_SETFL, flags);
+    if(ret == -1) {
+        perror("setting NONBLOCK failed");
+	exit(-1);
+    }
     do {
         n = read(fd_tty, &c, 1);
     } while(n > 0);
+    ret = fcntl(fd_tty, F_SETFL, flags & ~O_NONBLOCK);
+    if(ret == -1) {
+        perror("setting ~NONBLOCK failed");
+	exit(-1);
+    }
 }
 
 int writeToSPI(char *data, char *response, int length) {
@@ -182,10 +200,9 @@ int writeToSPI(char *data, char *response, int length) {
     do {
         char recbuf[64];
         int n = read(fd_tty, recbuf, sizeof recbuf);
-        if(n < 0) {
-            //perror("error on reading SPI response");
-            //return -1;
-            usleep(1 * 1000);
+        if(n == -1) {
+            perror("error on reading SPI response");
+            exit(-1);
         }
         if(n > 0) {
             for(int i = 0; i < n; ++i) {
@@ -360,7 +377,7 @@ int main(int argc, char *argv[])
     }
 
 
-    fd_tty = open(portname, O_RDWR | O_NOCTTY | O_SYNC | O_NONBLOCK);
+    fd_tty = open(portname, O_RDWR | O_NOCTTY | O_SYNC);
     if (fd_tty < 0)
     {
         perror("error opening serial port");
