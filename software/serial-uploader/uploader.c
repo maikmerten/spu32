@@ -21,7 +21,7 @@ const char CMD_PAGE_PROGRAM = (char) 0x02;
 const char CMD_READ_STATUS = (char) 0x05;
 const char CMD_WRITE_ENABLE = (char) 0x06;
 
-const int CHUNKSIZE = 32;
+const int CHUNKSIZE = 64;
 
 
 int set_interface_attribs(int fd, int speed) {
@@ -84,16 +84,23 @@ void uploadFile(char *filename, int address) {
         assemble32(&cmd_upload[1], address); // upload address
         assemble32(&cmd_upload[5], n); // upload size
 
-	// FIXME: evaluate return value. For error handling, d'oh!        
-	ret = write(fd_tty, cmd_upload, sizeof cmd_upload);
+	    ret = write(fd_tty, cmd_upload, sizeof cmd_upload);
+        if(ret == -1) {
+            perror("uploadFile: error writing to fd_tty (1)");
+            exit(-1);
+        }        
         ret = write(fd_tty, filebuf, n);
+        if(ret == -1) {
+            perror("uploadFile: error writing to fd_tty (2)");
+            exit(-1);
+        }
 
         address += n;
         n = read(fd, filebuf, sizeof filebuf);
-
-        // FIXME: the write operations above need to be properly synced instead of
-        // waiting long enough for the data to be transferred.
-        //usleep(40 * 1000);
+        if(n == -1) {
+            perror("uploadFile: error reading from fd");
+            exit(-1);
+        }
     }
 
     printf("uploaded %d bytes\n\r", address);
@@ -185,15 +192,27 @@ void drainfd() {
 int writeToSPI(char *data, char *response, int length) {
     drainfd();
 
-
     char op[1];
     char len[4];
+    int ret;
     op[0] = 'S';
     assemble32(len, length);
 
-    write(fd_tty, op, sizeof op);
-    write(fd_tty, len, sizeof len);
-    write(fd_tty, data, length);
+    ret = write(fd_tty, op, sizeof op);
+    if(ret == -1) {
+        perror("writeToSPI: error writing to fd_tty (1)");
+        exit(-1);
+    }
+    ret = write(fd_tty, len, sizeof len);
+    if(ret == -1) {
+        perror("writeToSPI: error writing to fd_tty (2)");
+        exit(-1);
+    }
+    ret = write(fd_tty, data, length);
+    if(ret == -1) {
+        perror("writeToSPI: error writing to fd_tty (3)");
+        exit(-1);
+    }
 
 
     int received = 0;
@@ -201,7 +220,7 @@ int writeToSPI(char *data, char *response, int length) {
         char recbuf[64];
         int n = read(fd_tty, recbuf, sizeof recbuf);
         if(n == -1) {
-            perror("error on reading SPI response");
+            perror("writeToSPI: error reading from fd_tty");
             exit(-1);
         }
         if(n > 0) {
@@ -212,7 +231,7 @@ int writeToSPI(char *data, char *response, int length) {
                 }
             }
             received += n;
-        } 
+        }
     } while(received < length);
 
     return 0;
