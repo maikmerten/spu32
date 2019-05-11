@@ -111,9 +111,14 @@ void uploadFile(char *filename, int address) {
 
 void callAddress(int address) {
     char cmd_call[5];
+    int ret;
     cmd_call[0] = 'C';
     assemble32(&cmd_call[1], 0);
-    write(fd_tty, cmd_call, sizeof cmd_call);
+    ret = write(fd_tty, cmd_call, sizeof cmd_call);
+    if(ret == -1) {
+        perror("callAddress: could not write to fd_tty");
+        exit(-1);
+    }
 }
 
 int readTestResult() {
@@ -142,20 +147,28 @@ void console() {
     fcntl(0, F_SETFL, fcntl(0, F_GETFL) | O_NONBLOCK);
 
     while(1) {
-        int n;
+        int n, ret;
         char c;
         char active = 0;
 
         n = read(0, &c, 1);
         if(n > 0) {
             active = 1;
-            write(fd_tty, &c, 1);
+            ret = write(fd_tty, &c, 1);
+            if(ret == -1) {
+                perror("console: could not write to fd_tty");
+                exit(-1);
+            }
         }
 
         n = read(fd_tty, &c, 1);
         if(n > 0) {
             active = 1;
-            write(1, &c, 1);
+            ret = write(1, &c, 1);
+            if(ret == -1) {
+                perror("console: could not write to stdout");
+                exit(-1);
+            }
         }
 
         if(!active) {
@@ -351,7 +364,7 @@ int main(int argc, char *argv[])
     tcgetattr(0, &termsave);
 
     char *filename = NULL;
-    char *portname = NULL;
+    char *portname = "/dev/ttyUSB1";
     char enterconsole = 0, program = 0;
 
     int c;
@@ -395,7 +408,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-
+    printf("selected serial port: %s\n", portname);
     fd_tty = open(portname, O_RDWR | O_NOCTTY | O_SYNC);
     if (fd_tty < 0)
     {

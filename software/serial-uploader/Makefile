@@ -1,5 +1,5 @@
 CC=cc
-CFLAGS=-ggdb -fPIC
+CFLAGS=-ggdb -fPIC -O2
 LDFLAGS=
 
 
