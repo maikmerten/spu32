@@ -40,16 +40,16 @@ module cpu_tb();
     bram_wb8_vga #(
         .RAMINITFILE("./software/testgen/testsuite.dat")
     ) ram_inst (
-	    .CLK_I(clk),
-	    .STB_I(ram_stb),
-	    .WE_I(cpu_we),
-	    .ADR_I(cpu_adr[12:0]),
-	    .DAT_I(cpu_dat),
-	    .DAT_O(ram_dat),
-	    .ACK_O(ram_ack),
-        .STALL_O(ram_stall),
-        .VGA_REQ_I(stall),
-        .VGA_ADR_I(0)
+	    .I_wb_clk(clk),
+	    .I_wb_stb(ram_stb),
+	    .I_wb_we(cpu_we),
+	    .I_wb_adr(cpu_adr[12:0]),
+	    .I_wb_dat(cpu_dat),
+	    .O_wb_dat(ram_dat),
+	    .O_wb_ack(ram_ack),
+        .O_wb_stall(ram_stall),
+        .I_vga_req(stall),
+        .I_vga_adr(0)
     );
 
     reg leds_stb;
@@ -57,12 +57,12 @@ module cpu_tb();
     wire leds_ack;
 
     leds_wb8 leds_inst(
-        .CLK_I(clk),
-        .DAT_I(cpu_dat),
-        .STB_I(leds_stb),
-        .WE_I(cpu_we),
-        .DAT_O(leds_dat),
-        .ACK_O(leds_ack),
+        .I_wb_clk(clk),
+        .I_wb_dat(cpu_dat),
+        .I_wb_stb(leds_stb),
+        .I_wb_we(cpu_we),
+        .O_wb_dat(leds_dat),
+        .O_wb_ack(leds_ack),
         .O_leds(leds_value)
     );
 

@@ -4,13 +4,13 @@ module bram_wb8
 		parameter RAMINITFILE = "./ram/raminit.dat"
 	)
 	(
-		input CLK_I,
-		input STB_I,
-		input WE_I,
-		input[ADDRBITS-1:0] ADR_I,
-		input[7:0] DAT_I,
-		output reg [7:0] DAT_O,
-		output reg ACK_O
+		input I_wb_clk,
+		input I_wb_stb,
+		input I_wb_we,
+		input[ADDRBITS-1:0] I_wb_adr,
+		input[7:0] I_wb_dat,
+		output reg [7:0] O_wb_dat,
+		output reg O_wb_ack
 	);
 
 	localparam RAMSIZE = 2**ADDRBITS;
@@ -19,14 +19,14 @@ module bram_wb8
 	
 	initial $readmemh(RAMINITFILE, ram, 0, RAMSIZE-1);
 
-	wire write = STB_I & WE_I;
-	wire read = STB_I & !WE_I;
+	wire write = I_wb_stb & I_wb_we;
+	wire read = I_wb_stb & !I_wb_we;
 
-	always @(posedge CLK_I) begin
-		if(write) ram[ADR_I] <= DAT_I;
-		if(read) DAT_O <= ram[ADR_I];
+	always @(posedge I_wb_clk) begin
+		if(write) ram[I_wb_adr] <= I_wb_dat;
+		if(read) O_wb_dat <= ram[I_wb_adr];
 
-		ACK_O <= STB_I;
+		O_wb_ack <= I_wb_stb;
 
 	end
 

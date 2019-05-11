@@ -1,18 +1,18 @@
 module sram512kx8_wb8_vga
 	(
 		// Wishbone signals
-		input CLK_I,
-		input STB_I,
-		input WE_I,
-		input[18:0] ADR_I,
-		input[7:0] DAT_I,
-		output reg [7:0] DAT_O,
-		output reg ACK_O,
-		output STALL_O,
+		input I_wb_clk,
+		input I_wb_stb,
+		input I_wb_we,
+		input[18:0] I_wb_adr,
+		input[7:0] I_wb_dat,
+		output reg [7:0] O_wb_dat,
+		output reg O_wb_ack,
+		output O_wb_stall,
 
 		// read port for VGA
-		input VGA_REQ_I,
-		input[18:0] VGA_ADR_I,
+		input I_vga_req,
+		input[18:0] I_vga_adr,
 
 		// SRAM signals
 		input[7:0] I_data,
@@ -32,29 +32,29 @@ module sram512kx8_wb8_vga
 	// control signals are active low, thus negated
 	assign O_ce = 0;
 	assign O_we = !(write1 != write2);
-	assign STALL_O = STB_I & VGA_REQ_I;
+	assign O_wb_stall = I_wb_stb & I_vga_req;
 
-	always @(posedge CLK_I) begin
+	always @(posedge I_wb_clk) begin
 		O_oe <= 1; // active low
-		O_data <= DAT_I;
+		O_data <= I_wb_dat;
 		O_output_enable <= 0;
 	
-		if(VGA_REQ_I) begin
-			O_address <= VGA_ADR_I;
+		if(I_vga_req) begin
+			O_address <= I_vga_adr;
 			O_output_enable <= 0;
 			O_oe <= 0;
-		end else if(STB_I) begin
-			write1 <= WE_I ? !write2 : write2;
-			O_address <= ADR_I;
-			O_oe <= !(!WE_I); // active low
-			O_output_enable <= WE_I;
+		end else if(I_wb_stb) begin
+			write1 <= I_wb_we ? !write2 : write2;
+			O_address <= I_wb_adr;
+			O_oe <= !(!I_wb_we); // active low
+			O_output_enable <= I_wb_we;
 		end
 
-		ACK_O <= (STB_I & !VGA_REQ_I);
+		O_wb_ack <= (I_wb_stb & !I_vga_req);
 	end
 
-	always @(negedge CLK_I) begin
-		DAT_O <= I_data[7:0];
+	always @(negedge I_wb_clk) begin
+		O_wb_dat <= I_data[7:0];
 		write2 <= write1;
 	end
 

@@ -127,12 +127,12 @@ module top(
     wire leds_ack;
 
     leds_wb8 leds_inst(
-        .CLK_I(clk),
-        .DAT_I(cpu_dat),
-        .STB_I(leds_stb),
-        .WE_I(cpu_we),
-        .DAT_O(leds_dat),
-        .ACK_O(leds_ack),
+        .I_wb_clk(clk),
+        .I_wb_dat(cpu_dat),
+        .I_wb_stb(leds_stb),
+        .I_wb_we(cpu_we),
+        .O_wb_dat(leds_dat),
+        .O_wb_ack(leds_ack),
         .O_leds(leds_value)
     );
     assign {led0, led1, led2, led3, led4, led5, led6, led7} = leds_value;
@@ -272,17 +272,17 @@ module top(
 
         sram512kx8_wb8_vga sram_inst(
             // wiring to wishbone bus
-            .CLK_I(clk),
-            .ADR_I(cpu_adr[18:0]),
-            .DAT_I(cpu_dat),
-            .STB_I(ram_stb),
-            .WE_I(cpu_we),
-            .DAT_O(ram_dat),
-            .ACK_O(ram_ack),
-            .STALL_O(ram_stall),
+            .I_wb_clk(clk),
+            .I_wb_adr(cpu_adr[18:0]),
+            .I_wb_dat(cpu_dat),
+            .I_wb_stb(ram_stb),
+            .I_wb_we(cpu_we),
+            .O_wb_dat(ram_dat),
+            .O_wb_ack(ram_ack),
+            .O_wb_stall(ram_stall),
             // VGA read port
-            .VGA_ADR_I(vga_ram_adr),
-            .VGA_REQ_I(vga_ram_req),
+            .I_vga_req(vga_ram_req),
+            .I_vga_adr(vga_ram_adr),
             // wiring to SRAM chip
             .O_data(sram_dat_to_chip),
             .I_data(sram_dat_from_chip),
@@ -347,13 +347,13 @@ module top(
         bram_wb8 #(
             .ADDRBITS(13)
         ) bram_inst(
-            .CLK_I(clk),
-            .ADR_I(cpu_adr[12:0]),
-            .DAT_I(cpu_dat),
-            .STB_I(ram_stb),
-            .WE_I(cpu_we),
-            .DAT_O(ram_dat),
-            .ACK_O(ram_ack)
+            .I_wb_clk(clk),
+            .I_wb_adr(cpu_adr[12:0]),
+            .I_wb_dat(cpu_dat),
+            .I_wb_stb(ram_stb),
+            .I_wb_we(cpu_we),
+            .O_wb_dat(ram_dat),
+            .O_wb_ack(ram_ack)
         );
         assign ram_stall = 0;
     `endif

@@ -1,12 +1,11 @@
 module leds_wb8(
-        // naming according to Wisbhone B4 spec
-        // input[31:0] ADR_I, no address needed here, only one memory location
-        input CLK_I,
-        input[7:0] DAT_I,
-        input STB_I,
-        input WE_I,
-        output reg ACK_O,
-        output reg[7:0] DAT_O,
+        // Wishbone signals
+        input I_wb_clk,
+        input[7:0] I_wb_dat,
+        input I_wb_stb,
+        input I_wb_we,
+        output reg O_wb_ack,
+        output reg[7:0] O_wb_dat,
         // output for LEDS
         output[7:0] O_leds
     );
@@ -14,17 +13,14 @@ module leds_wb8(
     reg[7:0] ledvalue = 0;
     assign O_leds = ledvalue;
 
-    always @(posedge CLK_I) begin
-        ACK_O <= 0;
-        if(STB_I) begin
-            if(WE_I) begin
-                ledvalue <= DAT_I;
-            end else begin
-                DAT_O <= ledvalue;
+    always @(posedge I_wb_clk) begin
+        if(I_wb_stb) begin
+            if(I_wb_we) begin
+                ledvalue <= I_wb_dat;
             end
-            ACK_O <= 1;
+            O_wb_dat <= ledvalue;
         end
-
+        O_wb_ack <= I_wb_stb;
     end
 
 
