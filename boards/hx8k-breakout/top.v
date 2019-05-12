@@ -162,13 +162,13 @@ module top(
     wire spi0_ack;
 
     spi_wb8 spi0_inst(
-        .CLK_I(clk),
-        .ADR_I(cpu_adr[1:0]),
-        .DAT_I(cpu_dat),
-        .STB_I(spi0_stb),
-        .WE_I(cpu_we),
-        .DAT_O(spi0_dat),
-        .ACK_O(spi0_ack),
+        .I_wb_clk(clk),
+        .I_wb_adr(cpu_adr[1:0]),
+        .I_wb_dat(cpu_dat),
+        .I_wb_stb(spi0_stb),
+        .I_wb_we(cpu_we),
+        .O_wb_dat(spi0_dat),
+        .O_wb_ack(spi0_ack),
         .I_spi_miso(spi0_miso),
         .O_spi_mosi(spi0_mosi),
         .O_spi_clk(spi0_clk),

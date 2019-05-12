@@ -14,13 +14,13 @@ module spi_wb8_tb;
     wire spi_clk, spi_mosi, spi_cs;
 
     spi_wb8 mut(
-        .ADR_I(adr),
-        .CLK_I(clk),
-        .DAT_I(dat_i),
-        .STB_I(stb),
-        .WE_I(we),
-        .DAT_O(dat_o),
-        .ACK_O(ack),
+        .I_wb_adr(adr),
+        .I_wb_clk(clk),
+        .I_wb_dat(dat_i),
+        .I_wb_stb(stb),
+        .I_wb_we(we),
+        .O_wb_dat(dat_o),
+        .O_wb_ack(ack),
         // SPI signals
         .I_spi_miso(spi_miso),
         .O_spi_clk(spi_clk),

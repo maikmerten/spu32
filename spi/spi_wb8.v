@@ -2,13 +2,13 @@
 
 module spi_wb8(
         // Wishbone signals
-        input CLK_I,
-        input STB_I,
-        input WE_I,
-        input[1:0] ADR_I,
-        input[7:0] DAT_I,
-        output reg [7:0] DAT_O,
-        output reg ACK_O,
+        input I_wb_clk,
+        input I_wb_stb,
+        input I_wb_we,
+        input[1:0] I_wb_adr,
+        input[7:0] I_wb_dat,
+        output reg [7:0] O_wb_dat,
+        output reg O_wb_ack,
 
         // SPI signals
         input I_spi_miso,
@@ -27,7 +27,7 @@ module spi_wb8(
     wire busy;
 
     spicontroller spictrl(
-        .I_clk(CLK_I),
+        .I_clk(I_wb_clk),
         .I_tx_data(txdata),
         .I_tx_start(txstart),
         .I_spi_miso(I_spi_miso),
@@ -42,30 +42,29 @@ module spi_wb8(
     localparam STATE_WAIT_READY = 2;
     reg[1:0] state = STATE_IDLE;
 
-   	always @(posedge CLK_I) begin
-		ACK_O <= 0;
-		if(STB_I) begin
-            ACK_O <= 1;
+   	always @(posedge I_wb_clk) begin
+		O_wb_ack <= I_wb_stb;
+		if(I_wb_stb) begin
 
-            case(ADR_I)
+            case(I_wb_adr)
                 0: begin
-                    if(WE_I) begin
+                    if(I_wb_we) begin
                         if(state == STATE_IDLE) begin
-                            txdata <= DAT_I;
+                            txdata <= I_wb_dat;
                             state <= STATE_WAIT_BUSY;
                         end
                     end else begin
-                        DAT_O <= rxdata;
+                        O_wb_dat <= rxdata;
                     end
                 end
 
                 1: begin // chip select
-                    if(WE_I) cs <= DAT_I[0];
-                    else DAT_O <= {7'b0, cs};
+                    if(I_wb_we) cs <= I_wb_dat[0];
+                    else O_wb_dat <= {7'b0, cs};
                 end
 
                 default: begin // ready signal
-                    DAT_O <= {7'b0, (state == STATE_IDLE ? 1'b1 : 1'b0)};
+                    O_wb_dat <= {7'b0, (state == STATE_IDLE ? 1'b1 : 1'b0)};
                 end
 
             endcase
