@@ -183,13 +183,13 @@ module top(
     timer_wb8 #(
         .CLOCKFREQ(CLOCKFREQ)
     )timer_inst(
-        .CLK_I(clk),
-        .ADR_I(cpu_adr[2:0]),
-        .DAT_I(cpu_dat),
-        .STB_I(timer_stb),
-        .WE_I(cpu_we),
-        .DAT_O(timer_dat),
-        .ACK_O(timer_ack),
+        .I_wb_clk(clk),
+        .I_wb_adr(cpu_adr[2:0]),
+        .I_wb_dat(cpu_dat),
+        .I_wb_stb(timer_stb),
+        .I_wb_we(cpu_we),
+        .O_wb_dat(timer_dat),
+        .O_wb_ack(timer_ack),
         .O_interrupt(timer_interrupt)
     );
 
