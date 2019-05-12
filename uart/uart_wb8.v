@@ -4,17 +4,16 @@ module uart_wb8
         parameter CLOCKFREQ = 25000000
     )
     (
-        // naming according to Wisbhone B4 spec
-        input[1:0] ADR_I, // data register, receive status, send status
-        input CLK_I,
-        input[7:0] DAT_I,
-        input STB_I,
-        input WE_I,
+        // Wisbhone signals
+        input[1:0] I_wb_adr, // data register, receive status, send status
+        input I_wb_clk,
+        input[7:0] I_wb_dat,
+        input I_wb_stb,
+        input I_wb_we,
+        output reg O_wb_ack,
+        output reg[7:0] O_wb_dat,
         // serial input (RX)
         input I_rx,
-        // Wishbone outputs
-        output reg ACK_O,
-        output reg[7:0] DAT_O,
         // serial output (TX)
         output reg O_tx
     );
@@ -37,7 +36,7 @@ module uart_wb8
 
     reg read_ready, write_ready, do_write = 0;
 
-    always @(posedge CLK_I) begin
+    always @(posedge I_wb_clk) begin
 
         case (readstate)
             READ_IDLE: begin
@@ -98,33 +97,30 @@ module uart_wb8
             end
         endcase
 
-        if(STB_I) begin
-            case(ADR_I)
+        if(I_wb_stb) begin
+            case(I_wb_adr)
                 0: begin // data register
-                    if(WE_I) begin
-                        writebuf <= DAT_I;
+                    if(I_wb_we) begin
+                        writebuf <= I_wb_dat;
                         do_write <= 1;
                     end else begin
-                        DAT_O <= readbuf;
+                        O_wb_dat <= readbuf;
                         read_ready <= 0;
                     end
                 end
 
                 1: begin 
-                    DAT_O <= {7'b0, read_ready}; // status register: receive
+                    O_wb_dat <= {7'b0, read_ready}; // status register: receive
                 end
 
                 default: begin // status register: send
-                    DAT_O <= {7'b0, !do_write};
+                    O_wb_dat <= {7'b0, !do_write};
                 end
 
             endcase
-
-            ACK_O <= 1;
-        end else begin
-            ACK_O <= 0;
         end
 
+        O_wb_ack <= I_wb_stb;
     end
 
 endmodule

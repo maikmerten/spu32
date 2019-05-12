@@ -144,13 +144,13 @@ module top(
     uart_wb8 #(
         .CLOCKFREQ(CLOCKFREQ)
     ) uart_inst(
-        .CLK_I(clk),
-        .ADR_I(cpu_adr[1:0]),
-        .DAT_I(cpu_dat),
-        .STB_I(uart_stb),
-        .WE_I(cpu_we),
-        .DAT_O(uart_dat),
-        .ACK_O(uart_ack),
+        .I_wb_clk(clk),
+        .I_wb_adr(cpu_adr[1:0]),
+        .I_wb_dat(cpu_dat),
+        .I_wb_stb(uart_stb),
+        .I_wb_we(cpu_we),
+        .O_wb_dat(uart_dat),
+        .O_wb_ack(uart_ack),
         .O_tx(uart_tx),
         .I_rx(uart_rx)
     );
