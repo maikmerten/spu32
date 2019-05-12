@@ -3,22 +3,22 @@ module rom_wb8
 		parameter ROMINITFILE = "./rom/rominit.dat"
 	)
 	(
-		input CLK_I,
-		input STB_I,
-		input[8:0] ADR_I,
-		input[7:0] DAT_I,
-		output reg [7:0] DAT_O,
-		output reg ACK_O
+		input I_wb_clk,
+		input I_wb_stb,
+		input[8:0] I_wb_adr,
+		output reg [7:0] O_wb_dat,
+		output reg O_wb_ack
 	);
-
 
 	reg[7:0] rom [511:0];
 	
 	initial $readmemh(ROMINITFILE, rom, 0, 511);
 
-	always @(posedge CLK_I) begin
-		DAT_O <= rom[ADR_I];
-    	ACK_O <= STB_I;
+	always @(posedge I_wb_clk) begin
+		if(I_wb_stb) begin
+			O_wb_dat <= rom[I_wb_adr];
+		end
+    	O_wb_ack <= I_wb_stb;
 	end
 
 endmodule

@@ -114,12 +114,11 @@ module top(
     rom_wb8 #(
         .ROMINITFILE("./software/asm/bootrom.dat")
     ) rom_inst (
-	    .CLK_I(clk),
-	    .STB_I(rom_stb),
-	    .ADR_I(cpu_adr[8:0]),
-	    .DAT_I(cpu_dat),
-	    .DAT_O(rom_dat),
-	    .ACK_O(rom_ack)
+	    .I_wb_clk(clk),
+	    .I_wb_stb(rom_stb),
+	    .I_wb_adr(cpu_adr[8:0]),
+	    .O_wb_dat(rom_dat),
+	    .O_wb_ack(rom_ack)
     );
 
     reg leds_stb;
