@@ -18,7 +18,7 @@ CHECK := $(foreach exec,$(EXECS),\
 
 top.json: config-local.vh top.v
 	cd ../../software/asm && make
-	cd ../.. && yosys -p 'synth_ice40 -json ./boards/hx8k-breakout/top.json' ./boards/hx8k-breakout/top.v
+	cd ../.. && yosys -p 'synth_ice40; attrmvcp; write_json ./boards/hx8k-breakout/top.json' ./boards/hx8k-breakout/top.v
 
 top.asc: top.json hx8k-breakout.pcf
 	nextpnr-ice40 --randomize-seed --placer heap --hx8k --json top.json --pcf hx8k-breakout.pcf --asc top.asc --freq 28
