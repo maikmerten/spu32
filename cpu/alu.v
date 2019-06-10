@@ -23,9 +23,11 @@ module alu(
 //`define SINGLE_CYCLE_SHIFTER
 `ifdef SINGLE_CYCLE_SHIFTER
 	wire[31:0] sll, srl, sra;
+	wire signed[31:0] I_dataS1_signed;
+	assign I_dataS1_signed[31:0] = I_dataS1[31:0];
 	assign sll = (I_dataS1 << I_dataS2[4:0]);
 	assign srl = (I_dataS1 >> I_dataS2[4:0]);
-	assign sra = (I_dataS1 >>> I_dataS2[4:0]);
+	assign sra = (I_dataS1_signed >>> I_dataS2[4:0]);
 	assign O_busy = 0;
 `else
 	assign O_busy = busy;
