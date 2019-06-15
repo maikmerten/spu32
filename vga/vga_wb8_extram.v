@@ -42,9 +42,9 @@ module vga_wb8_extram (
     reg col_is_visible = 0;
     reg row_is_visible = 0;
 
-    localparam MODE_OFF = 0;
-    localparam MODE_TEXT_40 = 1;
-    localparam MODE_GRAPHICS_640 = 2;
+    localparam MODE_OFF = 2'b00;
+    localparam MODE_TEXT_40 = 2'b01;
+    localparam MODE_GRAPHICS_640 = 2'b10;
 
     reg[1:0] mode = MODE_TEXT_40;
 
@@ -89,14 +89,11 @@ module vga_wb8_extram (
 
     reg[3:0] coloridx = 0;
     always @(*) begin
-        coloridx = 0;
-        if(col_is_visible && row_is_visible) begin
-            case(mode)
-                MODE_TEXT_40:      coloridx = font_byte[col[4:1]] ? color_byte2[7:4] : color_byte2[3:0];
-                MODE_GRAPHICS_640: coloridx = !col[0] ? ram_dat[7:4] : ram_dat[3:0];
-                default:           coloridx = 0;
-            endcase
-        end
+        case({col_is_visible && row_is_visible, mode})
+            {1'b1, MODE_TEXT_40}:      coloridx = font_byte[col[4:1]] ? color_byte2[7:4] : color_byte2[3:0];
+            {1'b1, MODE_GRAPHICS_640}: coloridx = !col[0] ? ram_dat[7:4] : ram_dat[3:0];
+            default:                   coloridx = 0;
+        endcase
     end
 
 
