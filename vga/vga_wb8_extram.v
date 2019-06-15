@@ -91,11 +91,11 @@ module vga_wb8_extram (
     always @(*) begin
         coloridx = 0;
         if(col_is_visible && row_is_visible) begin
-            if(mode == MODE_TEXT_40) begin
-                coloridx = font_byte[col[4:1]] ? color_byte2[7:4] : color_byte2[3:0];
-            end else begin
-                coloridx = !col[0] ? ram_dat[7:4] : ram_dat[3:0];
-            end
+            case(mode)
+                MODE_TEXT_40:      coloridx = font_byte[col[4:1]] ? color_byte2[7:4] : color_byte2[3:0];
+                MODE_GRAPHICS_640: coloridx = !col[0] ? ram_dat[7:4] : ram_dat[3:0];
+                default:           coloridx = 0;
+            endcase
         end
     end
 
@@ -122,7 +122,9 @@ module vga_wb8_extram (
                 ram_dat <= I_ram_dat;
             end
 
-        end if(mode == MODE_TEXT_40) begin
+        end
+        
+        if(mode == MODE_TEXT_40) begin
             // 40 column text mode
             if(row_is_visible && col == (h_front_porch + h_pulse + h_back_porch - 15)) begin
                 ram_fetch <= 1;
