@@ -29,7 +29,7 @@ module cpu
 
     // MSRS
     reg[31:0] pc, pcnext, epc;
-    reg nextpc_from_alu, writeback_from_alu;
+    reg nextpc_from_alu, writeback_from_alu, writeback_from_bus;
     reg[31:0] evect = VECTOR_EXCEPTION;
      // current and previous machine-mode external interrupt enable
     reg meie = 0, meie_prev = 0;
@@ -211,10 +211,9 @@ module cpu
     localparam STATE_LOAD2          = 6;
     localparam STATE_BRANCH2        = 7;
     localparam STATE_TRAP1          = 8;
-    localparam STATE_REGWRITEBUS    = 9;
-    localparam STATE_SYSTEM         = 13;
-    localparam STATE_CSRRW1         = 14;
-    localparam STATE_CSRRW2         = 15;
+    localparam STATE_SYSTEM         = 9;
+    localparam STATE_CSRRW1         = 10;
+    localparam STATE_CSRRW2         = 11;
 
 
     reg[3:0] state, prevstate = STATE_RESET, nextstate = STATE_RESET;
@@ -257,13 +256,15 @@ module cpu
                 evect <= VECTOR_EXCEPTION;
                 nextpc_from_alu <= 0;
                 writeback_from_alu <= 0;
+                writeback_from_bus <= 0;
             end
 
             STATE_FETCH: begin
                 // write result of previous instruction to registers if requested
-                mux_reg_input_sel <= MUX_REGINPUT_ALU;
-                reg_we <= writeback_from_alu;
+                mux_reg_input_sel <= writeback_from_alu ? MUX_REGINPUT_ALU : MUX_REGINPUT_BUS;
+                reg_we <= writeback_from_alu | writeback_from_bus;
                 writeback_from_alu <= 0;
+                writeback_from_bus <= 0;
 
                 // update PC
                 pc <= nextpc_from_alu ? alu_dataout : pcnext;
@@ -416,7 +417,9 @@ module cpu
                     `FUNC_LBU:  bus_op <= `BUSOP_READBU;
                     default:    bus_op <= `BUSOP_READHU; // FUNC_LHU
                 endcase
-                nextstate <= STATE_REGWRITEBUS;
+                //nextstate <= STATE_REGWRITEBUS;
+                writeback_from_bus <= 1;
+                nextstate <= STATE_FETCH;
             end
 
 
@@ -500,14 +503,6 @@ module cpu
                         MSR_EVECT: evect <= reg_val1;
                     endcase
                 end
-                // advance to next instruction
-                nextstate <= STATE_FETCH;
-            end
-
-
-            STATE_REGWRITEBUS: begin
-                reg_we <= 1;
-                mux_reg_input_sel <= MUX_REGINPUT_BUS;
                 // advance to next instruction
                 nextstate <= STATE_FETCH;
             end
