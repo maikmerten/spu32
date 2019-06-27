@@ -267,7 +267,8 @@ module cpu
                 writeback_from_bus <= 0;
 
                 // update PC
-                pc <= nextpc_from_alu ? {alu_dataout[31:1], 1'b0} : pcnext;
+                pc <= nextpc_from_alu ? alu_dataout : pcnext;
+                pc[0] <= 0;
 
                 // fetch next instruction 
                 bus_en <= 1;
