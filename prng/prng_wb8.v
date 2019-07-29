@@ -1,40 +1,38 @@
 module prng_wb8(
-        // naming according to Wisbhone B4 spec
-        input[1:0] ADR_I,
-        input CLK_I,
-        input[7:0] DAT_I,
-        input STB_I,
-        input WE_I,
-        output reg ACK_O,
-        output reg[7:0] DAT_O
+        // Wishbone signals
+        input[1:0] I_wb_adr,
+        input I_wb_clk,
+        input[7:0] I_wb_dat,
+        input I_wb_stb,
+        input I_wb_we,
+        output reg O_wb_ack,
+        output reg[7:0] O_wb_dat
     );
 
     reg[31:0] state;
 
-    always @(posedge CLK_I) begin
-        ACK_O <= STB_I;
-        if(STB_I) begin
-            if(WE_I) begin
-                case(ADR_I)
-                    0: state[7:0] <= DAT_I;
-                    1: state[15:8] <= DAT_I;
-                    2: state[23:16] <= DAT_I;
-                    default: state[31:24] <= DAT_I;
+    always @(posedge I_wb_clk) begin
+        O_wb_ack <= I_wb_stb;
+        if(I_wb_stb) begin
+            if(I_wb_we) begin
+                case(I_wb_adr)
+                    0: state[7:0] <= I_wb_dat;
+                    1: state[15:8] <= I_wb_dat;
+                    2: state[23:16] <= I_wb_dat;
+                    default: state[31:24] <= I_wb_dat;
                 endcase
             end else begin
-                case(ADR_I)
-                    0: DAT_O <= state[7:0];
-                    1: DAT_O <= state[15:8];
-                    2: DAT_O <= state[23:16];
+                case(I_wb_adr)
+                    0: O_wb_dat <= state[7:0];
+                    1: O_wb_dat <= state[15:8];
+                    2: O_wb_dat <= state[23:16];
                     default: begin
-                        DAT_O <= state[31:24];
+                        O_wb_dat <= state[31:24];
                         state <= {(((state[0] ^ state[10]) ^ state[30]) ^ state[31]), state[31:1]};
                     end
                 endcase
             end
-            
         end
-
     end
 
 

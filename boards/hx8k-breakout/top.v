@@ -198,13 +198,13 @@ module top(
     wire prng_ack;
 
     prng_wb8 prng_inst(
-        .CLK_I(clk),
-        .ADR_I(cpu_adr[1:0]),
-        .DAT_I(cpu_dat),
-        .STB_I(prng_stb),
-        .WE_I(cpu_we),
-        .DAT_O(prng_dat),
-        .ACK_O(prng_ack)
+        .I_wb_clk(clk),
+        .I_wb_adr(cpu_adr[1:0]),
+        .I_wb_dat(cpu_dat),
+        .I_wb_stb(prng_stb),
+        .I_wb_we(cpu_we),
+        .O_wb_dat(prng_dat),
+        .O_wb_ack(prng_ack)
     );
 
     wire[7:0] ram_dat;
