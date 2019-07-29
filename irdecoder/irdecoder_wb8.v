@@ -3,15 +3,13 @@ module irdecoder_wb8
         parameter CLOCKFREQ = 25000000
     )
     (
-        // naming according to Wisbhone B4 spec
-        input[2:0] ADR_I,
-        input CLK_I,
-        input[7:0] DAT_I,
-        input STB_I,
-        input WE_I,
-        // Wishbone outputs
-        output reg ACK_O,
-        output reg[7:0] DAT_O,
+        // Wishbone signals
+        input[2:0] I_wb_adr,
+        input I_wb_clk,
+        input I_wb_stb,
+        input I_wb_we,
+        output reg O_wb_ack,
+        output reg[7:0] O_wb_dat,
         // connection to infrared-receiver
         input I_ir_signal
     );
@@ -45,7 +43,7 @@ module irdecoder_wb8
     wire data_valid;
     assign data_valid = (bitcounter == 32);
 
-    always @(posedge CLK_I) begin
+    always @(posedge I_wb_clk) begin
 
         indat <= {indat[1:0], I_ir_signal};
 
@@ -83,25 +81,25 @@ module irdecoder_wb8
             end
         end
 
-        if(STB_I) begin
-            if(WE_I) begin
+        if(I_wb_stb) begin
+            if(I_wb_we) begin
                 // writes are used to acknowledge and prepare for new data
                 bitcounter <= 0;
             end else begin
-                case(ADR_I)
+                case(I_wb_adr)
                     0 : begin
                         readbuffer <= data_valid ? irdata[23:0] : 24'h000000;
-                        DAT_O <= data_valid ? irdata[31:24] : 8'h00;
+                        O_wb_dat <= data_valid ? irdata[31:24] : 8'h00;
                     end
                      
-                    1 : DAT_O <= readbuffer[23:16];
-                    2 : DAT_O <= readbuffer[15:8];
-                    default: DAT_O <= readbuffer[7:0];
+                    1 : O_wb_dat <= readbuffer[23:16];
+                    2 : O_wb_dat <= readbuffer[15:8];
+                    default: O_wb_dat <= readbuffer[7:0];
                 endcase;
             end
         end
 
-        ACK_O <= STB_I;
+        O_wb_ack <= I_wb_stb;
     end
 
 

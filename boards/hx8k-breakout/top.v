@@ -248,13 +248,12 @@ module top(
     irdecoder_wb8 #(
         .CLOCKFREQ(CLOCKFREQ)
     ) irdecoder_inst(
-        .CLK_I(clk),
-        .ADR_I(cpu_adr[2:0]),
-        .DAT_I(cpu_dat),
-        .STB_I(irdecoder_stb),
-        .WE_I(cpu_we),
-        .DAT_O(irdecoder_dat),
-        .ACK_O(irdecoder_ack),
+        .I_wb_clk(clk),
+        .I_wb_adr(cpu_adr[2:0]),
+        .I_wb_stb(irdecoder_stb),
+        .I_wb_we(cpu_we),
+        .O_wb_dat(irdecoder_dat),
+        .O_wb_ack(irdecoder_ack),
         .I_ir_signal(ir_receiver)
     );
 
