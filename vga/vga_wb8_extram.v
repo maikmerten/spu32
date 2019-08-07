@@ -178,7 +178,7 @@ module vga_wb8_extram (
         if(mode != MODE_GRAPHICS_320) begin
             {O_vga_r1, O_vga_r0, O_vga_g1, O_vga_g0, O_vga_b1, O_vga_b0} <= RGBcolor(coloridx);
         end else begin
-            {O_vga_r1, O_vga_r0, O_vga_g1, O_vga_g0, O_vga_b1, O_vga_b0} <= ram_dat[5:0];
+            {O_vga_r1, O_vga_r0, O_vga_g1, O_vga_g0, O_vga_b1, O_vga_b0} <= col_is_visible ? ram_dat[5:0] : 6'b0;
         end
 
         // generate sync signals
