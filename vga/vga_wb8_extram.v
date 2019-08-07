@@ -45,6 +45,7 @@ module vga_wb8_extram (
     localparam MODE_OFF = 2'b00;
     localparam MODE_TEXT_40 = 2'b01;
     localparam MODE_GRAPHICS_640 = 2'b10;
+    localparam MODE_GRAPHICS_320 = 2'b11;
 
     reg[1:0] mode = MODE_TEXT_40;
 
@@ -57,6 +58,7 @@ module vga_wb8_extram (
     reg[7:0] color_byte = 0, color_byte2 = 0;
 
     reg[6:0] text_col = 0;
+    reg[8:0] graphics_col = 0;
 
     reg[7:0] ram_dat;
     reg ram_fetch = 0;
@@ -118,7 +120,28 @@ module vga_wb8_extram (
             if(col[0]) begin
                 ram_dat <= I_ram_dat;
             end
+        end
 
+        if(mode == MODE_GRAPHICS_320) begin
+            if(row_is_visible && col == (h_front_porch + h_pulse + h_back_porch - 2)) begin
+                ram_fetch <= 1;
+            end
+            if(col == (h_front_porch + h_pulse + h_back_porch + h_visible - 2)) begin
+                ram_fetch <= 0;
+                if(row[0]) begin
+                    ram_adr <= ram_adr + 320;
+                end
+            end
+
+            if(ram_fetch && col[0]) begin
+                O_ram_req <= 1;
+                O_ram_adr <= ram_adr + graphics_col;
+                graphics_col <= graphics_col + 1;
+            end
+
+            if(col[0]) begin
+                ram_dat <= I_ram_dat;
+            end
         end
         
         if(mode == MODE_TEXT_40) begin
@@ -152,8 +175,11 @@ module vga_wb8_extram (
             end
         end
 
-
-        {O_vga_r1, O_vga_r0, O_vga_g1, O_vga_g0, O_vga_b1, O_vga_b0} <= RGBcolor(coloridx);
+        if(mode != MODE_GRAPHICS_320) begin
+            {O_vga_r1, O_vga_r0, O_vga_g1, O_vga_g0, O_vga_b1, O_vga_b0} <= RGBcolor(coloridx);
+        end else begin
+            {O_vga_r1, O_vga_r0, O_vga_g1, O_vga_g0, O_vga_b1, O_vga_b0} <= ram_dat[5:0];
+        end
 
         // generate sync signals
         if(col == h_front_porch - 1) begin
@@ -181,6 +207,7 @@ module vga_wb8_extram (
             col <= 0;
             col_is_visible <= 0;
             text_col <= 0;
+            graphics_col <= 0;
 
             if(row == v_visible + v_front_porch + v_pulse + v_back_porch - 1) begin
                 // return to first line
@@ -239,7 +266,7 @@ module vga_wb8_extram (
 
 
         if(I_reset) begin
-            mode <= MODE_OFF;
+            mode <= MODE_GRAPHICS_320;
         end
 
     end
