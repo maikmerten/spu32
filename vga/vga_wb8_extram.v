@@ -103,46 +103,33 @@ module vga_wb8_extram (
 
         O_ram_req <= 0;
 
-        if(mode == MODE_GRAPHICS_640) begin
+        if(mode == MODE_GRAPHICS_640 || mode == MODE_GRAPHICS_320) begin
             if(row_is_visible && col == (h_front_porch + h_pulse + h_back_porch - 4)) begin
                 ram_fetch <= 1;
             end
             if(col == (h_front_porch + h_pulse + h_back_porch + h_visible - 4)) begin
                 ram_fetch <= 0;
-            end
-
-            if(ram_fetch && col[0]) begin
-                O_ram_req <= 1;
-                O_ram_adr <= ram_adr;
-                ram_adr <= ram_adr + 1;
-            end
-
-            if(col[0]) begin
-                ram_dat <= I_ram_dat;
-            end
-        end
-
-        if(mode == MODE_GRAPHICS_320) begin
-            if(row_is_visible && col == (h_front_porch + h_pulse + h_back_porch - 4)) begin
-                ram_fetch <= 1;
-            end
-            if(col == (h_front_porch + h_pulse + h_back_porch + h_visible - 4)) begin
-                ram_fetch <= 0;
-                if(row[0]) begin
+                if(row[0] && mode == MODE_GRAPHICS_320) begin
                     ram_adr <= ram_adr + 320;
                 end
             end
 
             if(ram_fetch && col[0]) begin
                 O_ram_req <= 1;
-                O_ram_adr <= ram_adr + graphics_col;
-                graphics_col <= graphics_col + 1;
+                if(mode == MODE_GRAPHICS_640) begin
+                    O_ram_adr <= ram_adr + graphics_col;
+                    ram_adr <= ram_adr + 1;
+                end else begin
+                    O_ram_adr <= ram_adr + graphics_col;
+                    graphics_col <= graphics_col + 1;                    
+                end
             end
 
             if(col[0]) begin
                 ram_dat <= I_ram_dat;
             end
         end
+
         
         if(mode == MODE_TEXT_40) begin
             // 40 column text mode
