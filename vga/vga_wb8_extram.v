@@ -109,20 +109,18 @@ module vga_wb8_extram (
             end
             if(col == (h_front_porch + h_pulse + h_back_porch + h_visible - 4)) begin
                 ram_fetch <= 0;
-                if(row[0] && mode == MODE_GRAPHICS_320) begin
+                // In both MODE_GRAPHICS_320 and MODE_GRAPHICS_640 one line is 320 bytes.
+                // In MODE_GRAPHICS each line is output twice, thus only increase memory offset
+                // every second line.
+                if((row[0] && mode == MODE_GRAPHICS_320) || mode == MODE_GRAPHICS_640) begin
                     ram_adr <= ram_adr + 320;
                 end
             end
 
             if(ram_fetch && col[0]) begin
                 O_ram_req <= 1;
-                if(mode == MODE_GRAPHICS_640) begin
-                    O_ram_adr <= ram_adr + graphics_col;
-                    ram_adr <= ram_adr + 1;
-                end else begin
-                    O_ram_adr <= ram_adr + graphics_col;
-                    graphics_col <= graphics_col + 1;                    
-                end
+                O_ram_adr <= ram_adr + graphics_col;
+                graphics_col <= graphics_col + 1;
             end
 
             if(col[0]) begin
