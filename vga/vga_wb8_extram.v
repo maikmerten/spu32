@@ -123,10 +123,10 @@ module vga_wb8_extram (
         end
 
         if(mode == MODE_GRAPHICS_320) begin
-            if(row_is_visible && col == (h_front_porch + h_pulse + h_back_porch - 2)) begin
+            if(row_is_visible && col == (h_front_porch + h_pulse + h_back_porch - 4)) begin
                 ram_fetch <= 1;
             end
-            if(col == (h_front_porch + h_pulse + h_back_porch + h_visible - 2)) begin
+            if(col == (h_front_porch + h_pulse + h_back_porch + h_visible - 4)) begin
                 ram_fetch <= 0;
                 if(row[0]) begin
                     ram_adr <= ram_adr + 320;
