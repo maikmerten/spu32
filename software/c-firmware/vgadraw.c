@@ -249,77 +249,119 @@ void fillCircle(int16_t xoff, int16_t yoff, uint16_t r, uint8_t color) {
     }
 }
 
-void fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint8_t color) {
-    // ported from https://fgiesen.wordpress.com/2013/02/10/optimizing-the-basic-rasterizer/
+void fillFlatTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t x2, int16_t y12, uint32_t color) {
+    // Use Bresenham's line algorithm to fill a flat triangle
 
-    uint32_t packed_color = packColor(color);
-
-    int16_t minX = x0 < x1 ? x0 : x1;
-    if(x2 < minX) minX = x2;
-    int16_t minY = y0 < y1 ? y0 : y1;
-    if(y2 < minY) minY = y2;
-    int16_t maxX = x0 > x1 ? x0 : x1;
-    if(x2 > maxX) maxX = x2;
-    int16_t maxY = y0 > y1 ? y0 : y1;
-    if(y2 > maxY) maxY = y2;
-
-    // clip to screen
-    if(minX < clipxmin) minX = clipxmin;
-    if(minY < clipymin) minY = clipymin;
-    if(maxX > clipxmax) maxX = clipxmax;
-    if(maxY > clipymax) maxY = clipymax;
-
-    // Triangle setup
-    int16_t a01 = y0 - y1;
-    int16_t b01 = x1 - x0;
-    int16_t a12 = y1 - y2;
-    int16_t b12 = x2 - x1;
-    int16_t a20 = y2 - y0;
-    int16_t b20 = x0 - x2;
-
-    // Barycentric coordinates at minX/minY corner
-    //let w0_row = orient2d(x1, y1, x2, y2, minX, minY);
-    int32_t w0_row = (b12)*(minY-y1) - (y2-y1)*(minX-x1);
-    //let w1_row = orient2d(x2, y2, x0, y0, minX, minY);
-    int32_t w1_row = (b20)*(minY-y2) - (y0-y2)*(minX-x2);
-    //let w2_row = orient2d(x0, y0, x1, y1, minX, minY);
-    int32_t w2_row = (b01)*(minY-y0) - (y1-y0)*(minX-x0);
-
-    for(int16_t y = minY; y <= maxY; y++) {
-        int32_t w0 = w0_row;
-        int32_t w1 = w1_row;
-        int32_t w2 = w2_row;
-
-        int16_t startx = -1;
-        int16_t rowwidth = 0;
-
-        for(int16_t x = minX; x <= maxX; x++) {
-            if(w0 >= 0 && w1 >= 0 && w2 >= 0) {
-                // inside triangle
-                if(startx < 0) {
-                    // entered triangle
-                    startx = x;
-                }
-                rowwidth++;
-            } else if(startx >= 0) {
-                // exited triangle, break to emit
-                break;
-            }
-            // step to right
-            w0 += a12;
-            w1 += a20;
-            w2 += a01;
-        }
-
-        // emit row
-        drawHLinePreclipped(startx, y, rowwidth, packed_color);
-
-        // step one row
-        w0_row += b12;
-        w1_row += b20;
-        w2_row += b01;
+    if(x1 >= x2) {
+        int16_t tmp = x2;
+        x2 = x1;
+        x1 = tmp;
     }
 
+    int16_t line1_x = x0;
+    int16_t line1_y = y0;
+    int16_t line2_x = x0;
+    int16_t line2_y = y0;
+
+    int16_t  dx1, sx1;
+    if(x0 < x1) {
+        dx1 = x1 - x0;
+        sx1 = 1;
+    } else {
+        dx1 = x0 - x1;
+        sx1 = -1;
+    }
+
+    int16_t dx2, sx2;
+    if(x0 < x2) {
+        dx2 = x2 - x0;
+        sx2 = 1;
+    } else {
+        dx2 = x0 - x2;
+        sx2 = -1;
+    }
+
+    int16_t dy, sy;
+    if(y0 < y12) {
+        dy = y0 - y12;
+        sy = 1;
+    } else {
+        dy = y12 - y0;
+        sy = -1;
+    }
+    int16_t line1_err = dx1 + dy;
+    int16_t line2_err = dx2 + dy;
+
+
+    int16_t current_y = y0;
+
+    while(current_y != y12) {
+        // follow first line
+        while(line1_y == current_y) {
+            int16_t e2 = 2 * line1_err;
+            if(e2 >= dy) {
+                line1_err += dy;
+                line1_x += sx1;
+            }
+            if(e2 <= dx1) {
+                line1_err += dx1;
+                line1_y += sy;
+            }
+        }
+        // follow second line
+        while(line2_y == current_y) {
+            int16_t e2 = 2 * line2_err;
+            if(e2 >= dy) {
+                line2_err += dy;
+                line2_x += sx2;
+            }
+            if(e2 <= dx2) {
+                line2_err += dx2;
+                line2_y += sy;
+            }
+        }
+
+        drawHLine(line1_x, current_y, (line2_x - line1_x) + 1, color);
+           
+        current_y += sy;
+    }
+    // draw last line
+    drawHLine(x1, y12, (x2 - x1) + 1, color);
+}
+
+void fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint8_t color) {
+    // sort vertices top to bottom
+    while(y0 > y1 || y1 > y2) {
+        if(y0 > y1) {
+            int16_t tmp = y0;
+            y0 = y1;
+            y1 = tmp;
+            tmp = x0;
+            x0 = x1;
+            x1 = tmp;
+        }
+        if(y1 > y2) {
+            int16_t tmp = y1;
+            y1 = y2;
+            y2 = tmp;
+            tmp = x1;
+            x1 = x2;
+            x2 = tmp;
+        }
+    }
+
+    if(y2 == y0) {
+        // squished triangle
+        return;
+    }
+
+    // Split this triangle into two flat triangles.
+    // The following integer arithemtics are not very precise. 
+    int16_t x3 = x0 + (((y1-y0)*(x2-x0)) / (y2-y0));
+
+    uint32_t packed_color = packColor(color);
+    fillFlatTriangle(x0, y0, x1, x3, y1, packed_color);
+    fillFlatTriangle(x2, y2, x1, x3, y1, packed_color);
 }
 
 
