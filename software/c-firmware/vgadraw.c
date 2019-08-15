@@ -249,13 +249,34 @@ void fillCircle(int16_t xoff, int16_t yoff, uint16_t r, uint8_t color) {
     }
 }
 
-void fillFlatTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t x2, int16_t y12, uint32_t color) {
-    // Use Bresenham's line algorithm to fill a flat triangle
+void fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint8_t color) {
 
-    if(x1 >= x2) {
-        int16_t tmp = x2;
-        x2 = x1;
-        x1 = tmp;
+     if(y0 == y1 && y1 == y2) {
+        // squished triangle
+        return;
+    }
+
+    // rotate triangle vertices until y0 is unequal to y1 and y2 AND above or below
+    while(((y0 < y1) && (y0 >= y2)) || ((y0 >= y1) && (y0 < y2)) || (y0 == y1) || (y0 == y2)) {
+        int16_t tmp = x0;
+        x0 = x1;
+        x1 = x2;
+        x2 = tmp;
+
+        tmp = y0;
+        y0 = y1;
+        y1 = y2;
+        y2 = tmp;
+    }
+
+    // y1 needs to be between y0 and y2
+    if(((y0 < y2 && y1 > y2)) || ((y0 > y2) && (y1 < y2))) {
+        int16_t tmp = x1;
+        x1 = x2;
+        x2 = tmp;
+        tmp = y1;
+        y1 = y2;
+        y2 = tmp;
     }
 
     int16_t line1_x = x0;
@@ -263,13 +284,22 @@ void fillFlatTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t x2, int16_t y1
     int16_t line2_x = x0;
     int16_t line2_y = y0;
 
-    int16_t  dx1, sx1;
+    int16_t dx1, sx1;
     if(x0 < x1) {
         dx1 = x1 - x0;
         sx1 = 1;
     } else {
         dx1 = x0 - x1;
         sx1 = -1;
+    }
+
+    int16_t dy1, sy1;
+    if(y0 < y1) {
+        dy1 = y0 - y1;
+        sy1 = 1;
+    } else {
+        dy1 = y1 - y0;
+        sy1 = -1;
     }
 
     int16_t dx2, sx2;
@@ -281,89 +311,94 @@ void fillFlatTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t x2, int16_t y1
         sx2 = -1;
     }
 
-    int16_t dy, sy;
-    if(y0 < y12) {
-        dy = y0 - y12;
-        sy = 1;
+    int16_t dy2, sy2;
+    if(y0 < y2) {
+        dy2 = y0 - y2;
+        sy2 = 1;
     } else {
-        dy = y12 - y0;
-        sy = -1;
+        dy2 = y2 - y0;
+        sy2 = -1;
     }
-    int16_t line1_err = dx1 + dy;
-    int16_t line2_err = dx2 + dy;
 
+    int16_t line1_err = dx1 + dy1;
+    int16_t line2_err = dx2 + dy2;
 
     int16_t current_y = y0;
 
-    while(current_y != y12) {
+    int16_t minx = x0;
+    int16_t maxx = x0;
+
+    uint32_t packed_color = packColor(color);
+
+    while(current_y != y2) {
         // follow first line
         while(line1_y == current_y) {
-            int16_t e2 = 2 * line1_err;
-            if(e2 >= dy) {
-                line1_err += dy;
+            int16_t e2 = line1_err + line1_err;
+            if(e2 >= dy1) {
+                line1_err += dy1;
                 line1_x += sx1;
             }
             if(e2 <= dx1) {
                 line1_err += dx1;
-                line1_y += sy;
+                line1_y += sy1;
+            }
+
+            if(line1_x < minx) {
+                minx = line1_x;
+            }
+            if(line1_x > maxx) {
+                maxx = line1_x;
             }
         }
         // follow second line
         while(line2_y == current_y) {
-            int16_t e2 = 2 * line2_err;
-            if(e2 >= dy) {
-                line2_err += dy;
+            int16_t e2 = line2_err + line2_err;
+            if(e2 >= dy2) {
+                line2_err += dy2;
                 line2_x += sx2;
             }
             if(e2 <= dx2) {
                 line2_err += dx2;
-                line2_y += sy;
+                line2_y += sy2;
+            }
+
+            if(line2_x < minx) {
+                minx = line2_x;
+            }
+            if(line2_x > maxx) {
+                maxx = line2_x;
             }
         }
 
-        drawHLine(line1_x, current_y, (line2_x - line1_x) + 1, color);
-           
-        current_y += sy;
-    }
-    // draw last line
-    drawHLine(x1, y12, (x2 - x1) + 1, color);
-}
+        drawHLine(minx, current_y, (maxx - minx) + 1, packed_color);
+        maxx = -16384;
+        minx = 16384;
 
-void fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint8_t color) {
-    // sort vertices top to bottom
-    while(y0 > y1 || y1 > y2) {
-        if(y0 > y1) {
-            int16_t tmp = y0;
-            y0 = y1;
-            y1 = tmp;
-            tmp = x0;
-            x0 = x1;
-            x1 = tmp;
+        if(line1_y == y1) {
+            // line1 reached x1/y2, redirect to x2/y2
+            line1_x = x1;
+            line1_y = y1;
+
+            if(x1 < x2) {
+                dx1 = x2 - x1;
+                sx1 = 1;
+            } else {
+                dx1 = x1 - x2;
+                sx1 = -1;
+            }
+
+            if(y1 < y2) {
+                dy1 = y1 - y2;
+                sy1 = 1;
+            } else {
+                dy1 = y2 - y1;
+                sy1 = -1;
+            }
+            line1_err = dx1 + dy1;
         }
-        if(y1 > y2) {
-            int16_t tmp = y1;
-            y1 = y2;
-            y2 = tmp;
-            tmp = x1;
-            x1 = x2;
-            x2 = tmp;
-        }
+        current_y += sy2;
     }
-
-    if(y2 == y0) {
-        // squished triangle
-        return;
-    }
-
-    // Split this triangle into two flat triangles.
-    // The following integer arithemtics are not very precise. 
-    int16_t x3 = x0 + (((y1-y0)*(x2-x0)) / (y2-y0));
-
-    uint32_t packed_color = packColor(color);
-    fillFlatTriangle(x0, y0, x1, x3, y1, packed_color);
-    fillFlatTriangle(x2, y2, x1, x3, y1, packed_color);
 }
-
 
 
 int main() {
