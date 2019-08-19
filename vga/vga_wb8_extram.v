@@ -63,8 +63,13 @@ module vga_wb8_extram (
     reg[7:0] ram_dat;
     reg ram_fetch = 0;
 
+    reg[7:0] cache [511:0];
+    reg[8:0] cache_adr;
+
     reg[23:0] tmp;
 
+    wire line_double;
+    assign line_double = (mode == MODE_GRAPHICS_320);
 
     // default 16-color EGA palette
     function[5:0] RGBcolor;
@@ -114,17 +119,25 @@ module vga_wb8_extram (
                 // memory offset every second line.
                 if((row[0] && mode == MODE_GRAPHICS_320) || mode == MODE_GRAPHICS_640) begin
                     ram_adr <= ram_adr + 320;
+                    cache_adr <= 0;
                 end
             end
 
             if(ram_fetch && col[0]) begin
-                O_ram_req <= 1;
+                O_ram_req <= !row[0] || !line_double;
                 O_ram_adr <= ram_adr + graphics_col;
                 graphics_col <= graphics_col + 1;
+                cache_adr <= graphics_col[8:0];
             end
 
             if(col[0]) begin
                 ram_dat <= I_ram_dat;
+                // in line-doubled mode, retrieve odd-numbered lines from cache
+                if(row[0] && line_double) begin
+                    ram_dat <= cache[cache_adr];
+                end else begin
+                    cache[cache_adr] <= I_ram_dat;
+                end
             end
         end
 
@@ -251,7 +264,7 @@ module vga_wb8_extram (
 
 
         if(I_reset) begin
-            mode <= MODE_GRAPHICS_320;
+            mode <= MODE_OFF;
         end
 
     end
