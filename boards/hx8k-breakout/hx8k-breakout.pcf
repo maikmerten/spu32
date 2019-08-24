@@ -77,3 +77,6 @@ set_io vga_b1 T3
 # infrared receiver
 
 set_io ir_receiver P15
+
+# audio
+set_io audio_out0 F1

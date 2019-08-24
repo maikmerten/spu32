@@ -11,6 +11,7 @@
 `include "./prng/prng_wb8.v"
 `include "./vga/vga_wb8_extram.v"
 `include "./irdecoder/irdecoder_wb8.v"
+`include "./audio/sn76489_wb8.v"
 
 
 module top(
@@ -31,6 +32,8 @@ module top(
         input reset_button,
         // infrared receiver
         input ir_receiver,
+        // audio output
+        output audio_out0,
 
         output vga_vsync, vga_hsync, vga_r0, vga_r1, vga_g0, vga_g1, vga_b0, vga_b1,
 
@@ -257,6 +260,20 @@ module top(
         .I_ir_signal(ir_receiver)
     );
 
+    reg audio_stb = 0;
+    wire[7:0] audio_dat;
+    wire audio_ack;
+    sn76489_wb8 sn76489_inst(
+        .I_wb_clk(clk),
+        .I_wb_dat(cpu_dat),
+        .I_wb_stb(audio_stb),
+        .I_wb_we(cpu_we),
+        .O_wb_ack(audio_ack),
+        .O_wb_dat(audio_dat),
+        .I_reset(reset),
+        .O_audio_modulated(audio_out0)
+    );
+
 
     reg ram_stb;
     wire ram_ack;
@@ -382,6 +399,7 @@ module top(
         ram_stb = 0;
         prng_stb = 0;
         irdecoder_stb = 0;
+        audio_stb = 0;
         `ifdef EXTENSION_PRESENT
                 vga_stb = 0;
         `endif
@@ -414,9 +432,15 @@ module top(
                 spi0_stb = cpu_stb;
             end
 
+            {32'hFFFFFA??}: begin // 0xFFFFFAxx: audio
+                arbiter_dat_o = audio_dat;
+                arbiter_ack_o = audio_ack;
+                audio_stb = cpu_stb;
+            end
+
             // reserved:
-            // 0xFFFFFAxx
             // 0xFFFFFBxx
+            
             {32'hFFFFFC??}: begin // 0xFFFFFCxx: IR receiver
                 arbiter_dat_o = irdecoder_dat;
                 arbiter_ack_o = irdecoder_ack;
