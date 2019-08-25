@@ -229,11 +229,11 @@ module sn76489_wb8 (
 				// single-byte transfer or first byte of double byte transfer
 				last_selected_register <= selected_register;
 				case(selected_register)
-					3'b000: tone1_freq[9:6] <= I_wb_dat[3:0];
+					3'b000: tone1_freq[3:0] <= I_wb_dat[3:0];
 					3'b001: tone1_att <= I_wb_dat[3:0];
-					3'b010: tone2_freq[9:6] <= I_wb_dat[3:0];
+					3'b010: tone2_freq[3:0] <= I_wb_dat[3:0];
 					3'b011: tone2_att <= I_wb_dat[3:0];
-					3'b100: tone3_freq[9:6] <= I_wb_dat[3:0];
+					3'b100: tone3_freq[3:0] <= I_wb_dat[3:0];
 					3'b101: tone3_att <= I_wb_dat[3:0];
 					3'b110: begin
 						noise_ctrl <= I_wb_dat[2:0];
@@ -245,9 +245,18 @@ module sn76489_wb8 (
 			end else begin
 				// second byte of double byte transfer
 				case(last_selected_register)
-					3'b000: tone1_freq[5:0] <= I_wb_dat[5:0];
-					3'b010: tone2_freq[5:0] <= I_wb_dat[5:0];
-					3'b100: tone3_freq[5:0] <= I_wb_dat[5:0];
+					3'b000: tone1_freq[9:4] <= I_wb_dat[5:0];
+					3'b001: tone1_att <= I_wb_dat[3:0];
+					3'b010: tone2_freq[9:4] <= I_wb_dat[5:0];
+					3'b011: tone2_att <= I_wb_dat[3:0];
+					3'b100: tone3_freq[9:4] <= I_wb_dat[5:0];
+					3'b101: tone3_att <= I_wb_dat[3:0];
+					3'b110: begin
+						noise_ctrl <= I_wb_dat[2:0];
+						// noise shift register is cleared when writing to noise register
+						reset_noise <= !noise_reset_ack;
+					end
+					3'b111: noise_att <= I_wb_dat[3:0];
 				endcase
 			end
 		end
