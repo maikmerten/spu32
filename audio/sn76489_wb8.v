@@ -148,7 +148,7 @@ module sn76489_wb8 (
 
 	// divide audio clock from bus clock
 	reg clk = 0;
-	reg[7:0] clk_counter;
+	reg[5:0] clk_counter;
 	always @(posedge I_wb_clk) begin
 		clk_counter <= clk_counter - 1;
 		if(clk_counter == 0) begin
