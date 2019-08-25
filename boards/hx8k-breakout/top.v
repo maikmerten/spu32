@@ -432,13 +432,8 @@ module top(
                 spi0_stb = cpu_stb;
             end
 
-            {32'hFFFFFA??}: begin // 0xFFFFFAxx: audio
-                arbiter_dat_o = audio_dat;
-                arbiter_ack_o = audio_ack;
-                audio_stb = cpu_stb;
-            end
-
             // reserved:
+            // 0xFFFFFAxx
             // 0xFFFFFBxx
             
             {32'hFFFFFC??}: begin // 0xFFFFFCxx: IR receiver
@@ -459,7 +454,16 @@ module top(
                 prng_stb = cpu_stb;
             end
 
-            {32'hFFFFFF??}: begin // 0xFFFFFFxx LEDs
+            {32'hFFFFFF0?}: begin // 0xFFFFFF0x: audio
+                arbiter_dat_o = audio_dat;
+                arbiter_ack_o = audio_ack;
+                audio_stb = cpu_stb;
+            end
+
+            // reserved:
+            // 0xFFFFFF1x to 0xFFFFFFEx
+
+            {32'hFFFFFFF?}: begin // 0xFFFFFFFx LEDs
                 arbiter_dat_o = leds_dat;
                 arbiter_ack_o = leds_ack;
                 leds_stb = cpu_stb;                      
