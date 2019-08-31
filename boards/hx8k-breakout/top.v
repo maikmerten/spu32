@@ -133,6 +133,7 @@ module top(
         .I_wb_dat(cpu_dat),
         .I_wb_stb(leds_stb),
         .I_wb_we(cpu_we),
+        .I_reset(reset),
         .O_wb_dat(leds_dat),
         .O_wb_ack(leds_ack),
         .O_leds(leds_value)

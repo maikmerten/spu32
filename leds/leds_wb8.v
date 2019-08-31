@@ -6,6 +6,8 @@ module leds_wb8(
         input I_wb_we,
         output reg O_wb_ack,
         output reg[7:0] O_wb_dat,
+        // reset signal
+        input I_reset,
         // output for LEDS
         output[7:0] O_leds
     );
@@ -21,6 +23,9 @@ module leds_wb8(
             O_wb_dat <= ledvalue;
         end
         O_wb_ack <= I_wb_stb;
+
+        if(I_reset) ledvalue <= 0;
+
     end
 
 

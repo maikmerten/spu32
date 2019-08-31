@@ -61,6 +61,7 @@ module cpu_tb();
         .I_wb_dat(cpu_dat),
         .I_wb_stb(leds_stb),
         .I_wb_we(cpu_we),
+        .I_reset(1'b0),
         .O_wb_dat(leds_dat),
         .O_wb_ack(leds_ack),
         .O_leds(leds_value)
