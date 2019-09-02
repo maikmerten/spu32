@@ -126,7 +126,11 @@ module sn76489_modulator(
 endmodule
 
 
-module sn76489_wb8 (
+module sn76489_wb8
+    #(
+        parameter FREQDIVIDE = 55
+    )
+    (
         // Wisbhone B4 signals
         input I_wb_clk,
         input[7:0] I_wb_dat,
@@ -152,7 +156,7 @@ module sn76489_wb8 (
         clk_counter <= clk_counter - 1;
         if(clk_counter == 0) begin
             clk <= !clk;
-            clk_counter <= 63;
+            clk_counter <= FREQDIVIDE;
         end
     end
 
