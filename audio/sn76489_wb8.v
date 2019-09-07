@@ -111,17 +111,36 @@ module sn76489_mixer(
 endmodule
 
 
-module sn76489_modulator(
+module sn76489_modulator
+    #(
+        parameter BITS = 8,
+        parameter PDM = 1
+    )
+    (
         input I_clk,
         input[7:0] I_audio_pcm,
         output reg O_audio_modulated
     );
 
-    reg[7:0] pwm_counter = 0;
+    if(PDM) begin
+        // Pulse-Density Modulation (PDM)
+        localparam MAX = 2**BITS - 1;
+        reg[(BITS - 1):0] error;
 
-    always @(posedge I_clk) begin
-        O_audio_modulated <= pwm_counter < I_audio_pcm;
-        pwm_counter <= pwm_counter + 1;
+        wire out;
+        assign out = (I_audio_pcm >= error);
+
+        always @(posedge I_clk) begin
+            O_audio_modulated <= out;
+		    error <= out ? (error + (MAX - I_audio_pcm)) : (error - I_audio_pcm);
+        end
+    end else begin
+        // Pulse-Width Modulation (PWM)
+        reg[(BITS - 1):0] pwm_counter = 0;
+        always @(posedge I_clk) begin
+            O_audio_modulated <= pwm_counter < I_audio_pcm;
+            pwm_counter <= pwm_counter + 1;
+        end
     end
 endmodule
 
