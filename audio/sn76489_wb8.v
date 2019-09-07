@@ -240,33 +240,38 @@ module sn76489_wb8
     );
 
 
-    reg[2:0] last_selected_register;
-    wire[2:0] selected_register;
-    assign selected_register = I_wb_dat[6:4];
+    reg[2:0] register;
+    reg update;
+    reg[6:0] update_data;
 
     // bus logic
     always @(posedge I_wb_clk) begin
+        update <= 0;
         if(I_wb_stb && I_wb_we) begin
+            update <= 1;
+            update_data <= {I_wb_dat[7], I_wb_dat[5:0]};
             if(I_wb_dat[7]) begin
-                last_selected_register <= selected_register;
+                register <= I_wb_dat[6:4];
             end
+        end
 
-            casez({I_wb_dat[7] ? selected_register : last_selected_register, I_wb_dat[7]})
-                4'b0000: tone1_freq[9:4] <= I_wb_dat[5:0];
-                4'b0001: tone1_freq[3:0] <= I_wb_dat[3:0];
-                4'b001?: tone1_att <= I_wb_dat[3:0];
-                4'b0100: tone2_freq[9:4] <= I_wb_dat[5:0];
-                4'b0101: tone2_freq[3:0] <= I_wb_dat[3:0];
-                4'b011?: tone2_att <= I_wb_dat[3:0];
-                4'b1000: tone3_freq[9:4] <= I_wb_dat[5:0];
-                4'b1001: tone3_freq[3:0] <= I_wb_dat[3:0];
-                4'b101?: tone3_att <= I_wb_dat[3:0];
+        if(update) begin
+            casez({register, update_data[6]})
+                4'b0000: tone1_freq[9:4] <= update_data[5:0];
+                4'b0001: tone1_freq[3:0] <= update_data[3:0];
+                4'b001?: tone1_att <= update_data[3:0];
+                4'b0100: tone2_freq[9:4] <= update_data[5:0];
+                4'b0101: tone2_freq[3:0] <= update_data[3:0];
+                4'b011?: tone2_att <= update_data[3:0];
+                4'b1000: tone3_freq[9:4] <= update_data[5:0];
+                4'b1001: tone3_freq[3:0] <= update_data[3:0];
+                4'b101?: tone3_att <= update_data[3:0];
                 4'b110?: begin
-                    noise_ctrl <= I_wb_dat[2:0];
+                    noise_ctrl <= update_data[2:0];
                     // noise shift register is cleared when writing to noise register
                     reset_noise <= !noise_reset_ack;
                 end
-                4'b111?: noise_att <= I_wb_dat[3:0];
+                4'b111?: noise_att <= update_data[3:0];
             endcase
         end
 
