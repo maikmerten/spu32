@@ -54,11 +54,8 @@ module sn76489_noise(
             endcase
 
             if(flipbit == 0) begin
-                if(white_noise) begin
-                    shiftreg <= {shiftreg[3] ^ shiftreg[0], shiftreg[15:1]};
-                end else begin
-                    shiftreg <= {shiftreg[0], shiftreg[15:1]};
-                end
+                shiftreg[14:0] <= shiftreg[15:1];
+                shiftreg[15] <= white_noise ? shiftreg[3] ^ shiftreg[0] : shiftreg[0];
             end
         end
 
