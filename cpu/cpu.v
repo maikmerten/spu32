@@ -4,23 +4,23 @@
 `include "./cpu/registers.v"
 
 
-module cpu
+module spu32_cpu
     #(
         parameter VECTOR_RESET = 32'd0,
         parameter VECTOR_EXCEPTION = 32'd16
     )
     (
         input CLK_I,
-	    input ACK_I,
+        input ACK_I,
         input STALL_I,
-	    input[7:0] DAT_I,
-	    input RST_I,
+        input[7:0] DAT_I,
+        input RST_I,
         input INTERRUPT_I,
-	    output[31:0] ADR_O,
-	    output[7:0] DAT_O,
-	    output CYC_O,
-	    output STB_O,
-	    output WE_O
+        output[31:0] ADR_O,
+        output[7:0] DAT_O,
+        output CYC_O,
+        output STB_O,
+        output WE_O
     );
 
     wire clk, reset;
@@ -48,7 +48,7 @@ module cpu
     reg[31:0] alu_dataS1, alu_dataS2;
     wire alu_busy, alu_lt, alu_ltu, alu_eq;
 
-    alu alu_inst(
+    spu32_cpu_alu alu_inst(
         .I_clk(clk),
         .I_en(alu_en),
         .I_reset(reset),
@@ -73,7 +73,7 @@ module cpu
     reg[31:0] reg_datain;
 
     // Bus instance
-    bus_wb8 bus_inst(
+    spu32_cpu_bus_wb8 bus_inst(
         .I_en(bus_en),
         .I_op(bus_op),
         .I_data(reg_val2),
@@ -82,15 +82,15 @@ module cpu
         .O_busy(bus_busy),
 
         .CLK_I(clk),
-	    .ACK_I(ACK_I),
+        .ACK_I(ACK_I),
         .STALL_I(STALL_I),
-	    .DAT_I(DAT_I),
-	    .RST_I(RST_I),
-	    .ADR_O(ADR_O),
-	    .DAT_O(DAT_O),
-	    .CYC_O(CYC_O),
-	    .STB_O(STB_O),
-	    .WE_O(WE_O)
+        .DAT_I(DAT_I),
+        .RST_I(RST_I),
+        .ADR_O(ADR_O),
+        .DAT_O(DAT_O),
+        .CYC_O(CYC_O),
+        .STB_O(STB_O),
+        .WE_O(WE_O)
     );
 
     // Decoder instance
@@ -102,7 +102,7 @@ module cpu
     wire[5:0] dec_branchmask;
     reg dec_en;
 
-    decoder dec_inst(
+    spu32_cpu_decoder dec_inst(
         .I_clk(clk),
         .I_en(dec_en),
         .I_instr(bus_dataout),
@@ -114,10 +114,10 @@ module cpu
         .O_funct3(dec_funct3),
         .O_funct7(dec_funct7),
         .O_branchmask(dec_branchmask)
-	);
+    );
 
     // Registers instance
-    registers reg_inst(
+    spu32_cpu_registers reg_inst(
         .I_clk(clk),
         .I_data(reg_datain),
         .I_rs1(dec_rs1),

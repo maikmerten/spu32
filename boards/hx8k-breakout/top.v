@@ -94,7 +94,7 @@ module top(
     reg arbiter_ack_o;
     wire ram_stall;
 
-    cpu #(
+    spu32_cpu #(
         .VECTOR_RESET(32'hFFFFF000)
     ) cpu_inst(
         .CLK_I(clk),

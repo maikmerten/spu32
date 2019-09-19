@@ -19,18 +19,18 @@ module cpu_tb();
     reg stall = 0;
     wire ram_stall;
 
-    cpu cpu_inst(
+    spu32_cpu cpu_inst(
         .CLK_I(clk),
-	    .ACK_I(arbiter_ack_o),
+        .ACK_I(arbiter_ack_o),
         .STALL_I(ram_stall),
-	    .DAT_I(arbiter_dat_o),
-	    .RST_I(reset),
+        .DAT_I(arbiter_dat_o),
+        .RST_I(reset),
         .INTERRUPT_I(interrupt),
-	    .ADR_O(cpu_adr),
-	    .DAT_O(cpu_dat),
-	    .CYC_O(cpu_cyc),
-	    .STB_O(cpu_stb),
-	    .WE_O(cpu_we)
+        .ADR_O(cpu_adr),
+        .DAT_O(cpu_dat),
+        .CYC_O(cpu_cyc),
+        .STB_O(cpu_stb),
+        .WE_O(cpu_we)
     );
 
     wire ram_ack;
@@ -40,13 +40,13 @@ module cpu_tb();
     bram_wb8_vga #(
         .RAMINITFILE("./software/testgen/testsuite.dat")
     ) ram_inst (
-	    .I_wb_clk(clk),
-	    .I_wb_stb(ram_stb),
-	    .I_wb_we(cpu_we),
-	    .I_wb_adr(cpu_adr[12:0]),
-	    .I_wb_dat(cpu_dat),
-	    .O_wb_dat(ram_dat),
-	    .O_wb_ack(ram_ack),
+        .I_wb_clk(clk),
+        .I_wb_stb(ram_stb),
+        .I_wb_we(cpu_we),
+        .I_wb_adr(cpu_adr[12:0]),
+        .I_wb_dat(cpu_dat),
+        .O_wb_dat(ram_dat),
+        .O_wb_ack(ram_ack),
         .O_wb_stall(ram_stall),
         .I_vga_req(stall),
         .I_vga_adr(0)
@@ -100,7 +100,7 @@ module cpu_tb();
 
     initial begin
         $dumpfile("./cpu/tests/cpu_tb.lxt");
-		$dumpvars(0, clk, error, reset, cpu_cyc, cpu_stb, cpu_we, cpu_dat, cpu_adr, ram_ack, ram_dat, cpu_inst.state, cpu_inst.busy, cpu_inst.alu_en, cpu_inst.alu_op, cpu_inst.bus_en, cpu_inst.bus_op, cpu_inst.reg_re, cpu_inst.reg_we, cpu_inst.bus_addr, cpu_inst.alu_dataout, cpu_inst.reg_val1, cpu_inst.reg_val2, cpu_inst.dec_rs1, cpu_inst.dec_rs2, cpu_inst.dec_rd, cpu_inst.reg_datain, cpu_inst.bus_dataout, cpu_inst.pc, cpu_inst.pcnext, leds_value, stall, ram_stall);
+        $dumpvars(0, clk, error, reset, cpu_cyc, cpu_stb, cpu_we, cpu_dat, cpu_adr, ram_ack, ram_dat, cpu_inst.state, cpu_inst.busy, cpu_inst.alu_en, cpu_inst.alu_op, cpu_inst.bus_en, cpu_inst.bus_op, cpu_inst.reg_re, cpu_inst.reg_we, cpu_inst.bus_addr, cpu_inst.alu_dataout, cpu_inst.reg_val1, cpu_inst.reg_val2, cpu_inst.dec_rs1, cpu_inst.dec_rs2, cpu_inst.dec_rd, cpu_inst.reg_datain, cpu_inst.bus_dataout, cpu_inst.pc, cpu_inst.pcnext, leds_value, stall, ram_stall);
 
         #3
         reset = 0;
