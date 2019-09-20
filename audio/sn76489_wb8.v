@@ -7,7 +7,8 @@ module sn76489_oscillator(
     reg[9:0] counter = 0;
     reg out = 0;
 
-    assign O_voice = out;
+    // for frequency values of 0 and 1 output a constant 1
+    assign O_voice = out | (I_freq[9:1] == 9'b0);
 
     always @(posedge I_clk) begin
         counter <= counter - 1;
