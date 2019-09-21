@@ -1,5 +1,6 @@
 module sn76489_oscillator(
         input I_clk,
+        input I_clk_gate,
         input[9:0] I_freq,
         output O_voice
     );
@@ -11,10 +12,12 @@ module sn76489_oscillator(
     assign O_voice = out | (I_freq[9:1] == 9'b0);
 
     always @(posedge I_clk) begin
-        counter <= counter - 1;
-        if(counter == 0) begin
-            out <= !out;
-            counter <= I_freq;
+        if(I_clk_gate) begin
+            counter <= counter - 1;
+            if(counter == 0) begin
+                out <= !out;
+                counter <= I_freq;
+            end
         end
     end
 endmodule
@@ -22,6 +25,7 @@ endmodule
 
 module sn76489_noise(
         input I_clk,
+        input I_clk_gate,
         input[2:0] I_ctrl,
         input[9:0] I_freq,
         input I_reset_noise,
@@ -44,19 +48,21 @@ module sn76489_noise(
     assign white_noise = I_ctrl[2];
 
     always @(posedge I_clk) begin
-        counter <= counter - 1;
-        if(counter == 0) begin
-            flipbit <= !flipbit;
-            case(rate)
-                2'b00: counter <= 'h10;
-                2'b01: counter <= 'h20;
-                2'b10: counter <= 'h40;
-                2'b11: counter <= I_freq;
-            endcase
+        if(I_clk_gate) begin
+            counter <= counter - 1;
+            if(counter == 0) begin
+                flipbit <= !flipbit;
+                case(rate)
+                    2'b00: counter <= 'h10;
+                    2'b01: counter <= 'h20;
+                    2'b10: counter <= 'h40;
+                    2'b11: counter <= I_freq;
+                endcase
 
-            if(flipbit == 0) begin
-                shiftreg[14:0] <= shiftreg[15:1];
-                shiftreg[15] <= white_noise ? shiftreg[3] ^ shiftreg[0] : shiftreg[0];
+                if(flipbit == 0) begin
+                    shiftreg[14:0] <= shiftreg[15:1];
+                    shiftreg[15] <= white_noise ? shiftreg[3] ^ shiftreg[0] : shiftreg[0];
+                end
             end
         end
 
@@ -136,7 +142,7 @@ endmodule
 
 module sn76489_wb8
     #(
-        parameter FREQDIVIDE = 55
+        parameter FREQDIVIDE = 110
     )
     (
         // Wisbhone B4 signals
@@ -158,12 +164,13 @@ module sn76489_wb8
     assign O_wb_dat = 0;
 
     // divide audio clock from bus clock
-    reg clk = 0;
+    reg clk_gate = 0;
     reg[($clog2(FREQDIVIDE) - 1):0] clk_counter;
     always @(posedge I_wb_clk) begin
+        clk_gate <= 0;
         clk_counter <= clk_counter - 1;
         if(clk_counter == 0) begin
-            clk <= !clk;
+            clk_gate <= 1;
             clk_counter <= FREQDIVIDE;
         end
     end
@@ -183,22 +190,26 @@ module sn76489_wb8
     wire tone1_output, tone2_output, tone3_output, noise_output, noise_reset_ack;
     reg reset_noise;
     sn76489_oscillator tone1_inst(
-        .I_clk(clk),
+        .I_clk(I_wb_clk),
+        .I_clk_gate(clk_gate),
         .I_freq(tone1_freq),
         .O_voice(tone1_output)
     );
     sn76489_oscillator tone2_inst(
-        .I_clk(clk),
+        .I_clk(I_wb_clk),
+        .I_clk_gate(clk_gate),
         .I_freq(tone2_freq),
         .O_voice(tone2_output)
     );
     sn76489_oscillator tone3_inst(
-        .I_clk(clk),
+        .I_clk(I_wb_clk),
+        .I_clk_gate(clk_gate),
         .I_freq(tone3_freq),
         .O_voice(tone3_output)
     );
     sn76489_noise noise_inst(
-        .I_clk(clk),
+        .I_clk(I_wb_clk),
+        .I_clk_gate(clk_gate),
         .I_ctrl(noise_ctrl),
         .I_freq(tone3_freq),
         .I_reset_noise(reset_noise),
