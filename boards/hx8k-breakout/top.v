@@ -141,7 +141,7 @@ module top(
     assign {led0, led1, led2, led3, led4, led5, led6, led7} = leds_value;
 
     reg uart_stb = 0;
-    wire uart_tx, uart_ack;
+    wire uart_ack;
     wire[7:0] uart_dat;
 
     uart_wb8 #(
