@@ -143,8 +143,9 @@ void console() {
     termcfg.c_lflag &= ~(ECHO | ICANON); // turn off echo, buffer
     tcsetattr(0, 0, &termcfg);
 
-    // set stdin to non-blocking reads
+    // set stdin and fd_tty to non-blocking reads
     fcntl(0, F_SETFL, fcntl(0, F_GETFL) | O_NONBLOCK);
+    fcntl(fd_tty, F_SETFL, fcntl(fd_tty, F_GETFL) | O_NONBLOCK);
 
     while(1) {
         int n, ret;
