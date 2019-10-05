@@ -19,9 +19,12 @@ module top(
         // UART pins on pmod header 2
         input uart_rx, uart_rts,
         output uart_tx,
-        // SPI port 0
-        input spi0_miso,
-        output spi0_clk, spi0_mosi, spi0_cs,
+        // SPI device 1
+        input spi1_miso,
+        output spi1_clk, spi1_mosi, spi1_cs,
+        // SPI device 2
+        input spi2_miso,
+        output spi2_clk, spi2_mosi, spi2_cs,
         // LEDs!
         output led0, led1, led2, led3, led4, led5, led6, led7,
         // debug output stuff
@@ -161,22 +164,32 @@ module top(
     assign eled_1 = !uart_rx;
     assign eled_2 = !uart_tx;
 
-    reg spi0_stb = 0;
-    wire[7:0] spi0_dat;
-    wire spi0_ack;
+    reg spi_wb_stb = 0;
+    wire[7:0] spi_wb_dat;
+    wire spi_wb_ack;
 
-    spi_wb8 spi0_inst(
+    wire spi_mosi, spi_miso, spi_clk, spi_cs1, spi_cs2;
+    assign spi1_mosi = spi_mosi;
+    assign spi2_mosi = spi_mosi;
+    assign spi1_clk = spi_clk;
+    assign spi2_clk = spi_clk;
+    assign spi_miso = !spi_cs1 ? spi1_miso : spi2_miso;
+    assign spi1_cs = spi_cs1;
+    assign spi2_cs = spi_cs2;
+
+    spi_wb8 spi_inst(
         .I_wb_clk(clk),
         .I_wb_adr(cpu_adr[1:0]),
         .I_wb_dat(cpu_dat),
-        .I_wb_stb(spi0_stb),
+        .I_wb_stb(spi_wb_stb),
         .I_wb_we(cpu_we),
-        .O_wb_dat(spi0_dat),
-        .O_wb_ack(spi0_ack),
-        .I_spi_miso(spi0_miso),
-        .O_spi_mosi(spi0_mosi),
-        .O_spi_clk(spi0_clk),
-        .O_spi_cs(spi0_cs)
+        .O_wb_dat(spi_wb_dat),
+        .O_wb_ack(spi_wb_ack),
+        .I_spi_miso(spi_miso),
+        .O_spi_mosi(spi_mosi),
+        .O_spi_clk(spi_clk),
+        .O_spi_cs1(spi_cs1),
+        .O_spi_cs2(spi_cs2)
     );
 
     reg timer_stb = 0;
@@ -394,7 +407,7 @@ module top(
     always @(*) begin
         leds_stb = 0;
         uart_stb = 0;
-        spi0_stb = 0;
+        spi_wb_stb = 0;
         timer_stb = 0;
         rom_stb = 0;
         ram_stb = 0;
@@ -427,10 +440,10 @@ module top(
                 uart_stb = cpu_stb;
             end
 
-            {32'hFFFFF9??}: begin // 0xFFFFF9xx: SPI port 0
-                arbiter_dat_o = spi0_dat;
-                arbiter_ack_o = spi0_ack;
-                spi0_stb = cpu_stb;
+            {32'hFFFFF9??}: begin // 0xFFFFF9xx: SPI port
+                arbiter_dat_o = spi_wb_dat;
+                arbiter_ack_o = spi_wb_ack;
+                spi_wb_stb = cpu_stb;
             end
 
             // reserved:

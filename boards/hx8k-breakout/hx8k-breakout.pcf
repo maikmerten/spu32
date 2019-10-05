@@ -7,10 +7,15 @@ set_io --warn-no-port uart_rx B10
 set_io --warn-no-port uart_rts B13
 
 
-set_io --warn-no-port spi0_clk T1
-set_io --warn-no-port spi0_miso T2
-set_io --warn-no-port spi0_mosi B1
-set_io --warn-no-port spi0_cs B2
+set_io --warn-no-port spi1_clk T1
+set_io --warn-no-port spi1_miso T2
+set_io --warn-no-port spi1_mosi B1
+set_io --warn-no-port spi1_cs B2
+
+set_io --warn-no-port spi2_clk E14
+set_io --warn-no-port spi2_miso D15
+set_io --warn-no-port spi2_mosi D14
+set_io --warn-no-port spi2_cs B16
 
 
 set_io led0 B5

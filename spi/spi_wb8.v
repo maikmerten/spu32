@@ -14,12 +14,16 @@ module spi_wb8(
         input I_spi_miso,
         output O_spi_clk,
         output O_spi_mosi,
-        output O_spi_cs
+        output O_spi_cs1, O_spi_cs2, O_spi_cs3
     );
 
 
-    reg cs = 0;
-    assign O_spi_cs = !cs; // chip select is active low
+    reg[1:0] cs = 0;
+    // chip select is active low
+    assign O_spi_cs1 = !(cs == 2'b01);
+    assign O_spi_cs2 = !(cs == 2'b10);
+    assign O_spi_cs3 = !(cs == 2'b11);
+   
 
     reg txstart = 0;
     reg[7:0] txdata = 0;
@@ -59,8 +63,8 @@ module spi_wb8(
                 end
 
                 1: begin // chip select
-                    if(I_wb_we) cs <= I_wb_dat[0];
-                    else O_wb_dat <= {7'b0, cs};
+                    if(I_wb_we) cs <= I_wb_dat[1:0];
+                    else O_wb_dat <= {6'b0, cs};
                 end
 
                 default: begin // ready signal
