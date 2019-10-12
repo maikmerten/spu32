@@ -1,10 +1,10 @@
-CC=riscv32-unknown-elf-gcc
-CFLAGS=-static -nostdlib -Os -fno-builtin-printf -fPIC -fdata-sections -ffunction-sections
+CC=riscv64-unknown-elf-gcc
+CFLAGS=-static -march=rv32i -mabi=ilp32 -nostdlib -Os -fno-builtin-printf -fPIC -fdata-sections -ffunction-sections
 
-AR=riscv32-unknown-elf-ar
+AR=riscv64-unknown-elf-ar
 ARFLAGS=rs
 
-DUMP=riscv32-unknown-elf-objdump
+DUMP=riscv64-unknown-elf-objdump
 
 all: libtinyc.a
 

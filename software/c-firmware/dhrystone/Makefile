@@ -1,10 +1,10 @@
-CC=riscv32-unknown-elf-gcc
-CFLAGS=-I../libtinyc -I../libspu32 -march=rv32i -static -nostdlib -fno-builtin-printf -O3 -fno-inline -fPIC -fdata-sections -ffunction-sections
+CC=riscv64-unknown-elf-gcc
+CFLAGS=-I../libtinyc -I../libspu32 -march=rv32i -mabi=ilp32 -static -nostdlib -fno-builtin-printf -O3 -fno-inline -fPIC -fdata-sections -ffunction-sections
 LDFLAGS=-L../libtinyc -ltinyc -L../libspu32 -lspu32 -lgcc -Tlink.ld -Xlinker --gc-sections
 # useful additions for LDFLAGS if linking fails: -Xlinker --verbose 
 
-DUMP=riscv32-unknown-elf-objdump
-COPY=riscv32-unknown-elf-objcopy
+DUMP=riscv64-unknown-elf-objdump
+COPY=riscv64-unknown-elf-objcopy
 
 all: dhrystone.o dhrystone_main.bin
 
