@@ -98,8 +98,9 @@ module spu32_cpu
     wire[31:0] dec_imm;
     wire[4:0] dec_opcode;
     wire[2:0] dec_funct3;
-    wire[6:0] dec_funct7;
     wire[5:0] dec_branchmask;
+    wire[3:0] dec_aluop;
+    wire[2:0] dec_busop;
     reg dec_en;
 
     spu32_cpu_decoder dec_inst(
@@ -112,8 +113,9 @@ module spu32_cpu
         .O_imm(dec_imm),
         .O_opcode(dec_opcode),
         .O_funct3(dec_funct3),
-        .O_funct7(dec_funct7),
-        .O_branchmask(dec_branchmask)
+        .O_branchmask(dec_branchmask),
+        .O_aluop(dec_aluop),
+        .O_busop(dec_busop)
     );
 
     // Registers instance
@@ -311,17 +313,7 @@ module spu32_cpu
                         alu_en <= 1;
                         mux_alu_s1_sel <= MUX_ALUDAT1_REGVAL1;
                         mux_alu_s2_sel <= MUX_ALUDAT2_REGVAL2;
-                        case(dec_funct3)
-                            `FUNC_ADD_SUB:  alu_op <= dec_funct7[5] ? `ALUOP_SUB : `ALUOP_ADD;
-                            `FUNC_SLL:      alu_op <= `ALUOP_SLL;
-                            `FUNC_SLT:      alu_op <= `ALUOP_SLT;
-                            `FUNC_SLTU:     alu_op <= `ALUOP_SLTU;
-                            `FUNC_XOR:      alu_op <= `ALUOP_XOR;
-                            `FUNC_SRL_SRA:  alu_op <= dec_funct7[5] ? `ALUOP_SRA : `ALUOP_SRL;
-                            `FUNC_OR:       alu_op <= `ALUOP_OR;
-                            `FUNC_AND:      alu_op <= `ALUOP_AND;
-                            default:        alu_op <= `ALUOP_ADD;
-                        endcase
+                        alu_op <= dec_aluop;
                         // do register writeback in FETCH
                         writeback_from_alu <= 1;
                         nextstate <= STATE_FETCH;
@@ -331,17 +323,7 @@ module spu32_cpu
                         alu_en <= 1;
                         mux_alu_s1_sel <= MUX_ALUDAT1_REGVAL1;
                         mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
-                        case(dec_funct3)
-                            `FUNC_ADDI:         alu_op <= `ALUOP_ADD;
-                            `FUNC_SLLI:         alu_op <= `ALUOP_SLL;
-                            `FUNC_SLTI:         alu_op <= `ALUOP_SLT;
-                            `FUNC_SLTIU:        alu_op <= `ALUOP_SLTU;
-                            `FUNC_XORI:         alu_op <= `ALUOP_XOR;
-                            `FUNC_SRLI_SRAI:    alu_op <= dec_funct7[5] ? `ALUOP_SRA : `ALUOP_SRL;
-                            `FUNC_ORI:          alu_op <= `ALUOP_OR;
-                            `FUNC_ANDI:         alu_op <= `ALUOP_AND;
-                            default:            alu_op <= `ALUOP_ADD;
-                        endcase
+                        alu_op <= dec_aluop;
                         // do register writeback in FETCH
                         writeback_from_alu <= 1;
                         nextstate <= STATE_FETCH;
@@ -412,14 +394,7 @@ module spu32_cpu
             STATE_LOAD2: begin // load from computed address
                 bus_en <= 1;
                 mux_bus_addr_sel <= MUX_BUSADDR_ALU;
-                case(dec_funct3)
-                    `FUNC_LB:   bus_op <= `BUSOP_READB;
-                    `FUNC_LH:   bus_op <= `BUSOP_READH;
-                    `FUNC_LW:   bus_op <= `BUSOP_READW;
-                    `FUNC_LBU:  bus_op <= `BUSOP_READBU;
-                    default:    bus_op <= `BUSOP_READHU; // FUNC_LHU
-                endcase
-                //nextstate <= STATE_REGWRITEBUS;
+                bus_op <= dec_busop;
                 writeback_from_bus <= 1;
                 nextstate <= STATE_FETCH;
             end
@@ -428,11 +403,7 @@ module spu32_cpu
             STATE_STORE2: begin // store to computed address
                 bus_en <= 1;
                 mux_bus_addr_sel <= MUX_BUSADDR_ALU;
-                case(dec_funct3)
-                    `FUNC_SB:   bus_op <= `BUSOP_WRITEB;
-                    `FUNC_SH:   bus_op <= `BUSOP_WRITEH;
-                    default:    bus_op <= `BUSOP_WRITEW; // FUNC_SW
-                endcase
+                bus_op <= dec_busop;
                 // advance to next instruction
                 nextstate <= STATE_FETCH;
             end

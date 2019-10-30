@@ -11,7 +11,6 @@ module decoder_tb;
     wire[31:0] imm;
     wire[4:0] opcode;
     wire[2:0] funct3;
-    wire[6:0] funct7;
         
     spu32_cpu_decoder mut(
         .I_instr(instr),
@@ -22,13 +21,12 @@ module decoder_tb;
         .O_rd(rd),
         .O_imm(imm),
         .O_opcode(opcode),
-        .O_funct3(funct3),
-        .O_funct7(funct7)
+        .O_funct3(funct3)
     );
     
     initial begin
         $dumpfile("./cpu/tests/decoder_tb.lxt");
-        $dumpvars(0, clk, en, error, instr, rs1, rs2, rd, imm, opcode, funct3, funct7);
+        $dumpvars(0, clk, en, error, instr, rs1, rs2, rd, imm, opcode, funct3);
 
         @(negedge clk)
         en <= 1;
