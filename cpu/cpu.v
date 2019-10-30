@@ -28,9 +28,9 @@ module spu32_cpu
     assign reset = RST_I;
 
     // MSRS
-    reg[31:0] pc, pcnext, epc;
+    reg[31:2] pc, pcnext, epc;
+    reg[31:2] evect = VECTOR_EXCEPTION;
     reg nextpc_from_alu, writeback_from_alu, writeback_from_bus;
-    reg[31:0] evect = VECTOR_EXCEPTION;
      // current and previous machine-mode external interrupt enable
     reg meie = 0, meie_prev = 0;
      // machine cause register, mcause[4] denotes interrupt, mcause[3:0] encodes exception code
@@ -136,7 +136,7 @@ module spu32_cpu
     always @(*) begin
         case(mux_alu_s1_sel)
             MUX_ALUDAT1_REGVAL1: alu_dataS1 = reg_val1;
-            default:             alu_dataS1 = pc; // MUX_ALUDAT1_PC
+            default:             alu_dataS1 = {pc, 2'b00}; // MUX_ALUDAT1_PC
         endcase
     end
 
@@ -160,7 +160,7 @@ module spu32_cpu
     always @(*) begin
         case(mux_bus_addr_sel)
             MUX_BUSADDR_ALU: bus_addr = alu_dataout;
-            default:         bus_addr = pc; // MUX_BUSADDR_PC
+            default:         bus_addr = {pc, 2'b00}; // MUX_BUSADDR_PC
         endcase
     end
 
@@ -182,8 +182,8 @@ module spu32_cpu
         case(mux_msr_sel)
             MSR_MSTATUS: msr_data = mstatus32;
             MSR_CAUSE:   msr_data = mcause32;
-            MSR_EPC:     msr_data = epc;
-            default:     msr_data = evect;
+            MSR_EPC:     msr_data = {epc, 2'b00};
+            default:     msr_data = {evect, 2'b00};
         endcase
     end
 
@@ -250,10 +250,10 @@ module spu32_cpu
 
         case(state)
             STATE_RESET: begin
-                pcnext <= VECTOR_RESET;
+                pcnext <= VECTOR_RESET[31:2];
                 meie <= 0; // disable machine-mode external interrupt
                 nextstate <= STATE_FETCH;
-                evect <= VECTOR_EXCEPTION;
+                evect <= VECTOR_EXCEPTION[31:2];
                 nextpc_from_alu <= 0;
                 writeback_from_alu <= 0;
                 writeback_from_bus <= 0;
@@ -267,8 +267,9 @@ module spu32_cpu
                 writeback_from_bus <= 0;
 
                 // update PC
-                pc <= nextpc_from_alu ? alu_dataout : pcnext;
-                pc[0] <= 0;
+                // TODO: if alu_dataout contains a misaligned address, raise exception
+                // instead of altering the PC.
+                pc <= nextpc_from_alu ? alu_dataout[31:2] : pcnext[31:2];
 
                 // fetch next instruction 
                 bus_en <= 1;
@@ -303,7 +304,7 @@ module spu32_cpu
 
             STATE_EXEC: begin
                 // ALU output when coming from decode is PC+4... store it in pcnext
-                if(!busy) pcnext <= alu_dataout;
+                if(!busy) pcnext <= alu_dataout[31:2];
 
                 case(dec_opcode)
                     `OP_OP: begin
@@ -496,12 +497,12 @@ module spu32_cpu
                 if(!dec_imm[11]) begin // denotes a writable non-standard machine-mode MSR
                     case(dec_imm[1:0])
                         MSR_CAUSE: mcause <= {reg_val1[31], reg_val1[3:0]};
-                        MSR_EPC:   epc <= reg_val1;
+                        MSR_EPC:   epc <= reg_val1[31:2];
                         MSR_MSTATUS: begin
                             meie <= reg_val1[0];
                             meie_prev <= reg_val1[1];
                         end
-                        MSR_EVECT: evect <= reg_val1;
+                        MSR_EVECT: evect <= reg_val1[31:2];
                     endcase
                 end
                 // advance to next instruction
