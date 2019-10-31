@@ -29,7 +29,7 @@ module spu32_cpu
 
     // MSRS
     reg[31:2] pc, pcnext, epc;
-    reg[31:2] evect = VECTOR_EXCEPTION;
+    reg[31:2] evect = VECTOR_EXCEPTION[31:2];
     reg nextpc_from_alu, writeback_from_alu, writeback_from_bus;
      // current and previous machine-mode external interrupt enable
     reg meie = 0, meie_prev = 0;
@@ -252,9 +252,9 @@ module spu32_cpu
         case(state)
             STATE_RESET: begin
                 pcnext <= VECTOR_RESET[31:2];
+                evect <= VECTOR_EXCEPTION[31:2];
                 meie <= 0; // disable machine-mode external interrupt
                 nextstate <= STATE_FETCH;
-                evect <= VECTOR_EXCEPTION[31:2];
                 nextpc_from_alu <= 0;
                 writeback_from_alu <= 0;
                 writeback_from_bus <= 0;
