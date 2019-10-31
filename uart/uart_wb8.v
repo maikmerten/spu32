@@ -20,12 +20,12 @@ module uart_wb8
 
     localparam baudclocks = CLOCKFREQ/BAUDRATE;
 
-    localparam READ_IDLE = 0;
-    localparam READ_READ = 1;
+    localparam READ_IDLE = 1'b0;
+    localparam READ_READ = 1'b1;
     reg readstate = READ_IDLE;
 
-    localparam WRITE_IDLE = 0;
-    localparam WRITE_WRITE = 1;
+    localparam WRITE_IDLE = 1'b0;
+    localparam WRITE_WRITE = 1'b1;
     reg writestate = WRITE_IDLE;
 
     reg[7:0] inputbuf, readbuf, writebuf = 0;
@@ -59,10 +59,10 @@ module uart_wb8
                         read_ready <= 1;
                         readstate <= READ_IDLE;
                     end
-                    readbitcnt <= readbitcnt + 1;
+                    readbitcnt <= readbitcnt + 1'b1;
                 end
 
-                readclkcnt <= readclkcnt + 1;
+                readclkcnt <= readclkcnt + 1'b1;
                 if(readclkcnt == baudclocks) readclkcnt <= 0;
             end
         endcase
@@ -80,11 +80,11 @@ module uart_wb8
             end
 
             WRITE_WRITE: begin
-                writeclkcnt <= writeclkcnt + 1;
+                writeclkcnt <= writeclkcnt + 1'b1;
                 if(writeclkcnt == (baudclocks - 1)) begin
                     // write next bit
                     writeclkcnt <= 0;
-                    writebitcnt <= writebitcnt + 1;
+                    writebitcnt <= writebitcnt + 1'b1;
                     if(writebitcnt == 9) begin
                         writestate <= WRITE_IDLE;
                         do_write <= 0;
