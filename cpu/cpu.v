@@ -209,13 +209,12 @@ module spu32_cpu
     localparam STATE_FETCH          = 1;
     localparam STATE_DECODE         = 2;
     localparam STATE_EXEC           = 3;
-    localparam STATE_STORE2         = 5;
-    localparam STATE_LOAD2          = 6;
-    localparam STATE_BRANCH2        = 7;
-    localparam STATE_TRAP1          = 8;
-    localparam STATE_SYSTEM         = 9;
-    localparam STATE_CSRRW1         = 10;
-    localparam STATE_CSRRW2         = 11;
+    localparam STATE_LOADSTORE      = 4;
+    localparam STATE_BRANCH2        = 5;
+    localparam STATE_TRAP1          = 6;
+    localparam STATE_SYSTEM         = 7;
+    localparam STATE_CSRRW1         = 8;
+    localparam STATE_CSRRW2         = 9;
 
 
     reg[3:0] state, prevstate = STATE_RESET, nextstate = STATE_RESET;
@@ -309,40 +308,22 @@ module spu32_cpu
                 if(!busy) pcnext <= alu_dataout[31:2];
 
                 case(dec_opcode)
-                    `OP_OP: begin
+                    `OP_OP, `OP_OPIMM: begin
                         alu_en <= 1;
                         mux_alu_s1_sel <= MUX_ALUDAT1_REGVAL1;
-                        mux_alu_s2_sel <= MUX_ALUDAT2_REGVAL2;
+                        mux_alu_s2_sel <= (dec_opcode[3]) ? MUX_ALUDAT2_REGVAL2 : MUX_ALUDAT2_IMM;
                         alu_op <= dec_aluop;
                         // do register writeback in FETCH
                         writeback_from_alu <= 1;
                         nextstate <= STATE_FETCH;
                     end
 
-                    `OP_OPIMM: begin
-                        alu_en <= 1;
-                        mux_alu_s1_sel <= MUX_ALUDAT1_REGVAL1;
-                        mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
-                        alu_op <= dec_aluop;
-                        // do register writeback in FETCH
-                        writeback_from_alu <= 1;
-                        nextstate <= STATE_FETCH;
-                    end
-
-                    `OP_LOAD: begin // compute load address on ALU
+                    `OP_LOAD, `OP_STORE: begin // compute load/store address on ALU
                         alu_en <= 1;
                         alu_op <= `ALUOP_ADD;
                         mux_alu_s1_sel <= MUX_ALUDAT1_REGVAL1;
                         mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
-                        nextstate <= STATE_LOAD2;
-                    end
-
-                    `OP_STORE:  begin // compute store address on ALU
-                        alu_en <= 1;
-                        alu_op <= `ALUOP_ADD;
-                        mux_alu_s1_sel <= MUX_ALUDAT1_REGVAL1;
-                        mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
-                        nextstate <= STATE_STORE2;
+                        nextstate <= STATE_LOADSTORE;
                     end
 
                     `OP_JAL, `OP_JALR: begin
@@ -391,22 +372,15 @@ module spu32_cpu
             end
 
 
-            STATE_LOAD2: begin // load from computed address
+            STATE_LOADSTORE: begin // load from computed address
                 bus_en <= 1;
                 mux_bus_addr_sel <= MUX_BUSADDR_ALU;
                 bus_op <= dec_busop;
-                writeback_from_bus <= 1;
+                //writeback_from_bus <= !dec_opcode[3];
+                writeback_from_bus <= (dec_opcode == `OP_LOAD);
                 nextstate <= STATE_FETCH;
             end
 
-
-            STATE_STORE2: begin // store to computed address
-                bus_en <= 1;
-                mux_bus_addr_sel <= MUX_BUSADDR_ALU;
-                bus_op <= dec_busop;
-                // advance to next instruction
-                nextstate <= STATE_FETCH;
-            end
 
             STATE_BRANCH2: begin
                 // use idle ALU to compute PC+immediate - in case we branch
