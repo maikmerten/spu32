@@ -79,15 +79,15 @@ module spu32_cpu_decoder(
 
         // OP_OPIMM
         case(funct3)
-            `FUNC_ADDI:         aluop_opimm <= `ALUOP_ADD;
-            `FUNC_SLLI:         aluop_opimm <= `ALUOP_SLL;
-            `FUNC_SLTI:         aluop_opimm <= `ALUOP_SLT;
-            `FUNC_SLTIU:        aluop_opimm <= `ALUOP_SLTU;
-            `FUNC_XORI:         aluop_opimm <= `ALUOP_XOR;
-            `FUNC_SRLI_SRAI:    aluop_opimm <= funct7[5] ? `ALUOP_SRA : `ALUOP_SRL;
-            `FUNC_ORI:          aluop_opimm <= `ALUOP_OR;
-            `FUNC_ANDI:         aluop_opimm <= `ALUOP_AND;
-            default:            aluop_opimm <= `ALUOP_ADD;
+            `FUNC_ADDI:         aluop_opimm = `ALUOP_ADD;
+            `FUNC_SLLI:         aluop_opimm = `ALUOP_SLL;
+            `FUNC_SLTI:         aluop_opimm = `ALUOP_SLT;
+            `FUNC_SLTIU:        aluop_opimm = `ALUOP_SLTU;
+            `FUNC_XORI:         aluop_opimm = `ALUOP_XOR;
+            `FUNC_SRLI_SRAI:    aluop_opimm = funct7[5] ? `ALUOP_SRA : `ALUOP_SRL;
+            `FUNC_ORI:          aluop_opimm = `ALUOP_OR;
+            `FUNC_ANDI:         aluop_opimm = `ALUOP_AND;
+            default:            aluop_opimm = `ALUOP_ADD;
         endcase
 
         O_aluop = (opcode == `OP_OPIMM ? aluop_opimm : aluop_op);
