@@ -22,16 +22,12 @@ module sram256kx16_wb8_vga
 		output O_ce, O_we, O_lb, O_ub,
 
 		// tristate control
-		output O_output_enable
+		output reg O_output_enable
 	);
 
 	
 	reg write1 = 0;
 	reg write2 = 0;
-	reg dowrite = 0;
-	wire writepulse;
-	assign writepulse = (write1 != write2);
-
 
 	reg[18:0] address;
 	assign O_address = address[18:1];
@@ -40,24 +36,23 @@ module sram256kx16_wb8_vga
 
 	// control signals are active low, thus negated
 	assign O_ce = 0;
-	assign O_we = !writepulse;
-	assign O_output_enable = writepulse;
+	assign O_we = !(write1 != write2);
 	assign O_wb_stall = I_wb_stb & I_vga_req;
 
 	always @(posedge I_wb_clk) begin
-		dowrite <= 0;
 		O_oe <= 1; // active low
 		O_data <= {I_wb_dat, I_wb_dat};
-
-		write1 <= write2;
+		O_output_enable <= 0;
 	
 		if(I_vga_req) begin
 			address <= I_vga_adr;
+			O_output_enable <= 0;
 			O_oe <= 0;
 		end else if(I_wb_stb) begin
+			write1 <= I_wb_we ? !write2 : write2;
 			address <= I_wb_adr;
-			dowrite <= I_wb_we;
 			O_oe <= !(!I_wb_we); // active low
+			O_output_enable <= I_wb_we;
 		end
 
 		O_wb_ack <= (I_wb_stb & !I_vga_req);
@@ -65,10 +60,7 @@ module sram256kx16_wb8_vga
 
 	always @(negedge I_wb_clk) begin
 		O_wb_dat <= address[0] ? I_data[15:8] : I_data[7:0];
-		if(dowrite) begin
-			write2 <= !write1;
-		end
-
+		write2 <= write1;
 	end
 
 endmodule
