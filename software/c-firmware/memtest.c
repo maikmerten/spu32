@@ -1,4 +1,5 @@
 #include <libtinyc.h>
+#include <stdint.h>
 #include "../asm/devices.h"
 
 inline int get_prng_value() {
@@ -43,6 +44,13 @@ int main()
 	int memsize = detectMemsize();
 	printf("Detected memory size: %d bytes\n\r", memsize);
 
+	volatile uint32_t* DEV_VGA_BASE = (volatile uint32_t*) 0xFFFF0000;
+	volatile uint8_t* DEV_VGA_MODE = (volatile uint8_t*) 0xFFFF0008;
+
+	*DEV_VGA_BASE = (32 * 1024);
+	*DEV_VGA_MODE = 3;
+
+
 	while (1)
 	{
 		const int base = (4 * 1024); // start at 4K, don't overwrite memtest program
@@ -80,7 +88,7 @@ int main()
 
 			set_prng_seed(pass);
 			// write predictable random numbers to memory
-			for(intPtr = (volatile unsigned int*)base;(int)intPtr < end; intPtr += sizeof(int)) {
+			for(intPtr = (volatile unsigned int*)base;(int)intPtr < end; intPtr++) {
 				int prn = get_prng_value();
 				*intPtr = prn;
 			}
@@ -88,7 +96,7 @@ int main()
 			// reset predictable number generator
 			set_prng_seed(pass);
 			// read memory contents and compare
-			for(intPtr = (volatile unsigned int*)base;(int)intPtr < end; intPtr += sizeof(int)) {
+			for(intPtr = (volatile unsigned int*)base;(int)intPtr < end; intPtr++) {
 				int prn = get_prng_value();
 				int val = *intPtr;
 				if(prn != val) {
