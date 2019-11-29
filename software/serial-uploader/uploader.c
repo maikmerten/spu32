@@ -52,17 +52,11 @@ int set_interface_attribs(int fd, int speed) {
 }
 
 void toggleReset() {
-    int RTS_flag = TIOCM_RTS;
-    int DTR_flag = TIOCM_DTR;
-    int CTS_flag = TIOCM_CTS;
-    ioctl(fd_tty, TIOCMBIS, &RTS_flag); // set RTS signal
-    ioctl(fd_tty, TIOCMBIS, &DTR_flag); // set DTR signal
-    ioctl(fd_tty, TIOCMBIS, &CTS_flag); // set CTS signal
+    int flags = TIOCM_RTS | TIOCM_DTR | TIOCM_CTS;
+    ioctl(fd_tty, TIOCMBIS, &flags); // set flags to signal reset
     usleep(10 * 1000); // sleep a while
-    ioctl(fd_tty, TIOCMBIC, &RTS_flag);// clear RTS signal
-    ioctl(fd_tty, TIOCMBIC, &DTR_flag);// clear DTR signal
-    ioctl(fd_tty, TIOCMBIC, &CTS_flag);// clear CTS signal
-    usleep(5 * 1000); // give bootloader a chance to start
+    ioctl(fd_tty, TIOCMBIC, &flags);// clear flags
+    usleep(10 * 1000); // give bootloader a chance to start
 }
 
 
