@@ -69,26 +69,8 @@ module vga_wb8_extram (
     reg[7:0] cache [511:0];
     reg[8:0] cache_adr;
 
-    reg[23:0] palette [15:0];
-    initial begin
-        // standard EGA palette
-        palette[0] = 24'h000000;
-        palette[1] = 24'h0000aa;
-        palette[2] = 24'h00aa00;
-        palette[3] = 24'h00aaaa;
-        palette[4] = 24'haa0000;
-        palette[5] = 24'haa00aa;
-        palette[6] = 24'haa5500;
-        palette[7] = 24'haaaaaa;
-        palette[8] = 24'h555555;
-        palette[9] = 24'h5555ff;
-        palette[10] = 24'h55ff55;
-        palette[11] = 24'h55ffff;
-        palette[12] = 24'hff5555;
-        palette[13] = 24'hff55ff;
-        palette[14] = 24'hffff55;
-        palette[15] = 24'hffffff;
-    end
+    reg[23:0] palette [255:0];
+    initial $readmemh("vga/vga_palette_256.dat", palette, 0, 255);
 
     reg[23:0] tmp;
 
@@ -103,6 +85,11 @@ module vga_wb8_extram (
             {1'b1, MODE_GRAPHICS_640}: coloridx = !col[0] ? ram_dat[7:4] : ram_dat[3:0];
             default:                   coloridx = 0;
         endcase
+    end
+
+    reg[7:0] palette_idx = 0;
+    always @(*) begin
+        palette_idx = (mode == MODE_GRAPHICS_320) ? ram_dat : {4'h0, coloridx};
     end
 
 
@@ -175,11 +162,10 @@ module vga_wb8_extram (
             end
         end
 
-        if(mode != MODE_GRAPHICS_320) begin
-            //{O_vga_r1, O_vga_r0, O_vga_g1, O_vga_g0, O_vga_b1, O_vga_b0} <= palette[coloridx];
-            {O_vga_r, O_vga_g, O_vga_b} <= palette[coloridx];
+        if(col_is_visible) begin
+            {O_vga_r, O_vga_g, O_vga_b} <= palette[palette_idx];
         end else begin
-            {O_vga_r, O_vga_g, O_vga_b} <= col_is_visible ? {ram_dat, ram_dat, ram_dat} : 24'b0;
+            {O_vga_r, O_vga_g, O_vga_b} <= 24'b0;
         end
 
         // generate sync signals
