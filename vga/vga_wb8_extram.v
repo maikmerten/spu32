@@ -112,7 +112,7 @@ module vga_wb8_extram (
             if(row_is_visible && col == (h_front_porch + h_pulse + h_back_porch - 4)) begin
                 ram_fetch <= 1;
             end
-            if(col == (h_front_porch + h_pulse + h_back_porch + h_visible - 4)) begin
+            if(col == (h_front_porch + h_pulse + h_back_porch + h_visible - 3)) begin
                 ram_fetch <= 0;
                 // In both MODE_GRAPHICS_320 and MODE_GRAPHICS_640 one line is 320 bytes.
                 // In MODE_GRAPHICS_320 each line is output twice, thus only increase
