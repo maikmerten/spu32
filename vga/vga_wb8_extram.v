@@ -80,10 +80,10 @@ module vga_wb8_extram (
 
     reg[3:0] coloridx = 0;
     always @(*) begin
-        case({col_is_visible && row_is_visible, mode})
-            {1'b1, MODE_TEXT_40}:      coloridx = font_byte[col[4:1]] ? color_byte2[7:4] : color_byte2[3:0];
-            {1'b1, MODE_GRAPHICS_640}: coloridx = !col[0] ? ram_dat[7:4] : ram_dat[3:0];
-            default:                   coloridx = 0;
+        case(mode)
+            MODE_TEXT_40:      coloridx = font_byte[col[4:1]] ? color_byte2[7:4] : color_byte2[3:0];
+            MODE_GRAPHICS_640: coloridx = !col[0] ? ram_dat[7:4] : ram_dat[3:0];
+            default:           coloridx = 0;
         endcase
     end
 
@@ -162,7 +162,7 @@ module vga_wb8_extram (
             end
         end
 
-        if(col_is_visible) begin
+        if(col_is_visible && row_is_visible) begin
             {O_vga_r, O_vga_g, O_vga_b} <= palette[palette_idx];
         end else begin
             {O_vga_r, O_vga_g, O_vga_b} <= 24'b0;
