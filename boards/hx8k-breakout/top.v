@@ -230,7 +230,7 @@ module top(
     `ifdef EXTENSION_PRESENT
         reg vga_stb = 0;
         wire[7:0] vga_dat;
-        wire[1:0] vga_r, vga_g, vga_b;
+        wire[7:0] vga_r, vga_g, vga_b;
         wire[18:0] vga_ram_adr;
         wire vga_ram_req;
         wire vga_ack;
@@ -251,18 +251,15 @@ module top(
             .I_vga_clk(clk),
             .O_vga_vsync(vga_vsync),
             .O_vga_hsync(vga_hsync),
-            .O_vga_r1(vga_r[1]),
-            .O_vga_r0(vga_r[0]),
-            .O_vga_g1(vga_g[1]),
-            .O_vga_g0(vga_g[0]),
-            .O_vga_b1(vga_b[1]),
-            .O_vga_b0(vga_b[0])
+            .O_vga_r(vga_r),
+            .O_vga_g(vga_g),
+            .O_vga_b(vga_b)
         );
 
         // expand RGB222 to RGB444
-        assign {vga_r0, vga_r1, vga_r2, vga_r3} = {vga_r[0], vga_r[1], vga_r[0], vga_r[1]};
-        assign {vga_g0, vga_g1, vga_g2, vga_g3} = {vga_g[0], vga_g[1], vga_g[0], vga_g[1]};
-        assign {vga_b0, vga_b1, vga_b2, vga_b3} = {vga_b[0], vga_b[1], vga_b[0], vga_b[1]};
+        assign {vga_r3, vga_r2, vga_r1, vga_r0} = vga_r[7:4];
+        assign {vga_g3, vga_g2, vga_g1, vga_g0} = vga_g[7:4];
+        assign {vga_b3, vga_b2, vga_b1, vga_b0} = vga_b[7:4];
 
     `endif
 

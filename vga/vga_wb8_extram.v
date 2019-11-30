@@ -18,7 +18,10 @@ module vga_wb8_extram (
 
         // VGA signals
         input I_vga_clk,
-        output reg O_vga_vsync, O_vga_hsync, O_vga_r0, O_vga_r1, O_vga_g0, O_vga_g1, O_vga_b0, O_vga_b1
+        output reg O_vga_vsync, O_vga_hsync,
+        output reg[7:0] O_vga_r,
+        output reg[7:0] O_vga_g,
+        output reg[7:0] O_vga_b
     );
 
 
@@ -66,25 +69,25 @@ module vga_wb8_extram (
     reg[7:0] cache [511:0];
     reg[8:0] cache_adr;
 
-    reg[5:0] palette [15:0];
+    reg[23:0] palette [15:0];
     initial begin
         // standard EGA palette
-        palette[0] = 6'b000000;
-        palette[1] = 6'b000010;
-        palette[2] = 6'b001000;
-        palette[3] = 6'b001010;
-        palette[4] = 6'b100000;
-        palette[5] = 6'b100010;
-        palette[6] = 6'b100100;
-        palette[7] = 6'b101010;
-        palette[8] = 6'b010101;
-        palette[9] = 6'b010111;
-        palette[10] = 6'b011101;
-        palette[11] = 6'b011111;
-        palette[12] = 6'b110101;
-        palette[13] = 6'b110111;
-        palette[14] = 6'b111101;
-        palette[15] = 6'b111111;
+        palette[0] = 24'h000000;
+        palette[1] = 24'h0000aa;
+        palette[2] = 24'h00aa00;
+        palette[3] = 24'h00aaaa;
+        palette[4] = 24'haa0000;
+        palette[5] = 24'haa00aa;
+        palette[6] = 24'haa5500;
+        palette[7] = 24'haaaaaa;
+        palette[8] = 24'h555555;
+        palette[9] = 24'h5555ff;
+        palette[10] = 24'h55ff55;
+        palette[11] = 24'h55ffff;
+        palette[12] = 24'hff5555;
+        palette[13] = 24'hff55ff;
+        palette[14] = 24'hffff55;
+        palette[15] = 24'hffffff;
     end
 
     reg[23:0] tmp;
@@ -173,9 +176,10 @@ module vga_wb8_extram (
         end
 
         if(mode != MODE_GRAPHICS_320) begin
-            {O_vga_r1, O_vga_r0, O_vga_g1, O_vga_g0, O_vga_b1, O_vga_b0} <= palette[coloridx];
+            //{O_vga_r1, O_vga_r0, O_vga_g1, O_vga_g0, O_vga_b1, O_vga_b0} <= palette[coloridx];
+            {O_vga_r, O_vga_g, O_vga_b} <= palette[coloridx];
         end else begin
-            {O_vga_r1, O_vga_r0, O_vga_g1, O_vga_g0, O_vga_b1, O_vga_b0} <= col_is_visible ? ram_dat[5:0] : 6'b0;
+            {O_vga_r, O_vga_g, O_vga_b} <= col_is_visible ? {ram_dat, ram_dat, ram_dat} : 24'b0;
         end
 
         // generate sync signals
