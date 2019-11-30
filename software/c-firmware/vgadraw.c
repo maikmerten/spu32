@@ -187,6 +187,16 @@ void fillScreen(uint8_t color) {
         adr += 64;
     }
 }
+
+void fillRect(int16_t xoff, int16_t yoff, uint16_t width, uint16_t height, uint8_t color) {
+    uint32_t packed_color = packColor(color);
+
+    for(int16_t y = yoff; y < yoff + height; ++y) {
+        drawHLine(xoff, y, width, packed_color);
+    }
+}
+
+
 void drawCircle(int16_t xoff, int16_t yoff, uint16_t r, uint8_t color) {
     // Horn's algorithm for drawing circles
     int16_t d = -r;
@@ -451,12 +461,30 @@ int main() {
 
         ///////////////
 
+        color = get_prng_value() & 0xFF;
+        fillRect(0, 0, 20, 1, color);
+        color = get_prng_value() & 0xFF;
+        fillRect(0, 1, 20, 1, color);
+        color = get_prng_value() & 0xFF;
+        fillRect(0, 2, 20, 1, color);
+        color = get_prng_value() & 0xFF;
+        fillRect(0, 3, 20, 1, color);
+
+
+        color = get_prng_value() & 0xFF;
+        fillRect(300, 0, 20, 1, color);
+        color = get_prng_value() & 0xFF;
+        fillRect(300, 1, 20, 1, color);
+        color = get_prng_value() & 0xFF;
+        fillRect(300, 2, 20, 1, color);
+        color = get_prng_value() & 0xFF;
+        fillRect(300, 3, 20, 1, color);
 
         // double-buffering: show picture
         switchVGABase();
         
         start = get_milli_time();
-        while(get_milli_time() - start < 500) {
+        while(get_milli_time() - start < 5000) {
         }
 
         count++;
