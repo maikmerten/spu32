@@ -66,33 +66,32 @@ module vga_wb8_extram (
     reg[7:0] cache [511:0];
     reg[8:0] cache_adr;
 
+    reg[5:0] palette [15:0];
+    initial begin
+        // standard EGA palette
+        palette[0] = 6'b000000;
+        palette[1] = 6'b000010;
+        palette[2] = 6'b001000;
+        palette[3] = 6'b001010;
+        palette[4] = 6'b100000;
+        palette[5] = 6'b100010;
+        palette[6] = 6'b100100;
+        palette[7] = 6'b101010;
+        palette[8] = 6'b010101;
+        palette[9] = 6'b010111;
+        palette[10] = 6'b011101;
+        palette[11] = 6'b011111;
+        palette[12] = 6'b110101;
+        palette[13] = 6'b110111;
+        palette[14] = 6'b111101;
+        palette[15] = 6'b111111;
+    end
+
     reg[23:0] tmp;
 
     wire line_double;
     assign line_double = (mode == MODE_GRAPHICS_320);
 
-    // default 16-color EGA palette
-    function[5:0] RGBcolor;
-        input[3:0] incolor;
-        case(incolor)
-            0: RGBcolor = 6'b000000;
-            1: RGBcolor = 6'b000010;
-            2: RGBcolor = 6'b001000;
-            3: RGBcolor = 6'b001010;
-            4: RGBcolor = 6'b100000;
-            5: RGBcolor = 6'b100010;
-            6: RGBcolor = 6'b100100;
-            7: RGBcolor = 6'b101010;
-            8: RGBcolor = 6'b010101;
-            9: RGBcolor = 6'b010111;
-            10: RGBcolor = 6'b011101;
-            11: RGBcolor = 6'b011111;
-            12: RGBcolor = 6'b110101;
-            13: RGBcolor = 6'b110111;
-            14: RGBcolor = 6'b111101;
-            15: RGBcolor = 6'b111111;
-        endcase
-    endfunction
 
     reg[3:0] coloridx = 0;
     always @(*) begin
@@ -174,7 +173,7 @@ module vga_wb8_extram (
         end
 
         if(mode != MODE_GRAPHICS_320) begin
-            {O_vga_r1, O_vga_r0, O_vga_g1, O_vga_g0, O_vga_b1, O_vga_b0} <= RGBcolor(coloridx);
+            {O_vga_r1, O_vga_r0, O_vga_g1, O_vga_g0, O_vga_b1, O_vga_b0} <= palette[coloridx];
         end else begin
             {O_vga_r1, O_vga_r0, O_vga_g1, O_vga_g0, O_vga_b1, O_vga_b0} <= col_is_visible ? ram_dat[5:0] : 6'b0;
         end
