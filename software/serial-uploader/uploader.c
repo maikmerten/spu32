@@ -366,7 +366,12 @@ int main(int argc, char *argv[])
 
     char *filename = NULL;
     char *portname = "/dev/ttyUSB1";
+    if(access( portname, F_OK) == -1 ) {
+        portname = "/dev/ttyUSB0";
+    }
+    
     char enterconsole = 0, program = 0;
+
 
     int c;
     opterr = 0;
