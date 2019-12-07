@@ -38,17 +38,18 @@ int detectMemsize() {
 }
 #pragma GCC pop_options
 
+#define VGA_BASE *((volatile uint32_t*) DEV_VGA_BASE)
+#define VGA_MODE *((volatile uint8_t*) DEV_VGA_MODE)
+
+
 int main()
 {
 
 	int memsize = detectMemsize();
 	printf("Detected memory size: %d bytes\n\r", memsize);
 
-	volatile uint32_t* DEV_VGA_BASE = (volatile uint32_t*) 0xFFFF0000;
-	volatile uint8_t* DEV_VGA_MODE = (volatile uint8_t*) 0xFFFF0008;
-
-	*DEV_VGA_BASE = (32 * 1024);
-	*DEV_VGA_MODE = 3;
+	VGA_BASE = (32 * 1024);
+	VGA_MODE = 3;
 
 
 	while (1)

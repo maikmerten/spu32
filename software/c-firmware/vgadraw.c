@@ -1,9 +1,10 @@
 #include <libtinyc.h>
 #include <libspu32.h>
 #include <stdint.h>
+#include "../asm/devices.h"
 
-volatile uint32_t* DEV_VGA_BASE = (volatile uint32_t*) 0xFFFF0000;
-volatile uint8_t* DEV_VGA_MODE = (volatile uint8_t*) 0xFFFF0008;
+#define VGA_BASE *((volatile uint32_t*)DEV_VGA_BASE)
+#define VGA_MODE *((volatile uint8_t*)DEV_VGA_MODE)
 
 const int screenwidth = 320;
 const int screenheight = 240;
@@ -22,8 +23,8 @@ void setVGABase(uint32_t baseadr) {
 
 void switchVGABase() {
     // switch to 320x240 graphics mode
-    *DEV_VGA_MODE = 3;
-    *DEV_VGA_BASE = vgabase;
+    VGA_MODE = 3;
+    VGA_BASE = vgabase;
 }
 
 

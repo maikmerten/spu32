@@ -1,11 +1,13 @@
 #include <libtinyc.h>
 #include <libspu32.h>
 #include <stdint.h>
+#include "../asm/devices.h"
+
+#define VGA_BASE *((volatile uint32_t*)DEV_VGA_BASE)
+#define VGA_MODE *((volatile uint8_t*)DEV_VGA_MODE)
+
 
 int main() {
-
-    volatile uint32_t* DEV_VGA_BASE = (volatile uint32_t*) 0xFFFF0000;
-    volatile uint8_t* DEV_VGA_MODE = (volatile uint8_t*) 0xFFFF0008;
 
     uint32_t vgabase = (16*1024);
     int32_t maxoff = (960 * 320);
@@ -13,11 +15,11 @@ int main() {
     int32_t dir = 320;
 
     // switch to graphics mode
-    *DEV_VGA_MODE = 1;
+    VGA_MODE = 1;
 
 	while(1) {
 
-        *DEV_VGA_BASE = (vgabase + off);
+        VGA_BASE = (vgabase + off);
         off += dir;
 
         if(off == 0 && dir < 0) {
@@ -33,7 +35,7 @@ int main() {
         }
 
         for(uint32_t delay = 5000; delay > 0; --delay) {
-            uint32_t tmp = *DEV_VGA_BASE;
+            uint32_t tmp = VGA_BASE;
         }
 	}
 

@@ -35,12 +35,8 @@ module vga_wb8_extram (
     localparam v_back_porch = 33;
 
 
-    localparam colhi = $clog2(h_front_porch + h_pulse + h_back_porch + h_visible);
-    localparam rowhi = $clog2(v_front_porch + v_pulse + v_back_porch + v_visible);
-
-
-    reg[colhi:0] col = 0;
-    reg[rowhi:0] row = 0;
+    reg[9:0] col = 0; // maximum of 1024 columns
+    reg[9:0] row = 0; // maximum of 1024 rows
     
     reg col_is_visible = 0;
     reg row_is_visible = 0;
@@ -71,6 +67,7 @@ module vga_wb8_extram (
 
     reg[23:0] palette [255:0];
     initial $readmemh("vga/vga_palette_256.dat", palette, 0, 255);
+    reg[31:0] palette_update;
 
     reg[23:0] tmp;
 
@@ -223,28 +220,68 @@ module vga_wb8_extram (
         if(I_wb_stb) begin
             if(I_wb_we) begin
                 case(I_wb_adr[3:0])
-                    0: tmp[7:0] <= I_wb_dat;
-                    1: tmp[15:8] <= I_wb_dat;
-                    2: tmp[23:16] <= I_wb_dat;
-                    3: ram_base <= tmp[18:0];
-                    4: tmp[7:0] <= I_wb_dat;
-                    5: tmp[15:8] <= I_wb_dat;
-                    6: tmp[23:16] <= I_wb_dat;
-                    7: font_base <= tmp[18:0];
-                    default: mode <= I_wb_dat[1:0];
+                    // write access to bitmap/text base address
+                    4'h0: tmp[7:0] <= I_wb_dat;
+                    4'h1: tmp[15:8] <= I_wb_dat;
+                    4'h2: tmp[23:16] <= I_wb_dat;
+                    4'h3: ram_base <= tmp[18:0];
+
+                    // write access to font base address
+                    4'h4: tmp[7:0] <= I_wb_dat;
+                    4'h5: tmp[15:8] <= I_wb_dat;
+                    4'h6: tmp[23:16] <= I_wb_dat;
+                    4'h7: font_base <= tmp[18:0];
+
+                    // write access to update color palette
+                    // TODO: actually implement
+                    4'h8: palette_update[7:0] <= I_wb_dat; // B component
+                    4'h9: palette_update[15:8] <= I_wb_dat; // G component
+                    4'hA: palette_update[23:16] <= I_wb_dat; // R component
+                    4'hB: palette_update[31:24] <= I_wb_dat; // palette entry index
+
+                    // 4'hC current line - read only
+                    // 4'hD current line - read only
+
+                    // 4'hE visible line - read only
                     
+                    // write access to graphics mode register
+                    4'hF: mode <= I_wb_dat[1:0];
+
+                    default: begin end
+
                 endcase
             end else begin
                 case(I_wb_adr[3:0])
-                    0: O_wb_dat <= ram_base[7:0];
-                    1: O_wb_dat <= ram_base[15:8];
-                    2: O_wb_dat <= {5'b00000, ram_base[18:16]};
-                    3: O_wb_dat <= 8'b0;
-                    4: O_wb_dat <= font_base[7:0];
-                    5: O_wb_dat <= font_base[15:8];
-                    6: O_wb_dat <= {5'b00000, font_base[18:16]};
-                    7: O_wb_dat <= 8'b0;
-                    default: O_wb_dat <= {6'b000000, mode};
+                    // read access for bitmap/text base address
+                    4'h0: O_wb_dat <= ram_base[7:0];
+                    4'h1: O_wb_dat <= ram_base[15:8];
+                    4'h2: O_wb_dat <= {5'b00000, ram_base[18:16]};
+                    4'h3: O_wb_dat <= 8'b0;
+
+                    // read access for font base address
+                    4'h4: O_wb_dat <= font_base[7:0];
+                    4'h5: O_wb_dat <= font_base[15:8];
+                    4'h6: O_wb_dat <= {5'b00000, font_base[18:16]};
+                    4'h7: O_wb_dat <= 8'b0;
+
+                    // read access to color palette update (quite useless?)
+                    4'h8: O_wb_dat <= palette_update[7:0];
+                    4'h9: O_wb_dat <= palette_update[15:8];
+                    4'hA: O_wb_dat <= palette_update[23:16];
+                    4'hB: O_wb_dat <= palette_update[31:24];
+
+                    // read access to current line
+                    4'hC: begin
+                        O_wb_dat <= row[7:0];
+                        tmp[1:0] <= row[9:8];
+                    end
+                    4'hD: O_wb_dat <= {{6{1'b0}}, tmp[1:0]};
+
+                    // read access to visible line flag
+                    4'hE: O_wb_dat <= {{7{1'b0}}, row_is_visible};
+
+                    // read access to graphics mode register
+                    4'hF: O_wb_dat <= {6'b000000, mode};
                 endcase
             end
         end
