@@ -370,14 +370,17 @@ int main(int argc, char *argv[])
         portname = "/dev/ttyUSB0";
     }
     
-    char enterconsole = 0, program = 0;
+    char enterconsole = 0, program = 0, justReset = 0;
 
 
     int c;
     opterr = 0;
 
-    while ((c = getopt (argc, argv, "cd:f:pt")) != -1) {
+    while ((c = getopt (argc, argv, "rcd:f:pt")) != -1) {
         switch (c) {
+            case 'r':
+                justReset = 1;
+                break;
             case 'c':
                 enterconsole = 1;
                 break;
@@ -407,12 +410,7 @@ int main(int argc, char *argv[])
                 abort ();
         }
     }
-    
-    int fd_file = open (filename, O_RDONLY);
-    if(fd_file == -1) {
-        perror("could not open input file");
-        return 1;
-    }
+
 
     printf("selected serial port: %s\n", portname);
     fd_tty = open(portname, O_RDWR | O_NOCTTY | O_SYNC);
@@ -423,8 +421,18 @@ int main(int argc, char *argv[])
     }
     set_interface_attribs(fd_tty, B115200);
 
-
     toggleReset();
+    if(justReset) {
+        return 0;
+    }
+
+
+    int fd_file = open (filename, O_RDONLY);
+    if(fd_file == -1) {
+        perror("could not open input file");
+        return 1;
+    }
+    
 
     if(program) {
         enableWrite();
