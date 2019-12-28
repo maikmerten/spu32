@@ -388,7 +388,8 @@ extern clock_t	clock();
 ///#define Stop_Timer() End_Time = read_csr(mcycle)
 
 // defines for SPU32
-#define Too_Small_Time 1000
+#include <libspu32.h>
+#define Too_Small_Time 5000
 #define HZ 1000
 #define CLOCK_TYPE "SPU32 milli_time()"
 #define Start_Timer() Begin_Time = (get_milli_time())
