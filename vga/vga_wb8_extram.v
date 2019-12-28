@@ -1,3 +1,5 @@
+`include "vga/vga_palette.v"
+
 module vga_wb8_extram (
         // Wisbhone B4 signals
         input[12:0] I_wb_adr, // 2^13 addresses
@@ -65,10 +67,6 @@ module vga_wb8_extram (
     reg[7:0] cache [511:0];
     reg[8:0] cache_adr;
 
-    reg[23:0] palette [255:0];
-    initial $readmemh("vga/vga_palette_256.dat", palette, 0, 255);
-    reg[31:0] palette_update;
-
     reg[23:0] tmp;
 
     wire line_double;
@@ -89,6 +87,26 @@ module vga_wb8_extram (
         palette_idx = (mode == MODE_GRAPHICS_320) ? ram_dat : {4'h0, coloridx};
     end
 
+    reg[31:0] palette_update;
+    reg palette_update_request = 0;
+    wire palette_update_ack;
+    wire[23:0] palette_rgb;
+    vga_palette vga_palette_inst(
+        .I_clk(I_vga_clk),
+        .I_palette_update(palette_update),
+        .I_update_request(palette_update_request),
+        .I_palette_idx(palette_idx),
+        .O_update_ack(palette_update_ack),
+        .O_rgb(palette_rgb)
+    );
+
+    always @(*) begin
+        if(col_is_visible && row_is_visible) begin
+            {O_vga_r, O_vga_g, O_vga_b} <= palette_rgb;
+        end else begin
+            {O_vga_r, O_vga_g, O_vga_b} <= 24'b0;
+        end
+    end
 
     always @(posedge I_vga_clk) begin
 
@@ -159,12 +177,6 @@ module vga_wb8_extram (
             end
         end
 
-        if(col_is_visible && row_is_visible) begin
-            {O_vga_r, O_vga_g, O_vga_b} <= palette[palette_idx];
-        end else begin
-            {O_vga_r, O_vga_g, O_vga_b} <= 24'b0;
-        end
-
         // generate sync signals
         if(col == h_front_porch - 1) begin
             O_vga_hsync <= 0;
@@ -233,11 +245,13 @@ module vga_wb8_extram (
                     4'h7: font_base <= tmp[18:0];
 
                     // write access to update color palette
-                    // TODO: actually implement
                     4'h8: palette_update[7:0] <= I_wb_dat; // B component
                     4'h9: palette_update[15:8] <= I_wb_dat; // G component
                     4'hA: palette_update[23:16] <= I_wb_dat; // R component
-                    4'hB: palette_update[31:24] <= I_wb_dat; // palette entry index
+                    4'hB: begin 
+                        palette_update[31:24] <= I_wb_dat; // palette entry index
+                        palette_update_request <= !palette_update_ack; // request palette update
+                    end
 
                     // 4'hC current line - read only
                     // 4'hD current line - read only
