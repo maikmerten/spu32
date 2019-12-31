@@ -1,0 +1,19 @@
+[tasks]
+prf
+cvr
+
+[options]
+prf: mode prove
+cvr: mode cover
+
+
+[engines]
+smtbmc
+
+[script]
+read -formal cpu/alu.v
+prep -top spu32_cpu_alu
+
+[files]
+cpu/alu.v alu.v
+cpu/aludefs.vh aludefs.vh

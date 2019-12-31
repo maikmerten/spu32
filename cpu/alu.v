@@ -49,7 +49,7 @@ module spu32_cpu_alu(
         // signed comparison: xor underflow bit with xored sign bit
         lt = (sub[32] ^ myxor[31]);
         
-        eq = (sub === 33'b0);
+        eq = (sub[31:0] === 32'b0);
     end
     
     always @(posedge I_clk) begin
@@ -105,5 +105,60 @@ module spu32_cpu_alu(
 
         end
     end
-        
+
+// --- FORMAL VERIFICATION --- //
+
+`ifdef FORMAL
+
+    function [31:0] trunc_33_to_32(input [32:0] val33);
+        trunc_33_to_32 = val33[31:0];
+    endfunction
+
+    function signed[31:0] to_signed(input[31:0] val);
+        to_signed[31:0] = val[31:0];
+    endfunction
+
+    always @(*) begin
+        assert(sum == (I_dataS1 + I_dataS2));
+        assert(sub[31:0] == (I_dataS1 - I_dataS2));
+        assert(eq == (I_dataS1 == I_dataS2));
+        assert(lt == (to_signed(I_dataS1)) < to_signed(I_dataS2));
+        assert(ltu == (I_dataS1 < I_dataS2));
+
+        if(I_dataS1 != I_dataS2) begin
+            assert(sub[31:0] != 32'b0);
+        end
+    end
+
+    reg past_valid = 1'b0;
+
+    always @(posedge I_clk) begin
+        past_valid <= 1;
+        if(past_valid) begin
+
+            if($past(I_en) && !$past(I_reset)) begin
+                if($past(I_aluop) == `ALUOP_ADD) assert(O_data[31:0] == trunc_33_to_32($past(I_dataS1) + $past(I_dataS2)));
+                if($past(I_aluop) == `ALUOP_SUB) assert(O_data[31:0] == trunc_33_to_32($past(I_dataS1) - $past(I_dataS2)));
+                if($past(I_aluop) == `ALUOP_AND) assert(O_data[31:0] == ($past(I_dataS1) & $past(I_dataS2)));
+                if($past(I_aluop) == `ALUOP_OR) assert(O_data[31:0] == ($past(I_dataS1) | $past(I_dataS2)));
+                if($past(I_aluop) == `ALUOP_XOR) assert(O_data[31:0] == ($past(I_dataS1) ^ $past(I_dataS2)));
+                if($past(I_aluop) == `ALUOP_SLT) begin
+                    assert(O_data[0] == to_signed($past(I_dataS1)) < to_signed($past(I_dataS2)));
+                    assert(O_data[31:1] == 31'b0);
+                end
+                if($past(I_aluop) == `ALUOP_SLTU) begin
+                    assert(O_data[0] == $past(I_dataS1) < $past(I_dataS2));
+                    assert(O_data[31:1] == 31'b0);
+                end
+            end
+
+            if($past(I_reset)) begin
+                assert(O_busy == 1'b0);
+            end
+        end
+    end
+
+`endif
+
+
 endmodule
