@@ -133,11 +133,11 @@ module spu32_cpu_alu(
         if(past_valid) begin
 
             if($past(I_en) && !$past(I_reset)) begin
-                if($past(I_aluop) == `ALUOP_ADD) assert(O_data[31:0] == trunc_33_to_32($past(I_dataS1) + $past(I_dataS2)));
-                if($past(I_aluop) == `ALUOP_SUB) assert(O_data[31:0] == trunc_33_to_32($past(I_dataS1) - $past(I_dataS2)));
-                if($past(I_aluop) == `ALUOP_AND) assert(O_data[31:0] == ($past(I_dataS1) & $past(I_dataS2)));
-                if($past(I_aluop) == `ALUOP_OR) assert(O_data[31:0] == ($past(I_dataS1) | $past(I_dataS2)));
-                if($past(I_aluop) == `ALUOP_XOR) assert(O_data[31:0] == ($past(I_dataS1) ^ $past(I_dataS2)));
+                if($past(I_aluop) == `ALUOP_ADD) assert(O_data == trunc_33_to_32($past(I_dataS1) + $past(I_dataS2)));
+                if($past(I_aluop) == `ALUOP_SUB) assert(O_data == trunc_33_to_32($past(I_dataS1) - $past(I_dataS2)));
+                if($past(I_aluop) == `ALUOP_AND) assert(O_data == ($past(I_dataS1) & $past(I_dataS2)));
+                if($past(I_aluop) == `ALUOP_OR) assert(O_data == ($past(I_dataS1) | $past(I_dataS2)));
+                if($past(I_aluop) == `ALUOP_XOR) assert(O_data == ($past(I_dataS1) ^ $past(I_dataS2)));
                 if($past(I_aluop) == `ALUOP_SLT) begin
                     assert(O_data[0] == $signed($past(I_dataS1)) < $signed($past(I_dataS2)));
                     assert(O_data[31:1] == 31'b0);
@@ -146,7 +146,15 @@ module spu32_cpu_alu(
                     assert(O_data[0] == $past(I_dataS1) < $past(I_dataS2));
                     assert(O_data[31:1] == 31'b0);
                 end
+
+                `ifdef SINGLE_CYCLE_SHIFTER
+                    if($past(I_aluop) == `ALUOP_SLL) assert(O_data == ($past(I_dataS1) << $past(I_dataS2[4:0])));
+                    if($past(I_aluop) == `ALUOP_SRL) assert(O_data == ($past(I_dataS1) >> $past(I_dataS2[4:0])));
+                    if($past(I_aluop) == `ALUOP_SRA) assert(O_data == $unsigned($signed($past(I_dataS1)) >>> $past(I_dataS2[4:0])));
+                `endif
+
             end
+
 
             if($past(I_reset)) begin
                 assert(O_busy == 1'b0);

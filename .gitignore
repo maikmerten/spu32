@@ -16,3 +16,5 @@ software/serial-uploader/uploader
 software/testgen/testcollection.s
 software/testgen/.testcollection.s.swp
 .vscode/*
+cpu/alu_prf/
+cpu/alu_cvr/
