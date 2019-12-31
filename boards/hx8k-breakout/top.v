@@ -1,3 +1,5 @@
+`default_nettype none
+
 `include "./boards/hx8k-breakout/config-local.vh"
 
 `include "./cpu/cpu.v"
