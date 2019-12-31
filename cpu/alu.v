@@ -1,3 +1,5 @@
+`default_nettype none
+
 `include "./cpu/aludefs.vh"
 
 module spu32_cpu_alu(
@@ -13,7 +15,7 @@ module spu32_cpu_alu(
         output reg O_ltu,
         output reg O_eq
     );
-    
+   
     reg[31:0] result, sum, myor, myxor, myand;
     reg[32:0] sub; // additional bit for underflow detection
     reg eq, lt, ltu, busy = 0;
@@ -23,12 +25,10 @@ module spu32_cpu_alu(
 
 //`define SINGLE_CYCLE_SHIFTER
 `ifdef SINGLE_CYCLE_SHIFTER
-    wire[31:0] sll, srl, sra;
-    wire signed[31:0] I_dataS1_signed;
-    assign I_dataS1_signed[31:0] = I_dataS1[31:0];
+    wire[31:0] sll, sr;
     assign sll = (I_dataS1 << I_dataS2[4:0]);
-    assign srl = (I_dataS1 >> I_dataS2[4:0]);
-    assign sra = (I_dataS1_signed >>> I_dataS2[4:0]);
+    // sign-extension for SRA, zero-extension for SRL
+    assign sr = ($signed({I_aluop[0] ? I_dataS1[31] : 1'b0, I_dataS1}) >>> I_dataS2[4:0]);
     assign O_busy = 0;
 `else
     assign O_busy = busy;
@@ -94,8 +94,7 @@ module spu32_cpu_alu(
                 `else
                 // single-cycle shifting
                 `ALUOP_SLL: result <= sll;
-                `ALUOP_SRA: result <= sra;
-                `ALUOP_SRL: result <= srl;
+                `ALUOP_SRA, `ALUOP_SRL: result <= sr;
                 `endif
             endcase
 
