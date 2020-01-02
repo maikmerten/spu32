@@ -13,11 +13,5 @@
 // With the extension board present, RAM capacity is 512 KB.
 // Without the extension board, RAM capacity is 8 KB.
 
-//`define EXTENSION_PRESENT
+`define EXTENSION_PRESENT
 
-
-// === Cache configuration ===
-// Uncomment the following define if you want to include a CPU cache. This improves
-// CPU perfomance by about 25%, but increases FPGA utilization a bit.
-
-//`define ENABLE_CACHE

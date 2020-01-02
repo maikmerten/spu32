@@ -1,5 +1,5 @@
+`default_nettype none
 `include "./cpu/busdefs.vh"
-`include "./cpu/cache.v"
 
 module spu32_cpu_bus_wb8(
         input I_en,
@@ -43,23 +43,6 @@ module spu32_cpu_bus_wb8(
 
     reg mysign = 0;
 
-    `ifdef ENABLE_CACHE
-    wire[31:0] cache_data;
-    wire cache_hit;
-    reg offer_data_to_cache = 0;
-    spu32_cpu_cache cache_inst(
-        .I_clk(CLK_I),
-        .I_en(I_en),
-        .I_reset(RST_I),
-        .I_offer_data(offer_data_to_cache),
-        .I_busop(I_op),
-        .I_addr(I_addr),
-        .I_invalidate_addr(busaddr),
-        .I_data(buffer),
-        .O_data(cache_data),
-        .O_hit(cache_hit)
-    );
-    `endif
 
     always @(*) begin
         // determine number of bytes to be processed
@@ -94,22 +77,10 @@ module spu32_cpu_bus_wb8(
         WE_O <= 0;
         STB_O <= (I_en && (addrcnt != byte_target || STALL_I ));
 
-        `ifdef ENABLE_CACHE
-        offer_data_to_cache <= 0;
-        `endif
-
         if(I_en) begin
             // if enabled, act
             WE_O <= write;
 
-            `ifdef ENABLE_CACHE
-            if(addrcnt == 1 && I_op == `BUSOP_READW && cache_hit) begin
-                busy <= 0;
-                ackcnt <= 0;
-                addrcnt <= 0;
-                buffer <= cache_data;
-            end else
-            `endif
             if(ackcnt != byte_target) begin
                 // we haven't yet received the proper number of ACKs, so we need to
                 // output addresses and receive ACKs
@@ -136,33 +107,19 @@ module spu32_cpu_bus_wb8(
                         2:			buffer[23:16] <= DAT_I;
                         default: begin
                             buffer[31:24] <= DAT_I;
-                            `ifdef ENABLE_CACHE
-                            offer_data_to_cache <= 1;
-                            `endif
                         end
                     endcase
                     ackcnt <= ackcnt_next;
 
-                    `ifndef ENABLE_CACHE
-                    // TODO: find out why this is incompatible with the cache
                     if(ackcnt_next == byte_target) begin
                         // received the correct number of ACKs, prepare for next request
                         busy <= 0;
                         ackcnt <= 0;
                         addrcnt <= 0;
                     end
-                    `endif
-
                 end
 
             end
-            `ifdef ENABLE_CACHE
-            else begin
-                busy <= 0;
-                ackcnt <= 0;
-                addrcnt <= 0;
-            end
-            `endif
 
         end
 
