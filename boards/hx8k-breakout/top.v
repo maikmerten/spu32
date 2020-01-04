@@ -312,7 +312,7 @@ module top(
             .I_wb_stb(ram_stb),
             // Filter out any write requests for the value of 0xFF if the topmost two address bits are 2'b10.
             // Not very elegant, but a very fast way to have sprites with partial transparency.
-            .I_wb_we(cpu_we & !(cpu_adr[31:30] == 2'b10 & cpu_dat == 8'hFF)),
+            .I_wb_we(cpu_we),
             .O_wb_dat(ram_dat),
             .O_wb_ack(ram_ack),
             .O_wb_stall(ram_stall),
