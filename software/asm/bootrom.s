@@ -172,6 +172,8 @@ detect_memory_size_loop:
     addi t1, t1, 1024
     j detect_memory_size_loop
 detect_memory_size_end:
+    # FIXME: this detection routine appears to be unreliable. Find out why.
+    li t1, (512 * 1024) # Hardcode 512 KB for now
     ret
 
 load_from_spi:
