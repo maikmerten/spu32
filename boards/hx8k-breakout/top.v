@@ -52,39 +52,21 @@ module top(
     );
 
     wire clk, clk_pll, pll_locked;
-    `ifdef SLOWCLK
-        // Instantiate a normal PLL, 15.938 MHz
-        SB_PLL40_CORE #(							
-            .FEEDBACK_PATH("SIMPLE"),				
-            .DIVR(4'b0000),
-            .DIVF(7'b1010100),
-            .DIVQ(3'b110),
-            .FILTER_RANGE(3'b001)
-        ) mypll (								
-            .LOCK(pll_locked),					
-            .RESETB(1'b1),						
-            .BYPASS(1'b0),						
-            .REFERENCECLK(clk_12mhz),				
-            .PLLOUTCORE(clk)				
-        );
-        localparam CLOCKFREQ = 15938000;
-    `else
-        // Instantiate a normal PLL, 25.125 MHz
-        SB_PLL40_CORE #(							
-            .FEEDBACK_PATH("SIMPLE"),				
-            .DIVR(4'b0000),
-            .DIVF(7'b1000010),
-            .DIVQ(3'b101),
-            .FILTER_RANGE(3'b001)
-        ) mypll (								
-            .LOCK(pll_locked),					
-            .RESETB(1'b1),						
-            .BYPASS(1'b0),						
-            .REFERENCECLK(clk_12mhz),				
-            .PLLOUTCORE(clk)				
-        );
-        localparam CLOCKFREQ = 25125000;
-    `endif
+    // Instantiate PLL, 25.125 MHz
+    SB_PLL40_CORE #(							
+        .FEEDBACK_PATH("SIMPLE"),				
+        .DIVR(4'b0000),
+        .DIVF(7'b1000010),
+        .DIVQ(3'b101),
+        .FILTER_RANGE(3'b001)
+    ) mypll (								
+        .LOCK(pll_locked),					
+        .RESETB(1'b1),						
+        .BYPASS(1'b0),						
+        .REFERENCECLK(clk_12mhz),				
+        .PLLOUTCORE(clk)				
+    );
+    localparam CLOCKFREQ = 25125000;
 
 
 
@@ -303,6 +285,7 @@ module top(
         wire sram_output_enable;
         wire[18:0] sram_chip_adr;
         assign {sram_a0, sram_a1, sram_a2, sram_a3, sram_a4, sram_a5, sram_a6, sram_a7, sram_a8, sram_a9, sram_a10, sram_a11, sram_a12, sram_a13, sram_a14, sram_a15, sram_a16, sram_a17, sram_a18} = sram_chip_adr;
+        wire[7:0] sram_chip_dat = {sram_d7, sram_d6, sram_d5, sram_d4, sram_d3, sram_d2, sram_d1, sram_d0};
 
         sram512kx8_wb8_vga sram_inst(
             // wiring to wishbone bus
@@ -328,54 +311,17 @@ module top(
             .O_output_enable(sram_output_enable)
         );
 
-        SB_IO #(.PIN_TYPE(6'b 1010_01), .PULLUP(1'b 0)) io_block_instance0 (
-            .PACKAGE_PIN(sram_d0),
-            .OUTPUT_ENABLE(sram_output_enable),
-            .D_OUT_0(sram_dat_to_chip[0]),
-            .D_IN_0(sram_dat_from_chip[0])
-        );
-        SB_IO #(.PIN_TYPE(6'b 1010_01), .PULLUP(1'b 0)) io_block_instance1 (
-            .PACKAGE_PIN(sram_d1),
-            .OUTPUT_ENABLE(sram_output_enable),
-            .D_OUT_0(sram_dat_to_chip[1]),
-            .D_IN_0(sram_dat_from_chip[1])
-        );
-        SB_IO #(.PIN_TYPE(6'b 1010_01), .PULLUP(1'b 0)) io_block_instance2 (
-            .PACKAGE_PIN(sram_d2),
-            .OUTPUT_ENABLE(sram_output_enable),
-            .D_OUT_0(sram_dat_to_chip[2]),
-            .D_IN_0(sram_dat_from_chip[2])
-        );
-        SB_IO #(.PIN_TYPE(6'b 1010_01), .PULLUP(1'b 0)) io_block_instance3 (
-            .PACKAGE_PIN(sram_d3),
-            .OUTPUT_ENABLE(sram_output_enable),
-            .D_OUT_0(sram_dat_to_chip[3]),
-            .D_IN_0(sram_dat_from_chip[3])
-        );
-        SB_IO #(.PIN_TYPE(6'b 1010_01), .PULLUP(1'b 0)) io_block_instance4 (
-            .PACKAGE_PIN(sram_d4),
-            .OUTPUT_ENABLE(sram_output_enable),
-            .D_OUT_0(sram_dat_to_chip[4]),
-            .D_IN_0(sram_dat_from_chip[4])
-        );
-        SB_IO #(.PIN_TYPE(6'b 1010_01), .PULLUP(1'b 0)) io_block_instance5 (
-            .PACKAGE_PIN(sram_d5),
-            .OUTPUT_ENABLE(sram_output_enable),
-            .D_OUT_0(sram_dat_to_chip[5]),
-            .D_IN_0(sram_dat_from_chip[5])
-        );
-        SB_IO #(.PIN_TYPE(6'b 1010_01), .PULLUP(1'b 0)) io_block_instance6 (
-            .PACKAGE_PIN(sram_d6),
-            .OUTPUT_ENABLE(sram_output_enable),
-            .D_OUT_0(sram_dat_to_chip[6]),
-            .D_IN_0(sram_dat_from_chip[6])
-        );
-        SB_IO #(.PIN_TYPE(6'b 1010_01), .PULLUP(1'b 0)) io_block_instance7 (
-            .PACKAGE_PIN(sram_d7),
-            .OUTPUT_ENABLE(sram_output_enable),
-            .D_OUT_0(sram_dat_to_chip[7]),
-            .D_IN_0(sram_dat_from_chip[7])
-        );
+        // instantiate IO blocks for tristate data lines
+        genvar i;
+        for(i = 0; i < 8; i = i + 1) begin
+            SB_IO #(.PIN_TYPE(6'b 1010_01), .PULLUP(1'b 0)) io_block_instance (
+                .PACKAGE_PIN(sram_chip_dat[i]),
+                .OUTPUT_ENABLE(sram_output_enable),
+                .D_OUT_0(sram_dat_to_chip[i]),
+                .D_IN_0(sram_dat_from_chip[i])
+            );            
+        end
+
     `else
         // without the extension board, generate 8KB of RAM out of BRAM ressources
         bram_wb8 #(
