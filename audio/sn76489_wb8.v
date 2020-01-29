@@ -121,7 +121,7 @@ module sn76489_modulator
     )
     (
         input I_clk,
-        input[7:0] I_audio_pcm,
+        input[(BITS - 1):0] I_audio_pcm,
         output reg O_audio_modulated
     );
 
@@ -142,7 +142,7 @@ endmodule
 
 module sn76489_wb8
     #(
-        parameter FREQDIVIDE = 110
+        parameter FREQDIVIDE = 112
     )
     (
         // Wisbhone B4 signals
