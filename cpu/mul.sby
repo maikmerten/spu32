@@ -1,0 +1,17 @@
+[tasks]
+bmc
+
+[options]
+bmc: mode bmc
+depth 100
+
+
+[engines]
+smtbmc
+
+[script]
+read -formal mul.v
+prep -top spu32_cpu_mul
+
+[files]
+mul.v
