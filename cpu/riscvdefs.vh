@@ -20,6 +20,8 @@
 
     `define OP_JAL		5'b11011	// UJ-type
 
+    `define OP_MULDIV   5'b01100    // R-type
+
     // Functions
     `define FUNC_BEQ	3'b000
     `define FUNC_BNE	3'b001
@@ -61,6 +63,11 @@
 
     `define FUNC_ECALL_EBREAK	3'b000
     `define FUNC_CSRRW			3'b001
+
+    `define FUNC_MUL    3'b000
+    `define FUNC_MULH   3'b001
+    `define FUNC_MULHSU 3'b010
+    `define FUNC_MULHU  3'b100
 
     // imm[11:0] of SYSTEM-opcode encodes function
     `define SYSTEM_ECALL	12'b000000000000
