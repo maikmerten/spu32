@@ -20,8 +20,6 @@
 
     `define OP_JAL		5'b11011	// UJ-type
 
-    `define OP_MULDIV   5'b01100    // R-type
-
     // Functions
     `define FUNC_BEQ	3'b000
     `define FUNC_BNE	3'b001

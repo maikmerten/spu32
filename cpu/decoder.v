@@ -65,15 +65,19 @@ module spu32_cpu_decoder(
         endcase
         
         // OP_OP
-        case(funct3)
-            `FUNC_ADD_SUB:  aluop_op = funct7[5] ? `ALUOP_SUB : `ALUOP_ADD;
-            `FUNC_SLL:      aluop_op = `ALUOP_SLL;
-            `FUNC_SLT:      aluop_op = `ALUOP_SLT;
-            `FUNC_SLTU:     aluop_op = `ALUOP_SLTU;
-            `FUNC_XOR:      aluop_op = `ALUOP_XOR;
-            `FUNC_SRL_SRA:  aluop_op = funct7[5] ? `ALUOP_SRA : `ALUOP_SRL;
-            `FUNC_OR:       aluop_op = `ALUOP_OR;
-            `FUNC_AND:      aluop_op = `ALUOP_AND;
+        case({funct3, funct7[0]})
+            {`FUNC_ADD_SUB, 1'b0}:  aluop_op = funct7[5] ? `ALUOP_SUB : `ALUOP_ADD;
+            {`FUNC_SLL, 1'b0}:      aluop_op = `ALUOP_SLL;
+            {`FUNC_SLT, 1'b0}:      aluop_op = `ALUOP_SLT;
+            {`FUNC_SLTU, 1'b0}:     aluop_op = `ALUOP_SLTU;
+            {`FUNC_XOR, 1'b0}:      aluop_op = `ALUOP_XOR;
+            {`FUNC_SRL_SRA, 1'b0}:  aluop_op = funct7[5] ? `ALUOP_SRA : `ALUOP_SRL;
+            {`FUNC_OR, 1'b0}:       aluop_op = `ALUOP_OR;
+            {`FUNC_AND, 1'b0}:      aluop_op = `ALUOP_AND;
+            {`FUNC_MUL, 1'b1}:      aluop_op = `ALUOP_MUL;
+            {`FUNC_MULH, 1'b1}:     aluop_op = `ALUOP_MULH;
+            {`FUNC_MULHSU, 1'b1}:   aluop_op = `ALUOP_MULHSU;
+            {`FUNC_MULHU, 1'b1}:    aluop_op = `ALUOP_MULHU;
             default:        aluop_op = `ALUOP_ADD;
         endcase
 
