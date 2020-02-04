@@ -1,6 +1,7 @@
 `default_nettype none
 
 `include "./cpu/aludefs.vh"
+`include "./cpu/mul.v"
 
 module spu32_cpu_alu(
         input I_clk,
@@ -23,15 +24,57 @@ module spu32_cpu_alu(
 
     assign O_data = result;
 
+
+    wire[63:0] mul_result;
+    wire mul_busy;
+    reg mul_en, mul_s1_signed, mul_s2_signed, mul_hi;
+    always @(*) begin
+        mul_s1_signed = 1'b0;
+        mul_s2_signed = 1'b0;
+        mul_hi = 1'b1;
+        case({I_en, I_aluop})
+            {1'b1, `ALUOP_MUL}: begin
+                mul_en = 1'b1;
+                mul_hi = 1'b0;
+            end
+            {1'b1, `ALUOP_MULH}: begin
+                mul_en = 1'b1;
+                mul_s1_signed = 1'b1;
+                mul_s2_signed = 1'b1;
+            end
+            {1'b1, `ALUOP_MULHSU}: begin
+                mul_en = 1'b1;
+                mul_s1_signed = 1'b1;
+            end
+            {1'b1, `ALUOP_MULHU}: mul_en = 1'b1;
+            default: mul_en = 1'b0;
+        endcase
+    end
+    
+    // multiplication unit
+    spu32_cpu_mul mul_inst(
+        .I_clk(I_clk),
+        .I_en(mul_en),
+        .I_reset(I_reset),
+        .I_s1(I_dataS1),
+        .I_s1_signed(mul_s1_signed),
+        .I_s2(I_dataS2),
+        .I_s2_signed(mul_s2_signed),
+        .I_hi(mul_hi),
+        .O_result(mul_result),
+        .O_busy(mul_busy)
+    );
+
+
 //`define SINGLE_CYCLE_SHIFTER
 `ifdef SINGLE_CYCLE_SHIFTER
     wire[31:0] sll, sr;
     assign sll = (I_dataS1 << I_dataS2[4:0]);
     // sign-extension for SRA, zero-extension for SRL
     assign sr = ($signed({I_aluop[0] ? I_dataS1[31] : 1'b0, I_dataS1}) >>> I_dataS2[4:0]);
-    assign O_busy = 0;
+    assign O_busy = mul_busy;
 `else
-    assign O_busy = busy;
+    assign O_busy = (busy || mul_busy);
 `endif
 
     always @(*) begin
@@ -96,6 +139,10 @@ module spu32_cpu_alu(
                 `ALUOP_SLL: result <= sll;
                 `ALUOP_SRA, `ALUOP_SRL: result <= sr;
                 `endif
+
+                `ALUOP_MUL: result <= mul_result[31:0];
+                `ALUOP_MULH, `ALUOP_MULHSU, `ALUOP_MULHU: result <= mul_result[63:32];
+
             endcase
 
             O_lt <= lt;
