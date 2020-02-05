@@ -15,7 +15,7 @@ all: example.bin interrupts.bin chainreaction.bin memtest.bin selftest.bin
 	$(CC) $(CFLAGS) -o $@ crt0.s $< $(LDFLAGS)
 	$(DUMP) -d $@
 
-%.o: %.c libtinyc/*.h libtinyc/*.c libspu32/*.h libspu32/*.c
+%.o: %.c *.s libtinyc/*.h libtinyc/*.c libspu32/*.h libspu32/*.c
 	cd libtinyc && $(MAKE)
 	cd libspu32 && $(MAKE)
 	$(CC) $(CFLAGS) -c $<
