@@ -10,8 +10,9 @@ depth 100
 smtbmc
 
 [script]
-read -formal mul.v
+read -formal cpu/mul.v
 prep -top spu32_cpu_mul
 
 [files]
-mul.v
+cpu/mul.v mul.v
+cpu/aludefs.vh aludefs.vh

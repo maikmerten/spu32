@@ -27,40 +27,14 @@ module spu32_cpu_alu(
 
     wire[63:0] mul_result;
     wire mul_busy;
-    reg mul_en, mul_s1_signed, mul_s2_signed, mul_hi;
-    always @(*) begin
-        mul_s1_signed = 1'b0;
-        mul_s2_signed = 1'b0;
-        mul_hi = 1'b1;
-        case({I_en, I_aluop})
-            {1'b1, `ALUOP_MUL}: begin
-                mul_en = 1'b1;
-                mul_hi = 1'b0;
-            end
-            {1'b1, `ALUOP_MULH}: begin
-                mul_en = 1'b1;
-                mul_s1_signed = 1'b1;
-                mul_s2_signed = 1'b1;
-            end
-            {1'b1, `ALUOP_MULHSU}: begin
-                mul_en = 1'b1;
-                mul_s1_signed = 1'b1;
-            end
-            {1'b1, `ALUOP_MULHU}: mul_en = 1'b1;
-            default: mul_en = 1'b0;
-        endcase
-    end
-    
     // multiplication unit
     spu32_cpu_mul mul_inst(
         .I_clk(I_clk),
-        .I_en(mul_en),
+        .I_en(I_en),
+        .I_op(I_aluop),
         .I_reset(I_reset),
         .I_s1(I_dataS1),
-        .I_s1_signed(mul_s1_signed),
         .I_s2(I_dataS2),
-        .I_s2_signed(mul_s2_signed),
-        .I_hi(mul_hi),
         .O_result(mul_result),
         .O_busy(mul_busy)
     );
