@@ -423,7 +423,11 @@ int main(int argc, char *argv[])
 
     toggleReset();
     if(justReset) {
-        return 0;
+        if(!enterconsole) {
+            return 0;
+        } else {
+            console();
+        }
     }
 
 
