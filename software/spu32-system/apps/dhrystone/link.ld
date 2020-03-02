@@ -7,6 +7,7 @@
  . = 0x0;
  .text :
  {
+ *(.text._start)    
  *(.text)
  }
  /* data: Initialized data segment */
