@@ -293,14 +293,14 @@ void do_run(char* arg1)
     }
 
     if (!error) {
-        uint32_t (*program)(char**, uint32_t nargs) = (void*)loadaddr;
+        uint32_t (*program)(uint32_t nargs, char** argv) = (void*)loadaddr;
 
-        uint32_t nargs = count_arguments();
+        uint32_t argn = count_arguments();
 
         // create array of pointers to program argument strings
-        char* programargs[nargs];
-        for (uint32_t i = 0; i < nargs; ++i) {
-            programargs[i] = find_argument(i);
+        char* argv[argn];
+        for (uint32_t i = 0; i < argn; ++i) {
+            argv[i] = find_argument(i);
         }
 
         // null-terminate arguments in buffer
@@ -310,7 +310,7 @@ void do_run(char* arg1)
             }
         }
 
-        uint32_t exitcode = (*program)(programargs, nargs);
+        uint32_t exitcode = (*program)(argn, argv);
 
         printf("\n\rexit code: %d\n\r", exitcode);
     }
