@@ -1,0 +1,28 @@
+#ifndef DEVICES_H
+    #define DEVICES_H
+
+
+    #define DEV_VGA_BASE 0xFFFF0000
+    #define DEV_VGA_FONT 0xFFFF0004
+    #define DEV_VGA_PALETTE 0xFFFF0008
+    #define DEV_VGA_LINE_NUMBER 0xFFFF000C
+    #define DEV_VGA_LINE_VISIBLE 0xFFFF000E
+    #define DEV_VGA_MODE 0xFFFF000F
+
+    #define DEV_UART_DATA 0xFFFFF800
+    #define DEV_UART_RX_READY 0xFFFFF801
+    #define DEV_UART_TX_READY 0xFFFFF802
+
+    #define DEV_SPI_DATA 0xFFFFF900
+    #define DEV_SPI_SELECT 0xFFFFF901
+    #define DEV_SPI_READY 0xFFFFF902
+
+    #define DEV_TIMER 0xFFFFFD00
+    #define DEV_TIMER_INTERRUPT 0xFFFFFD04
+
+    #define DEV_LED 0xFFFFFFFF
+
+    #define DEV_PRNG 0xFFFFFE00
+
+
+#endif
