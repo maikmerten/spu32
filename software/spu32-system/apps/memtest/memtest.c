@@ -1,6 +1,6 @@
 #include <libtinyc.h>
 #include <stdint.h>
-#include "../asm/devices.h"
+#include "../../bios/devices.h"
 
 inline int get_prng_value() {
 	volatile int* dev = (int*)DEV_PRNG;
@@ -55,7 +55,7 @@ int main()
 	while (1)
 	{
 		const int base = (4 * 1024); // start at 4K, don't overwrite memtest program
-		const int end = (memsize - 1024); // leave top 1K intact, don't trash the stack
+		const int end = (memsize - (64 * 1024)); // leave top 64K intact, don't trash environment
 
 		volatile unsigned char *bytePtr;
 		volatile unsigned int *intPtr;

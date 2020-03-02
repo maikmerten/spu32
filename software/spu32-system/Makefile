@@ -1,5 +1,5 @@
 
-SUBDIRS = libtinyc boot-stage1 bios boot-stage2 shell apps
+SUBDIRS = libtinyc libspu32 boot-stage1 bios boot-stage2 shell apps
 
 .PHONY: clean subdirs $(SUBDIRS)
 
