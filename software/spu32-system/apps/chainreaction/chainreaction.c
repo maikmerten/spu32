@@ -478,7 +478,7 @@ void gameloop() {
     read_string(buf, sizeof(buf), 0);
 }
 
-void gamemenu() {
+int gamemenu() {
 	printf(ANSI_CLEAR_SCREEN);
 	printf(ANSI_HOME);
 	printf("=== CHAIN REACTION ===\n\n\r");
@@ -488,11 +488,16 @@ void gamemenu() {
 	printf("Newly aquired fields may in turn explode, possibly causing a chain reaction.\n\n\r");
 	printf(ANSI_COLOR_RESET);
 	printf("A player wins if no fields are left to the other player.\n\n\r");
-	printf("Enter number of players (1 or 2): ");
+	printf("Enter number of players (1 or 2) or 0 to exit: ");
 	char buf[2];
 	read_string(buf, sizeof(buf), 1);
 	int players = parse_int(buf);
+	if(players == 0) {
+		return 1;
+	}
+
 	ki = players == 1 ? 1 : 0;
+	return 0;
 }
 
 // -------------
@@ -501,7 +506,11 @@ void gamemenu() {
 
 int main(void) {
     while(1) {
-		gamemenu();
+		int exit = gamemenu();
+		if(exit) {
+			break;
+		}
         gameloop();
     }
+	return 0;
 }
