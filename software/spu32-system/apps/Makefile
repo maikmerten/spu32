@@ -8,7 +8,7 @@ COPY=riscv64-unknown-elf-objcopy
 .PHONY: clean
 
 
-all: argtest.bin mandel.bin memtest.bin dhryston.bin
+all: argtest.bin mandel.bin memtest.bin dhryston.bin chreact.bin
 
 
 %.bin: %.elf
@@ -26,6 +26,9 @@ memtest.elf: ./memtest/*.* crt0.s ../libtinyc/*.a ../libspu32/*.a
 dhryston.bin: ./dhrystone/*.* ../libtinyc/*.a
 	cd dhrystone && $(MAKE)
 	cp dhrystone/dhrystone_main.bin dhryston.bin
+
+chreact.elf: ./chainreaction/*.* crt0.s ../libtinyc/*.a ../libspu32/*.a
+	$(CC) $(CFLAGS) -o $@ chainreaction/chainreaction.c crt0.s $(LDFLAGS)
 
 clean:
 	rm -rf *.o *.elf *.bin
