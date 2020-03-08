@@ -349,7 +349,7 @@ signed int evaluateField(char f[SIZEX][SIZEY], char p) {
 				score += 4 - getCapacity(x, y);
 				// small bonus for fields that are ready to explode
 				score += isCritical(f, x, y);
-			} else {
+			} else if(owner == otherplayer) {
 				++otherfields;
 			}
 		}
