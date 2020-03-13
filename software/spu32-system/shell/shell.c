@@ -5,7 +5,6 @@
 
 char inputbuf[128];
 
-
 void clear_buf(char* buf, uint32_t len)
 {
     for (uint32_t i = 0; i < len; ++i) {
@@ -238,26 +237,35 @@ void do_print(char* arg1)
     }
 }
 
-void do_run(char* arg1)
+int do_run(char* arg1, char in_bin)
 {
 
     uint32_t arglen = strlen(arg1);
-    char prgfile[arglen + 5];
-    strcpy(prgfile, arg1);
+    char prgfile[5 + arglen + 5];
+    clear_buf(prgfile, sizeof prgfile);
 
-    // append suffix for executable files and null-terminate
-    prgfile[arglen] = '.';
-    prgfile[arglen + 1] = 'b';
-    prgfile[arglen + 2] = 'i';
-    prgfile[arglen + 3] = 'n';
-    prgfile[arglen + 4] = 0;
+    if (in_bin) {
+        // prepend "/bin" prefix
+        strcpy(prgfile, "/bin/");
+
+        // copy in binary name
+        strcpy(prgfile + 5, arg1);
+
+        // append ".bin" suffix;
+        strcpy(prgfile + 5 + arglen, ".bin");
+    } else {
+        // copy in binary name
+        strcpy(prgfile, arg1);
+
+        // append ".bin" suffix;
+        strcpy(prgfile + arglen, ".bin");
+    }
 
     uint32_t error = 0;
     filehandle_t fh;
     result_t res = fs_open(&fh, prgfile, MODE_READ);
     if (res != RESULT_OK) {
-        printf("could not open %s\n\r", prgfile);
-        return;
+        return 1;
     }
 
     uint32_t maxbytes = (512 - 64) * 1024;
@@ -267,7 +275,7 @@ void do_run(char* arg1)
     if (size > maxbytes) {
         printf("%s is %d bytes, only up to %d bytes allowed\n\r", prgfile, size, maxbytes);
         fs_close(fh);
-        return;
+        return 1;
     }
 
     uint32_t read;
@@ -306,6 +314,7 @@ void do_run(char* arg1)
 
         printf("\n\rexit code: %d\n\r", exitcode);
     }
+    return error;
 }
 
 void do_cp(char* arg1, char* arg2)
@@ -351,8 +360,9 @@ void execute_input()
         return;
     }
     get_argument(arg0, sizeof(arg0), 0);
-
-    if (strcmp(arg0, "ls") == 0 || strcmp(arg0, "dir") == 0) {
+    if(!do_run(arg0, 1)) {
+        // executed program from /bin
+    } else if (strcmp(arg0, "ls") == 0 || strcmp(arg0, "dir") == 0) {
         do_ls();
     } else if (strcmp(arg0, "mkdir") == 0) {
         arg1_func(&do_mkdir);
@@ -367,7 +377,9 @@ void execute_input()
     } else if (strcmp(arg0, "cp") == 0) {
         arg2_func(&do_cp);
     } else {
-        do_run(arg0);
+        if(do_run(arg0, 0)) {
+            printf("could not execute %s\n\r", arg0);
+        }
     }
 }
 
