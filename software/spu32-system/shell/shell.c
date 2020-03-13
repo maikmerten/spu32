@@ -237,28 +237,26 @@ void do_print(char* arg1)
     }
 }
 
-int do_run(char* arg1, char in_bin)
+int do_run(char* arg0, char in_bin)
 {
 
-    uint32_t arglen = strlen(arg1);
-    char prgfile[5 + arglen + 5];
-    clear_buf(prgfile, sizeof prgfile);
+    uint32_t arglen = strlen(arg0);
+    char buf[5 + arglen + 5];
+    clear_buf(buf, sizeof buf);
+    char* prgfile = buf;
 
-    if (in_bin) {
-        // prepend "/bin" prefix
-        strcpy(prgfile, "/bin/");
+    // prepend "/bin/" prefix
+    strcpy(prgfile, "/bin/");
 
-        // copy in binary name
-        strcpy(prgfile + 5, arg1);
+    // copy in binary name
+    strcpy(prgfile + 5, arg0);
 
-        // append ".bin" suffix;
-        strcpy(prgfile + 5 + arglen, ".bin");
-    } else {
-        // copy in binary name
-        strcpy(prgfile, arg1);
+    // append ".bin" suffix;
+    strcpy(prgfile + 5 + arglen, ".bin");
 
-        // append ".bin" suffix;
-        strcpy(prgfile + arglen, ".bin");
+    if (!in_bin) {
+        // skip "/bin/" prefix if not searching in /bin
+        prgfile += 5;
     }
 
     uint32_t error = 0;
@@ -360,7 +358,7 @@ void execute_input()
         return;
     }
     get_argument(arg0, sizeof(arg0), 0);
-    if(!do_run(arg0, 1)) {
+    if (!do_run(arg0, 1)) {
         // executed program from /bin
     } else if (strcmp(arg0, "ls") == 0 || strcmp(arg0, "dir") == 0) {
         do_ls();
@@ -377,7 +375,7 @@ void execute_input()
     } else if (strcmp(arg0, "cp") == 0) {
         arg2_func(&do_cp);
     } else {
-        if(do_run(arg0, 0)) {
+        if (do_run(arg0, 0)) {
             printf("could not execute %s\n\r", arg0);
         }
     }
