@@ -5,14 +5,6 @@
 
 char inputbuf[128];
 
-uint32_t strlen(char* buf)
-{
-    uint32_t len = 0;
-    while (buf[len] != 0) {
-        len++;
-    }
-    return len;
-}
 
 void clear_buf(char* buf, uint32_t len)
 {

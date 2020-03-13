@@ -16,6 +16,10 @@ long long parse_long(char *str);
 int string_length(char *str);
 
 void *memcpy(void *str1, const void *str2, size_t n);
+
+
+size_t strlen(const char *s);
+char *strncat(char *dest, const char *src, size_t n);
 char *strcpy(char *dest, const char *src);
 int strcmp(const char *str1, const char *str2);
 
