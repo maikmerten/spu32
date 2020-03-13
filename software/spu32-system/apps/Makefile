@@ -31,4 +31,5 @@ chreact.elf: ./chainreaction/*.* crt0.s ../libtinyc/*.a ../libspu32/*.a
 	$(CC) $(CFLAGS) -o $@ chainreaction/chainreaction.c crt0.s $(LDFLAGS)
 
 clean:
+	cd dhrystone && $(MAKE) clean
 	rm -rf *.o *.elf *.bin
