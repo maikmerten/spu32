@@ -1,8 +1,10 @@
 #include "libtinyc.h"
 #include "../../asm/devices.h"
-#include <libbioscalls.h>
 #include <stdarg.h>
 #include <stdint.h>
+
+
+#include "../bios_calls/bios_calls.c"
 
 #define UART_DATA *((volatile char*)DEV_UART_DATA)
 #define UART_RREADY *((volatile char*)DEV_UART_RX_READY)
@@ -10,11 +12,15 @@
 
 void printf_c(char c)
 {
+#ifdef NOBIOS
     // wait until serial interface is ready to transmit
     while (!UART_WREADY) {
     };
     // write character
     UART_DATA = c;
+#else
+    bios_stream_write(DEVICE_UART, &c, 1);
+#endif
 }
 
 void printf_s(char* s)

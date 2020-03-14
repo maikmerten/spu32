@@ -14,8 +14,8 @@ dump: libtinyc.o
 	$(DUMP) -d $<
 
 
-%.o: %.c
-	$(CC) $(CFLAGS) -c $<
+%.o: %.c ../bios_calls/bios_calls.c
+	$(CC) $(CFLAGS) -c $^
 
 
 %.a: %.o

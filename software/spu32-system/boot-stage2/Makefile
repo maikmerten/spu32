@@ -1,6 +1,6 @@
 CC=riscv64-unknown-elf-gcc
-CFLAGS=-I../libbioscalls -I../libtinyc -march=rv32im -mno-div -mabi=ilp32 -static -nostdlib -fno-builtin-printf -Os -fPIC -fdata-sections -ffunction-sections
-LDFLAGS=-L../libbioscalls -l bioscalls -L../libtinyc -ltinyc -lgcc -Tlink.ld -Xlinker --gc-sections
+CFLAGS=-I../libtinyc -march=rv32im -mno-div -mabi=ilp32 -static -nostdlib -fno-builtin-printf -Os -fPIC -fdata-sections -ffunction-sections
+LDFLAGS=-L../libtinyc -ltinyc -lgcc -Tlink.ld -Xlinker --gc-sections
 # useful additions for LDFLAGS if linking fails: -Xlinker --verbose 
 
 COPY=riscv64-unknown-elf-objcopy
