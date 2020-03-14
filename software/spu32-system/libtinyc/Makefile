@@ -1,5 +1,5 @@
 CC=riscv64-unknown-elf-gcc
-CFLAGS=-static -march=rv32im -mno-div -mabi=ilp32 -nostdlib -Os -fno-builtin-printf -fPIC -fdata-sections -ffunction-sections
+CFLAGS=-I../libbioscalls -static -march=rv32im -mno-div -mabi=ilp32 -nostdlib -Os -fno-builtin-printf -fPIC -fdata-sections -ffunction-sections
 
 AR=riscv64-unknown-elf-ar
 ARFLAGS=rs
