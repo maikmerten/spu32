@@ -32,7 +32,7 @@ int main()
 
     // Mounting file system
 
-    result_t res = fs_init(DEVICE_SD);
+    result_t res = bios_fs_init(DEVICE_SD);
     if (res != RESULT_OK) {
         printf("could not mount FAT file system, halting.\n\r");
         halt(ERR_INIT);
@@ -40,7 +40,7 @@ int main()
 
 
     // Reading shell.bin
-    res = fs_open(&fh, "shell.bin", MODE_READ);
+    res = bios_fs_open(&fh, "shell.bin", MODE_READ);
     if (res != RESULT_OK) {
         printf("error opening shell.bin, halting.\n\r");
         halt(ERR_OPEN);
@@ -50,7 +50,7 @@ int main()
 
     // check size of shell
     uint32_t size;
-    res = fs_size(fh, &size);
+    res = bios_fs_size(fh, &size);
     if (res != RESULT_OK) {
         printf("error determining size of shell.bin, halting.\n\r");
         halt(ERR_SIZE);
@@ -67,7 +67,7 @@ int main()
     void* buf = (void*)((512 - 40) * 1024);
 
     uint32_t read;
-    res = fs_read(fh, buf, 8 * 1024, &read);
+    res = bios_fs_read(fh, buf, 8 * 1024, &read);
     if (res != RESULT_OK) {
         printf("error reading shell.bin, halting.\n\r");
         halt(ERR_READ);
@@ -75,7 +75,7 @@ int main()
 
     printf("did read %d bytes\n\r", read);
 
-    res = fs_close(fh);
+    res = bios_fs_close(fh);
     if (res == RESULT_OK) {
         printf("closed shell.bin\n\r");
     } else {

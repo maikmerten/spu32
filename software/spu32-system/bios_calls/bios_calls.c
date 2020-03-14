@@ -8,7 +8,7 @@ inline void call_environment(void* request_addr) {
     asm("ecall");   
 }
 
-result_t block_init(device_t device, struct block_device_info_t* info) {
+result_t bios_block_init(device_t device, struct block_device_info_t* info) {
     struct request_init_block_device_t req;
 
     req.command = CMD_INIT_BLOCK_DEVICE;
@@ -22,7 +22,7 @@ result_t block_init(device_t device, struct block_device_info_t* info) {
 }
 
 // set up structure for block read request and invoke BIOS
-result_t block_read(device_t device, uint32_t block, void* buf, uint32_t len) {
+result_t bios_block_read(device_t device, uint32_t block, void* buf, uint32_t len) {
     struct request_readwrite_block_t req;
 
     req.command = CMD_READ_BLOCK;
@@ -36,7 +36,7 @@ result_t block_read(device_t device, uint32_t block, void* buf, uint32_t len) {
 }
 
 // set up structure for block write request and invoke BIOS
-result_t block_write(device_t device, uint32_t block, void* buf, uint32_t len) {
+result_t bios_block_write(device_t device, uint32_t block, void* buf, uint32_t len) {
     struct request_readwrite_block_t req;
 
     req.command = CMD_WRITE_BLOCK;
@@ -51,7 +51,7 @@ result_t block_write(device_t device, uint32_t block, void* buf, uint32_t len) {
 
 
 // set up structure to request available bytes from stream
-result_t stream_available(device_t device, uint32_t* available) {
+result_t bios_stream_available(device_t device, uint32_t* available) {
     struct request_available_stream_t req;
 
     req.command = CMD_AVAILABLE_STREAM;
@@ -62,7 +62,7 @@ result_t stream_available(device_t device, uint32_t* available) {
 }
 
 // set up structure for stream read request and invoke BIOS
-result_t stream_read(device_t device, void* buf, uint32_t len) {
+result_t bios_stream_read(device_t device, void* buf, uint32_t len) {
     struct request_readwrite_stream_t req;
 
     req.command = CMD_READ_STREAM;
@@ -75,7 +75,7 @@ result_t stream_read(device_t device, void* buf, uint32_t len) {
 }
 
 // set up structure for stream write request and invoke BIOS
-result_t stream_write(device_t device, void* buf, uint32_t len) {
+result_t bios_stream_write(device_t device, void* buf, uint32_t len) {
     struct request_readwrite_stream_t req;
 
     req.command = CMD_WRITE_STREAM;
@@ -88,7 +88,7 @@ result_t stream_write(device_t device, void* buf, uint32_t len) {
 }
 
 // set up structure for file system init request and invoke BIOS
-result_t fs_init(device_t device) {
+result_t bios_fs_init(device_t device) {
     struct request_fs_init_t req;
 
     req.command = CMD_FS_INIT;
@@ -99,7 +99,7 @@ result_t fs_init(device_t device) {
 }
 
 // set up request to open a file
-result_t fs_open(filehandle_t* filehandle, char* path, filemode_t mode) {
+result_t bios_fs_open(filehandle_t* filehandle, char* path, filemode_t mode) {
     struct request_fs_open_t req;
 
     req.command = CMD_FS_OPENFILE;
@@ -112,7 +112,7 @@ result_t fs_open(filehandle_t* filehandle, char* path, filemode_t mode) {
 }
 
 // set up request to close a file
-result_t fs_close(filehandle_t fh) {
+result_t bios_fs_close(filehandle_t fh) {
     struct request_fs_close_t req;
 
     req.command = CMD_FS_CLOSEFILE;
@@ -124,7 +124,7 @@ result_t fs_close(filehandle_t fh) {
 
 
 // set up request for file reads
-result_t fs_read(filehandle_t fh, void* buf, uint32_t nbytes, uint32_t* readbytes) {
+result_t bios_fs_read(filehandle_t fh, void* buf, uint32_t nbytes, uint32_t* readbytes) {
     struct request_fs_read_t req;
     
     req.command = CMD_FS_READFILE;
@@ -138,7 +138,7 @@ result_t fs_read(filehandle_t fh, void* buf, uint32_t nbytes, uint32_t* readbyte
 }
 
 // set up request for file writes
-result_t fs_write(filehandle_t fh, void* buf, uint32_t nbytes, uint32_t* writtenbytes) {
+result_t bios_fs_write(filehandle_t fh, void* buf, uint32_t nbytes, uint32_t* writtenbytes) {
     struct request_fs_write_t req;
     
     req.command = CMD_FS_WRITEFILE;
@@ -152,7 +152,7 @@ result_t fs_write(filehandle_t fh, void* buf, uint32_t nbytes, uint32_t* written
 }
 
 // set up request to unlink files or directories
-result_t fs_unlink(char* path) {
+result_t bios_fs_unlink(char* path) {
     struct request_fs_unlink_t req;
 
     req.command = CMD_FS_UNLINK;
@@ -163,7 +163,7 @@ result_t fs_unlink(char* path) {
 }
 
 // set up request to start directory listing
-result_t fs_findfirst(char* path, char* pattern, struct file_info_t* fileinfo) {
+result_t bios_fs_findfirst(char* path, char* pattern, struct file_info_t* fileinfo) {
     struct request_fs_findfirst_t req;
 
     req.command = CMD_FS_FINDFIRST;
@@ -176,7 +176,7 @@ result_t fs_findfirst(char* path, char* pattern, struct file_info_t* fileinfo) {
 }
 
 // set up request to continue directory listing
-result_t fs_findnext(struct file_info_t* fileinfo) {
+result_t bios_fs_findnext(struct file_info_t* fileinfo) {
     struct request_fs_findnext_t req;
 
     req.command = CMD_FS_FINDNEXT;
@@ -187,7 +187,7 @@ result_t fs_findnext(struct file_info_t* fileinfo) {
 }
 
 // set up request to get current workdir
-result_t fs_getcwd(char* buf, uint32_t len) {
+result_t bios_fs_getcwd(char* buf, uint32_t len) {
     struct request_fs_getcwd_t req;
 
     req.command = CMD_FS_GETCWD;
@@ -199,7 +199,7 @@ result_t fs_getcwd(char* buf, uint32_t len) {
 }
 
 // set up request to change current workdir
-result_t fs_chdir(char* path) {
+result_t bios_fs_chdir(char* path) {
     struct request_fs_chdir_t req;
 
     req.command = CMD_FS_CHDIR;
@@ -210,7 +210,7 @@ result_t fs_chdir(char* path) {
 }
 
 // set up request to determine number of free bytes on FS
-result_t fs_free(uint64_t* free) {
+result_t bios_fs_free(uint64_t* free) {
     struct request_fs_free_t req;
 
     req.command = CMD_FS_FREE;
@@ -221,7 +221,7 @@ result_t fs_free(uint64_t* free) {
 }
 
 // set up request for file seeks
-result_t fs_seek(filehandle_t fh, uint32_t position) {
+result_t bios_fs_seek(filehandle_t fh, uint32_t position) {
     struct request_fs_seek_t req;
 
     req.command = CMD_FS_SEEK;
@@ -233,7 +233,7 @@ result_t fs_seek(filehandle_t fh, uint32_t position) {
 }
 
 // set up requests for making directories
-result_t fs_mkdir(char* path) {
+result_t bios_fs_mkdir(char* path) {
     struct request_fs_mkdir_t req;
 
     req.command = CMD_FS_MKDIR;
@@ -245,7 +245,7 @@ result_t fs_mkdir(char* path) {
 }
 
 // set up requests for renaming objects on the FS
-result_t fs_rename(char* oldname, char* newname) {
+result_t bios_fs_rename(char* oldname, char* newname) {
     struct request_fs_rename_t req;
 
     req.command = CMD_FS_RENAME;
@@ -257,7 +257,7 @@ result_t fs_rename(char* oldname, char* newname) {
 }
 
 // set up requests to determine file size
-result_t fs_size(filehandle_t fh, uint32_t* size) {
+result_t bios_fs_size(filehandle_t fh, uint32_t* size) {
     struct request_fs_size_t req;
 
     req.command = CMD_FS_SIZE;
@@ -269,7 +269,7 @@ result_t fs_size(filehandle_t fh, uint32_t* size) {
 }
 
 // set up request to determine position in file
-result_t fs_tell(filehandle_t fh, uint32_t* position) {
+result_t bios_fs_tell(filehandle_t fh, uint32_t* position) {
     struct request_fs_tell_t req;
 
     req.command = CMD_FS_TELL;
@@ -282,7 +282,7 @@ result_t fs_tell(filehandle_t fh, uint32_t* position) {
 
 
 // set up request to retrieve file information
-result_t fs_stat(char* path, struct file_info_t* fileinfo) {
+result_t bios_fs_stat(char* path, struct file_info_t* fileinfo) {
     struct request_fs_stat_t req;
 
     req.command = CMD_FS_STAT;

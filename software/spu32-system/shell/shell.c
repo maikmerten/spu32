@@ -17,7 +17,7 @@ void read_input()
     inputbuf[0] = 0;
 
     char cwd[64];
-    fs_getcwd(cwd, sizeof(cwd));
+    bios_fs_getcwd(cwd, sizeof(cwd));
 
     uint8_t reprint = 1;
     uint8_t execute = 0;
@@ -30,7 +30,7 @@ void read_input()
         }
 
         char c;
-        stream_read(DEVICE_STDIN, &c, 1);
+        bios_stream_read(DEVICE_STDIN, &c, 1);
         if (c == '\n' || c == '\r') {
             execute = 1;
         } else if (c == 127) {
@@ -45,7 +45,7 @@ void read_input()
             inputbuf[bufidx] = c;
             inputbuf[bufidx + 1] = 0;
             bufidx++;
-            stream_write(DEVICE_STDOUT, &c, 1);
+            bios_stream_write(DEVICE_STDOUT, &c, 1);
         }
     }
 
@@ -147,7 +147,7 @@ void do_ls()
     // List contents of current dir
     printf("\n\r");
     struct file_info_t finfo;
-    res = fs_findfirst(".", pattern, &finfo);
+    res = bios_fs_findfirst(".", pattern, &finfo);
     while (res == RESULT_OK && finfo.name[0] != 0) {
         char padding[16];
         clear_buf(padding, sizeof(padding));
@@ -158,11 +158,11 @@ void do_ls()
         printf("%s", finfo.name);
         printf("%s %s   ", padding, (finfo.attrib & ATTRIB_DIR) != 0 ? "<DIR>" : "     ");
         printf("%d bytes\n\r", finfo.size);
-        res = fs_findnext(&finfo);
+        res = bios_fs_findnext(&finfo);
     }
 
     uint64_t free;
-    res = fs_free(&free);
+    res = bios_fs_free(&free);
     if (res == RESULT_OK) {
         uint32_t freekibi = free / 1024;
         uint32_t freemibi = freekibi / 1024;
@@ -177,7 +177,7 @@ void do_ls()
 
 void do_mkdir(char* arg1)
 {
-    result_t res = fs_mkdir(arg1);
+    result_t res = bios_fs_mkdir(arg1);
     if (res != RESULT_OK) {
         printf("could not make directory %s\n\r", arg1);
     }
@@ -186,19 +186,19 @@ void do_mkdir(char* arg1)
 void do_rm(char* arg1)
 {
     struct file_info_t finfo;
-    result_t res = fs_findfirst(".", arg1, &finfo);
+    result_t res = bios_fs_findfirst(".", arg1, &finfo);
     while (res == RESULT_OK && finfo.name[0] != 0) {
-        result_t unlink_res = fs_unlink(finfo.name);
+        result_t unlink_res = bios_fs_unlink(finfo.name);
         if (unlink_res != RESULT_OK) {
             printf("could not remove %s\n\r", finfo.name);
         }
-        res = fs_findnext(&finfo);
+        res = bios_fs_findnext(&finfo);
     }
 }
 
 void do_cd(char* arg1)
 {
-    result_t res = fs_chdir(arg1);
+    result_t res = bios_fs_chdir(arg1);
     if (res != RESULT_OK) {
         printf("could not change directory to %s\n\r", arg1);
     }
@@ -206,7 +206,7 @@ void do_cd(char* arg1)
 
 void do_mv(char* arg1, char* arg2)
 {
-    result_t res = fs_rename(arg1, arg2);
+    result_t res = bios_fs_rename(arg1, arg2);
     if (res != RESULT_OK) {
         printf("could not rename %s\n\r", arg1);
     }
@@ -215,7 +215,7 @@ void do_mv(char* arg1, char* arg2)
 void do_print(char* arg1)
 {
     filehandle_t fh;
-    result_t res = fs_open(&fh, arg1, MODE_READ);
+    result_t res = bios_fs_open(&fh, arg1, MODE_READ);
     if (res != RESULT_OK) {
         printf("could not open input file\n\r");
         return;
@@ -224,14 +224,14 @@ void do_print(char* arg1)
     uint32_t read;
     char buf[512];
     clear_buf(buf, sizeof(buf));
-    res = fs_read(fh, buf, sizeof(buf), &read);
+    res = bios_fs_read(fh, buf, sizeof(buf), &read);
     while (res == RESULT_OK && read > 0) {
         printf("%s", buf);
         clear_buf(buf, sizeof(buf));
-        res = fs_read(fh, buf, sizeof(buf), &read);
+        res = bios_fs_read(fh, buf, sizeof(buf), &read);
     }
 
-    res = fs_close(fh);
+    res = bios_fs_close(fh);
     if (res != RESULT_OK) {
         printf("could not close file\n\r");
     }
@@ -261,7 +261,7 @@ int do_run(char* arg0, char in_bin)
 
     uint32_t error = 0;
     filehandle_t fh;
-    result_t res = fs_open(&fh, prgfile, MODE_READ);
+    result_t res = bios_fs_open(&fh, prgfile, MODE_READ);
     if (res != RESULT_OK) {
         return 1;
     }
@@ -269,22 +269,22 @@ int do_run(char* arg0, char in_bin)
     uint32_t maxbytes = (512 - 64) * 1024;
 
     uint32_t size;
-    res = fs_size(fh, &size);
+    res = bios_fs_size(fh, &size);
     if (size > maxbytes) {
         printf("%s is %d bytes, only up to %d bytes allowed\n\r", prgfile, size, maxbytes);
-        fs_close(fh);
+        bios_fs_close(fh);
         return 1;
     }
 
     uint32_t read;
     void* loadaddr = (void*)0x0;
-    res = fs_read(fh, loadaddr, maxbytes, &read);
+    res = bios_fs_read(fh, loadaddr, maxbytes, &read);
     if (res != RESULT_OK) {
         printf("error reading file %s\n\r", prgfile);
         error = 1;
     }
 
-    res = fs_close(fh);
+    res = bios_fs_close(fh);
     if (res != RESULT_OK) {
         printf("could not close file\n\r");
         error = 1;
@@ -318,36 +318,36 @@ int do_run(char* arg0, char in_bin)
 void do_cp(char* arg1, char* arg2)
 {
     filehandle_t fh1;
-    result_t res = fs_open(&fh1, arg1, MODE_READ);
+    result_t res = bios_fs_open(&fh1, arg1, MODE_READ);
     if (res != RESULT_OK) {
         printf("could not open input file\n\r");
         return;
     }
 
     filehandle_t fh2;
-    res = fs_open(&fh2, arg2, MODE_WRITE | MODE_CREATE_ALWAYS);
+    res = bios_fs_open(&fh2, arg2, MODE_WRITE | MODE_CREATE_ALWAYS);
     if (res != RESULT_OK) {
         printf("could not open output file\n\r");
-        fs_close(fh1);
+        bios_fs_close(fh1);
         return;
     }
 
     uint32_t read;
     char buf[8192];
     clear_buf(buf, sizeof(buf));
-    res = fs_read(fh1, buf, sizeof(buf), &read);
+    res = bios_fs_read(fh1, buf, sizeof(buf), &read);
     while (res == RESULT_OK && read > 0) {
         uint32_t written;
-        result_t write_res = fs_write(fh2, buf, read, &written);
+        result_t write_res = bios_fs_write(fh2, buf, read, &written);
         if (write_res != RESULT_OK) {
             printf("error writing to output file\n\r");
             break;
         }
-        res = fs_read(fh1, buf, sizeof(buf), &read);
+        res = bios_fs_read(fh1, buf, sizeof(buf), &read);
     }
 
-    fs_close(fh1);
-    fs_close(fh2);
+    bios_fs_close(fh1);
+    bios_fs_close(fh2);
 }
 
 void execute_input()
