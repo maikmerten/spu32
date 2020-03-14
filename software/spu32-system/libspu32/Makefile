@@ -1,19 +1,27 @@
 CC=riscv64-unknown-elf-gcc
-CFLAGS=-static -march=rv32i -mabi=ilp32 -nostdlib -Os -fno-builtin-printf -fPIC -fdata-sections -ffunction-sections
+CFLAGS=-static -march=rv32im -mno-div -mabi=ilp32 -nostdlib -Os -fno-builtin-printf -fPIC -fdata-sections -ffunction-sections
 
 AR=riscv64-unknown-elf-ar
 ARFLAGS=rs
 
 DUMP=riscv64-unknown-elf-objdump
 
+.PHONY: clean dump
+
 all: libspu32.a
+
+dump: libspu32.o
+	$(DUMP) -d $<
+
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $<
-	$(DUMP) -d $@
 
-libspu32.a: libspu32.o
+
+%.a: %.o
 	$(AR) $(ARFLAGS) $@ $<
+
+
 
 clean:
 	-rm *.o *.a

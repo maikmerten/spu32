@@ -1,19 +1,27 @@
 CC=riscv64-unknown-elf-gcc
-CFLAGS=-static -march=rv32i -mabi=ilp32 -nostdlib -Os -fno-builtin-printf -fPIC -fdata-sections -ffunction-sections
+CFLAGS=-static -march=rv32im -mno-div -mabi=ilp32 -nostdlib -Os -fno-builtin-printf -fPIC -fdata-sections -ffunction-sections
 
 AR=riscv64-unknown-elf-ar
 ARFLAGS=rs
 
 DUMP=riscv64-unknown-elf-objdump
 
+.PHONY: clean dump
+
 all: libtinyc.a
+
+dump: libtinyc.o
+	$(DUMP) -d $<
+
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $<
-	$(DUMP) -d $@
 
-libtinyc.a: libtinyc.o
+
+%.a: %.o
 	$(AR) $(ARFLAGS) $@ $<
+
+
 
 clean:
 	-rm *.o *.a

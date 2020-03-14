@@ -18,7 +18,7 @@ dump: libbioscalls.o
 	$(CC) $(CFLAGS) -c $<
 
 
-libbioscalls.a: libbioscalls.o
+%.a: %.o
 	$(AR) $(ARFLAGS) $@ $<
 
 
