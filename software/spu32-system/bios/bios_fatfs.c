@@ -1,6 +1,5 @@
 #include "bios_fatfs.h"
 #include "fatfs/ff.h"
-#include <libtinyc.h>
 #include <stdint.h>
 
 #define FILEHANDLES 4

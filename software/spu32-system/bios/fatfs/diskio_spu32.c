@@ -7,8 +7,6 @@
 /* storage control modules to the FatFs module with a defined API.       */
 /*-----------------------------------------------------------------------*/
 
-#include <libtinyc.h>
-
 #include "ff.h"			/* Obtains integer types */
 #include "diskio.h"		/* Declarations of disk functions */
 
@@ -73,7 +71,6 @@ DRESULT disk_read (
 	for(uint32_t block = sector; block < (sector + count); ++block) {
 		result_t res = bios_sd_read_block(block, (uint8_t*)buff);
 		if(res != RESULT_OK) {
-			printf("disk_read could not read block %d\n\r", block);
 			return RES_ERROR;
 		}
 		buff += 512;
@@ -100,7 +97,6 @@ DRESULT disk_write (
 	for(uint32_t block = sector; block < (sector + count); ++block) {
 		result_t res = bios_sd_write_block(block, (uint8_t*)buff);
 		if(res != RESULT_OK) {
-			printf("disk_write could not write block %d\n\r", block);
 			return RES_ERROR;
 		}
 		buff += 512;

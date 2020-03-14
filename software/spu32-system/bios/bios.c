@@ -1,5 +1,4 @@
 #include <stdint.h>
-#include <libtinyc.h>
 #include "devices.h"
 
 #include "bios_shared.h"
