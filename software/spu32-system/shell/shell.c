@@ -1,5 +1,5 @@
 #include "../bios/devices.h"
-#include "../bios_calls/bios_calls.h"
+#include <libbioscalls.h>
 #include <libtinyc.h>
 #include <stdint.h>
 
