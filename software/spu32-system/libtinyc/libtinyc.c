@@ -31,9 +31,15 @@ void printf_s(char* s)
 
 char _read_character_uart()
 {
+#ifdef NOBIOS
     while (!UART_RREADY) {
     }
     return UART_DATA;
+#else
+    char c;
+    bios_stream_read(DEVICE_UART, &c, 1);
+    return c;
+#endif
 }
 
 char* read_string(char* buf, int n, char echo)
