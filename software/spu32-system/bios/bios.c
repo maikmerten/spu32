@@ -12,29 +12,29 @@
 
 /// START OF BIOS CODE ///
 
-void bios_init_block_device(struct request_init_block_device_t* req);
-void bios_read_block(struct request_readwrite_block_t* req);
-void bios_write_block(struct request_readwrite_block_t* req);
-void bios_available_stream(struct request_available_stream_t* req);
-void bios_read_stream(struct request_readwrite_stream_t* req);
-void bios_write_stream(struct request_readwrite_stream_t* req);
-void bios_fs_init(struct request_fs_init_t* req);
-void bios_fs_open_file(struct request_fs_open_t* request_addr);
-void bios_fs_close_file(struct request_fs_close_t* request_addr);
-void bios_fs_read_file(struct request_fs_read_t* request);
-void bios_fs_write_file(struct request_fs_write_t* request);
-void bios_fs_unlink(struct request_fs_unlink_t* request);
-void bios_fs_findfirst(struct request_fs_findfirst_t* request);
-void bios_fs_findnext(struct request_fs_findnext_t* request);
-void bios_fs_getcwd(struct request_fs_getcwd_t* request);
-void bios_fs_chdir(struct request_fs_chdir_t* request);
-void bios_fs_free(struct request_fs_free_t* request);
-void bios_fs_seek(struct request_fs_seek_t* request);
-void bios_fs_mkdir(struct request_fs_mkdir_t* request);
-void bios_fs_rename(struct request_fs_rename_t* request);
-void bios_fs_size(struct request_fs_size_t* request);
-void bios_fs_tell(struct request_fs_tell_t* request);
-void bios_fs_stat(struct request_fs_stat_t* request);
+void _bios_init_block_device(struct request_init_block_device_t* req);
+void _bios_read_block(struct request_readwrite_block_t* req);
+void _bios_write_block(struct request_readwrite_block_t* req);
+void _bios_available_stream(struct request_available_stream_t* req);
+void _bios_read_stream(struct request_readwrite_stream_t* req);
+void _bios_write_stream(struct request_readwrite_stream_t* req);
+void _bios_fs_init(struct request_fs_init_t* req);
+void _bios_fs_open_file(struct request_fs_open_t* request_addr);
+void _bios_fs_close_file(struct request_fs_close_t* request_addr);
+void _bios_fs_read_file(struct request_fs_read_t* request);
+void _bios_fs_write_file(struct request_fs_write_t* request);
+void _bios_fs_unlink(struct request_fs_unlink_t* request);
+void _bios_fs_findfirst(struct request_fs_findfirst_t* request);
+void _bios_fs_findnext(struct request_fs_findnext_t* request);
+void _bios_fs_getcwd(struct request_fs_getcwd_t* request);
+void _bios_fs_chdir(struct request_fs_chdir_t* request);
+void _bios_fs_free(struct request_fs_free_t* request);
+void _bios_fs_seek(struct request_fs_seek_t* request);
+void _bios_fs_mkdir(struct request_fs_mkdir_t* request);
+void _bios_fs_rename(struct request_fs_rename_t* request);
+void _bios_fs_size(struct request_fs_size_t* request);
+void _bios_fs_tell(struct request_fs_tell_t* request);
+void _bios_fs_stat(struct request_fs_stat_t* request);
 
 /**
  * This is the interrupt service routine. Yeah, we can write this in C.
@@ -77,95 +77,95 @@ void bios_isr() {
             
                 switch(command) {
                     case CMD_INIT_BLOCK_DEVICE: {
-                        bios_init_block_device((void*) request_addr);
+                        _bios_init_block_device((void*) request_addr);
                         break;
                     }
                     case CMD_READ_BLOCK: {
-                        bios_read_block((void*) request_addr);
+                        _bios_read_block((void*) request_addr);
                         break;
                     }
                     case CMD_WRITE_BLOCK: {
-                        bios_write_block((void*) request_addr);
+                        _bios_write_block((void*) request_addr);
                         break;
                     }
                     case CMD_AVAILABLE_STREAM: {
-                        bios_available_stream((void*) request_addr);
+                        _bios_available_stream((void*) request_addr);
                         break;
                     }
                     case CMD_READ_STREAM: {
-                        bios_read_stream((void*) request_addr);
+                        _bios_read_stream((void*) request_addr);
                         break;
                     }
                     case CMD_WRITE_STREAM: {
-                        bios_write_stream((void*) request_addr);
+                        _bios_write_stream((void*) request_addr);
                         break;
                     }
                     case CMD_FS_INIT: {
-                        bios_fs_init((void*) request_addr);
+                        _bios_fs_init((void*) request_addr);
                         break;
                     }
                     case CMD_FS_OPENFILE: {
-                        bios_fs_open_file((void*) request_addr);
+                        _bios_fs_open_file((void*) request_addr);
                         break;
                     }
                     case CMD_FS_CLOSEFILE: {
-                        bios_fs_close_file((void*) request_addr);
+                        _bios_fs_close_file((void*) request_addr);
                         break;
                     }
                     case CMD_FS_READFILE: {
-                        bios_fs_read_file((void*) request_addr);
+                        _bios_fs_read_file((void*) request_addr);
                         break;
                     }
                     case CMD_FS_WRITEFILE: {
-                        bios_fs_write_file((void*) request_addr);
+                        _bios_fs_write_file((void*) request_addr);
                         break;
                     }
                     case CMD_FS_UNLINK: {
-                        bios_fs_unlink((void*) request_addr);
+                        _bios_fs_unlink((void*) request_addr);
                         break;
                     }
                     case CMD_FS_FINDFIRST: {
-                        bios_fs_findfirst((void*) request_addr);
+                        _bios_fs_findfirst((void*) request_addr);
                         break;
                     }
                     case CMD_FS_FINDNEXT: {
-                        bios_fs_findnext((void*) request_addr);
+                        _bios_fs_findnext((void*) request_addr);
                         break;
                     }
                     case CMD_FS_GETCWD: {
-                        bios_fs_getcwd((void*) request_addr);
+                        _bios_fs_getcwd((void*) request_addr);
                         break;
                     }
                     case CMD_FS_CHDIR: {
-                        bios_fs_chdir((void*) request_addr);
+                        _bios_fs_chdir((void*) request_addr);
                         break;
                     }
                     case CMD_FS_FREE: {
-                        bios_fs_free((void*) request_addr);
+                        _bios_fs_free((void*) request_addr);
                         break;
                     }
                     case CMD_FS_SEEK: {
-                        bios_fs_seek((void*) request_addr);
+                        _bios_fs_seek((void*) request_addr);
                         break;
                     }
                     case CMD_FS_MKDIR: {
-                        bios_fs_mkdir((void*) request_addr);
+                        _bios_fs_mkdir((void*) request_addr);
                         break;
                     }
                     case CMD_FS_RENAME: {
-                        bios_fs_rename((void*) request_addr);
+                        _bios_fs_rename((void*) request_addr);
                         break;
                     }
                     case CMD_FS_SIZE: {
-                        bios_fs_size((void*) request_addr);
+                        _bios_fs_size((void*) request_addr);
                         break;
                     }
                     case CMD_FS_TELL: {
-                        bios_fs_tell((void*) request_addr);
+                        _bios_fs_tell((void*) request_addr);
                         break;
                     }
                     case CMD_FS_STAT: {
-                        bios_fs_stat((void*) request_addr);
+                        _bios_fs_stat((void*) request_addr);
                         break;
                     }
                     default: {
@@ -207,7 +207,7 @@ void bios_isr() {
 // --- BIOS call implementations ---//
 
 
-void bios_init_block_device(struct request_init_block_device_t* request) {
+void _bios_init_block_device(struct request_init_block_device_t* request) {
     request->result = RESULT_ERR;
 
     switch(request->device) {
@@ -223,7 +223,7 @@ void bios_init_block_device(struct request_init_block_device_t* request) {
 
 
 // function to handle block read requests
-void bios_read_block(struct request_readwrite_block_t* request) {
+void _bios_read_block(struct request_readwrite_block_t* request) {
     // assume error for now
     request->result = RESULT_ERR;
 
@@ -239,7 +239,7 @@ void bios_read_block(struct request_readwrite_block_t* request) {
 }
 
 // function to handle block write requests
-void bios_write_block(struct request_readwrite_block_t* request) {
+void _bios_write_block(struct request_readwrite_block_t* request) {
     // assume error for now
     request->result = RESULT_ERR;
 
@@ -253,7 +253,7 @@ void bios_write_block(struct request_readwrite_block_t* request) {
     }
 }
 
-void bios_available_stream(struct request_available_stream_t* request) {
+void _bios_available_stream(struct request_available_stream_t* request) {
     switch(request->device) {
         case DEVICE_UART: {
             request->available = bios_uart_available();
@@ -268,7 +268,7 @@ void bios_available_stream(struct request_available_stream_t* request) {
 }
 
 // function to handle stream read requests
-void bios_read_stream(struct request_readwrite_stream_t* request) {
+void _bios_read_stream(struct request_readwrite_stream_t* request) {
     switch(request->device) {
         case DEVICE_STDIN:
         case DEVICE_UART: {
@@ -283,7 +283,7 @@ void bios_read_stream(struct request_readwrite_stream_t* request) {
 }
 
 // function to handle stream write requests
-void bios_write_stream(struct request_readwrite_stream_t* request) {
+void _bios_write_stream(struct request_readwrite_stream_t* request) {
     switch(request->device) {
         case DEVICE_STDOUT:
         case DEVICE_UART: {
@@ -299,7 +299,7 @@ void bios_write_stream(struct request_readwrite_stream_t* request) {
 
 
 // function to init  file system
-void bios_fs_init(struct request_fs_init_t* request) {
+void _bios_fs_init(struct request_fs_init_t* request) {
     switch(request->device) {
         case DEVICE_SD: {
             request->result = bios_fatfs_init();
@@ -312,82 +312,82 @@ void bios_fs_init(struct request_fs_init_t* request) {
 }
 
 // function to open files
-void bios_fs_open_file(struct request_fs_open_t* request) {
+void _bios_fs_open_file(struct request_fs_open_t* request) {
     request->result = bios_fatfs_open(request->filehandle, request->path, request->mode);
 }
 
 // function to close files
-void bios_fs_close_file(struct request_fs_close_t* request) {
+void _bios_fs_close_file(struct request_fs_close_t* request) {
     request->result = bios_fatfs_close(request->fh);
 }
 
 // function to read from a file
-void bios_fs_read_file(struct request_fs_read_t* request) {
+void _bios_fs_read_file(struct request_fs_read_t* request) {
     request->result = bios_fatfs_read(request->fh, request->buf, request->nbytes, request->readbytes);
 }
 
 // function to write to a file
-void bios_fs_write_file(struct request_fs_write_t* request) {
+void _bios_fs_write_file(struct request_fs_write_t* request) {
     request->result = bios_fatfs_write(request->fh, request->buf, request->nbytes, request->writtenbytes);
 }
 
 // function to unlink (=delete) files and directories
-void bios_fs_unlink(struct request_fs_unlink_t* request) {
+void _bios_fs_unlink(struct request_fs_unlink_t* request) {
     request->result = bios_fatfs_unlink(request->path);
 }
 
 // function to start directory listings
-void bios_fs_findfirst(struct request_fs_findfirst_t* request) {
+void _bios_fs_findfirst(struct request_fs_findfirst_t* request) {
     request->result = bios_fatfs_findfirst(request->path, request->pattern, request->fileinfo);
 }
 
 // functions to continue directory listings
-void bios_fs_findnext(struct request_fs_findnext_t* request) {
+void _bios_fs_findnext(struct request_fs_findnext_t* request) {
     request->result = bios_fatfs_findnext(request->fileinfo);
 }
 
 // function to retrieve current workdir
-void bios_fs_getcwd(struct request_fs_getcwd_t* request) {
+void _bios_fs_getcwd(struct request_fs_getcwd_t* request) {
     request->result = bios_fatfs_getcwd(request->buf, request->len);
 }
 
 // function to change current workdir
-void bios_fs_chdir(struct request_fs_chdir_t* request) {
+void _bios_fs_chdir(struct request_fs_chdir_t* request) {
     request->result = bios_fatfs_chdir(request->path);
 }
 
 // function to retrieve number of free bytes on FS
-void bios_fs_free(struct request_fs_free_t* request) {
+void _bios_fs_free(struct request_fs_free_t* request) {
     request->result = bios_fatfs_free(request->free);
 }
 
 // function for file seeks
-void bios_fs_seek(struct request_fs_seek_t* request) {
+void _bios_fs_seek(struct request_fs_seek_t* request) {
     request->result = bios_fatfs_seek(request->fh, request->position);
 }
 
 // function to create directories on FS
-void bios_fs_mkdir(struct request_fs_mkdir_t* request) {
+void _bios_fs_mkdir(struct request_fs_mkdir_t* request) {
     request->result = bios_fatfs_mkdir(request->path);
 }
 
 // function to rename
-void bios_fs_rename(struct request_fs_rename_t* request) {
+void _bios_fs_rename(struct request_fs_rename_t* request) {
     request->result = bios_fatfs_rename(request->oldname, request->newname);
 }
 
 // function to retrieve file size
-void bios_fs_size(struct request_fs_size_t* request) {
+void _bios_fs_size(struct request_fs_size_t* request) {
     request->result = bios_fatfs_size(request->fh, request->size);
 }
 
 // function determine current position within file
-void bios_fs_tell(struct request_fs_tell_t* request) {
+void _bios_fs_tell(struct request_fs_tell_t* request) {
     request->result = bios_fatfs_tell(request->fh, request->position);
 }
 
 // function to retrieve file information
-void bios_fs_stat(struct request_fs_stat_t* request) {
+void _bios_fs_stat(struct request_fs_stat_t* request) {
     request->result = bios_fatfs_stat(request->path, request->fileinfo);
 }
 
