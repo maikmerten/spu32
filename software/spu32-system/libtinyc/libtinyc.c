@@ -1,5 +1,6 @@
 #include "libtinyc.h"
 #include "../../asm/devices.h"
+#include <libbioscalls.h>
 #include <stdarg.h>
 #include <stdint.h>
 
@@ -56,13 +57,6 @@ char* read_string(char* buf, int n, char echo)
     return buf;
 }
 
-int string_length(char* str)
-{
-    int len = 0;
-    while (*str++)
-        len++;
-    return len;
-}
 
 int parse_int(char* str)
 {
@@ -163,12 +157,14 @@ void* memcpy(void* str1, const void* str2, size_t n)
     return str1;
 }
 
-
 size_t strlen(const char* s)
 {
-    return string_length(s);
+    size_t len = 0;
+    while (*s++) {
+        len++;
+    }
+    return len;
 }
-
 
 char* strncat(char* dest, const char* src, size_t n)
 {
