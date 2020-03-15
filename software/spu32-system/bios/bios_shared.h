@@ -280,8 +280,8 @@ struct request_fs_stat_t {
 // data structure to set video mode
 struct request_video_set_mode_t {
     command_t command; // every request needs to have a command_t at the top!
-    uint32_t* videobase;
-    uint32_t* fontbase;
+    void* videobase;
+    void* fontbase;
     result_t result;
     videomode_t mode; // is uint8_t
 };
