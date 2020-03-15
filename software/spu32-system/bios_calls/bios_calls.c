@@ -292,3 +292,28 @@ result_t bios_fs_stat(char* path, struct file_info_t* fileinfo) {
     call_environment(&req);
     return req.result;
 }
+
+// set up request to set video mode
+result_t bios_video_set_mode(videomode_t mode, uint32_t* videobase, uint32_t* fontbase) {
+    struct request_video_set_mode_t req;
+
+    req.command = CMD_VIDEO_SETMODE;
+    req.mode = mode;
+    req.videobase = videobase;
+    req.fontbase = fontbase;
+
+    call_environment(&req);
+    return req.result;
+}
+
+
+// set up request to set video colour palette
+result_t bios_video_set_palette(uint8_t* palette) {
+    struct request_video_set_palette_t req;
+
+    req.command = CMD_VIDEO_SETPALETTE;
+    req.palette = palette;
+
+    call_environment(&req);
+    return req.result;
+}

@@ -18,7 +18,7 @@ bios_32k.bin: bios.bin
 	$(COPY) -O binary $< $@
 
 
-bios.elf: bios_crt0.s bios.o bios_spi.o bios_sdcard.o bios_uart.o bios_fatfs.o diskio_spu32.o ff.o
+bios.elf: bios_crt0.s bios.o bios_spi.o bios_sdcard.o bios_uart.o bios_video.o bios_fatfs.o diskio_spu32.o ff.o
 	$(CC) $(CFLAGSBIOS) -o $@ $^ $(LDFLAGSBIOS)
 
 bios.o: bios.c bios_shared.h

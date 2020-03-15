@@ -6,6 +6,7 @@
 #include "bios_sdcard.h"
 #include "bios_uart.h"
 #include "bios_fatfs.h"
+#include "bios_video.h"
 
 // ------------------------------------------------------------------------------------
 
@@ -34,6 +35,8 @@ void _bios_fs_rename(struct request_fs_rename_t* request);
 void _bios_fs_size(struct request_fs_size_t* request);
 void _bios_fs_tell(struct request_fs_tell_t* request);
 void _bios_fs_stat(struct request_fs_stat_t* request);
+void _bios_video_set_mode(struct request_video_set_mode_t* request);
+void _bios_video_set_palette(struct request_video_set_palette_t* request);
 
 /**
  * This is the interrupt service routine. Yeah, we can write this in C.
@@ -165,6 +168,14 @@ void bios_isr() {
                     }
                     case CMD_FS_STAT: {
                         _bios_fs_stat((void*) request_addr);
+                        break;
+                    }
+                    case CMD_VIDEO_SETMODE: {
+                        _bios_video_set_mode((void*) request_addr);
+                        break;
+                    }
+                    case CMD_VIDEO_SETPALETTE: {
+                        _bios_video_set_palette((void*) request_addr);
                         break;
                     }
                     default: {
@@ -388,6 +399,16 @@ void _bios_fs_tell(struct request_fs_tell_t* request) {
 // function to retrieve file information
 void _bios_fs_stat(struct request_fs_stat_t* request) {
     request->result = bios_fatfs_stat(request->path, request->fileinfo);
+}
+
+// function to set video mode
+void _bios_video_set_mode(struct request_video_set_mode_t* request) {
+    request->result = bios_video_set_mode(request->mode, request->videobase, request->fontbase);
+}
+
+// function set video colour palette
+void _bios_video_set_palette(struct request_video_set_palette_t* request) {
+    request->result = bios_video_set_palette(request->palette);
 }
 
 /// END OF BIOS CODE ///

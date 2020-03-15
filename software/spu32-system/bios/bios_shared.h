@@ -18,6 +18,15 @@ enum device_enum {
 };
 
 
+typedef uint8_t videomode_t;
+enum videomode_enum {
+    VIDEOMODE_OFF = 0,
+    VIDEOMODE_TEXT_40 = 1,
+    VIDEOMODE_GRAPHICS_640 = 2,
+    VIDEOMODE_GRAPHICS_320 = 3
+};
+
+
 typedef uint32_t command_t;
 enum command_enum {
     CMD_INIT_BLOCK_DEVICE,
@@ -43,6 +52,8 @@ enum command_enum {
     CMD_FS_SIZE,
     CMD_FS_TELL,
     CMD_FS_STAT,
+    CMD_VIDEO_SETMODE,
+    CMD_VIDEO_SETPALETTE
 };
 
 typedef int32_t result_t;
@@ -263,6 +274,22 @@ struct request_fs_stat_t {
     command_t command; // every request needs to have a command_t at the top!
     char* path;
     struct file_info_t* fileinfo;
+    result_t result;
+};
+
+// data structure to set video mode
+struct request_video_set_mode_t {
+    command_t command; // every request needs to have a command_t at the top!
+    uint32_t* videobase;
+    uint32_t* fontbase;
+    result_t result;
+    videomode_t mode; // is uint8_t
+};
+
+// data structure to set video colour palette
+struct request_video_set_palette_t {
+    command_t command; // every request needs to have a command_t at the top!
+    uint8_t* palette;
     result_t result;
 };
 
