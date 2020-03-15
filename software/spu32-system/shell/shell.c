@@ -385,6 +385,34 @@ void execute_input()
  */
 int main()
 {
+    uint8_t fontdat[2048];
+    uint8_t videodat[(40 * 30) * 2]; // 40 cols, 30 cols, 2 bytes per character (char, colour)
+
+    // load font file
+    filehandle_t fh;
+    result_t res = bios_fs_open(&fh, "/font.dat", MODE_READ);
+    if (res == RESULT_OK) {
+        // read font data
+        uint32_t read;
+        res = bios_fs_read(fh, &fontdat, sizeof fontdat, &read);
+        if (res != RESULT_OK) {
+            printf("could not read /font.dat\n\r");
+        }
+        bios_fs_close(fh);
+
+        // clear video text buffer;
+        for(uint32_t i = 0; i < sizeof videodat; i += 2) {
+            videodat[i] = '@';
+            // set fg colour to light gray, bg colour to black
+            videodat[i+1] = 0x70;
+        }
+
+        bios_video_set_mode(VIDEOMODE_TEXT_40, &videodat, &fontdat);
+
+    } else {
+        printf("could not load /font.dat\n\r");
+    }
+
     printf("\n\r\n\rSPU32 Shell 0.0.1\n\r");
 
     while (1) {
