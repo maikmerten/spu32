@@ -45,7 +45,7 @@ int detectMemsize() {
 int main()
 {
 
-	int memsize = detectMemsize();
+	int memsize = 512 * 1024;
 	printf("Detected memory size: %d bytes\n\r", memsize);
 
 	VGA_BASE = (32 * 1024);
