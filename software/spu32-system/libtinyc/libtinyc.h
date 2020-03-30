@@ -23,5 +23,7 @@ char *strncat(char *dest, const char *src, size_t n);
 char *strcpy(char *dest, const char *src);
 int strcmp(const char *str1, const char *str2);
 
+void softterm_init(char *textbase);
+
 
 #endif

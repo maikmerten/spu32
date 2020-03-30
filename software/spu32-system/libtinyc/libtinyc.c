@@ -3,12 +3,88 @@
 #include <stdarg.h>
 #include <stdint.h>
 
-
 #include "../bios_calls/bios_calls.c"
 
 #define UART_DATA *((volatile char*)DEV_UART_DATA)
 #define UART_RREADY *((volatile char*)DEV_UART_RX_READY)
 #define UART_WREADY *((volatile char*)DEV_UART_TX_READY)
+
+// -------- software terminal stuff ------------ //
+
+#define TERM_COLS 40
+#define TERM_ROWS 30
+
+// standard colour: light gray text on black background
+#define TERM_COLOUR 0x70
+
+char* textbase = NULL;
+uint32_t row, col;
+
+void softterm_init(char *txtbase)
+{
+    textbase = txtbase;
+    row = 0;
+    col = 0;
+
+    // clear video text buffer;
+    for (uint32_t i = 0; i < (TERM_COLS * TERM_ROWS * 2); i += 2) {
+        textbase[i] = ' ';
+        // set fg colour to light gray, bg colour to black
+        textbase[i + 1] = TERM_COLOUR;
+    }
+}
+
+void softterm_scroll() {
+
+    // copy row contents from row below
+    for(uint32_t offset = (TERM_COLS * 2); offset < (TERM_COLS * TERM_ROWS * 2); offset++) {
+        textbase[offset - (TERM_COLS * 2)] = textbase[offset];
+    }
+
+    // clear last line
+    for(uint32_t offset = (TERM_ROWS - 1)*(TERM_COLS * 2); offset < (TERM_COLS * TERM_ROWS * 2); offset += 2) {
+        textbase[offset] = ' ';
+        textbase[offset + 1] = TERM_COLOUR;
+    }
+
+    row--;
+}
+
+void softterm_check_cursor() {
+    if(col >= TERM_COLS) {
+        row++;
+        col = 0;
+    }
+
+    while(row >= TERM_ROWS) {
+        softterm_scroll();
+    }
+}
+
+void softterm_write_char(char c)
+{
+    uint32_t offset = (2 * ((row * TERM_COLS) + col));
+
+    // make cursor invisible
+    textbase[offset] = ' ';
+
+    if(c == '\n') {
+        row++;
+        col = 0;
+    } else if(c == '\r') {
+        col = 0;
+    } else {
+        textbase[offset] = c;
+        textbase[offset + 1] = (char) 0x70; // light gray on black background
+        col++;
+    }
+
+    softterm_check_cursor();
+    // draw cursor
+    textbase[(2 * ((row * TERM_COLS) + col))] = 0xDB;
+}
+
+// -------- end of software terminal stuff --------- //
 
 void printf_c(char c)
 {
@@ -20,6 +96,9 @@ void printf_c(char c)
     UART_DATA = c;
 #else
     bios_stream_write(DEVICE_UART, &c, 1);
+    if (textbase != NULL) {
+        softterm_write_char(c);
+    }
 #endif
 }
 
@@ -68,7 +147,6 @@ char* read_string(char* buf, int n, char echo)
 
     return buf;
 }
-
 
 int parse_int(char* str)
 {

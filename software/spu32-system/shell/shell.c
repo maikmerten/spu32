@@ -44,7 +44,7 @@ void read_input()
             inputbuf[bufidx] = c;
             inputbuf[bufidx + 1] = 0;
             bufidx++;
-            bios_stream_write(DEVICE_STDOUT, &c, 1);
+            printf("%c", c);
         }
     }
 
@@ -408,6 +408,7 @@ int main()
         }
 
         bios_video_set_mode(VIDEOMODE_TEXT_40, &videodat, &fontdat);
+        softterm_init((char*)&videodat);
 
     } else {
         printf("could not load /font.dat\n\r");
