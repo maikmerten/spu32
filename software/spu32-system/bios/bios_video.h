@@ -17,6 +17,7 @@ uint32_t bios_video_get_videobase();
 uint32_t bios_video_get_fontbase();
 uint32_t bios_video_getcols();
 uint32_t bios_video_getrows();
+void bios_video_write(struct request_readwrite_stream_t* request);
 
 
 #endif

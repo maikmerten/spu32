@@ -296,6 +296,9 @@ void _bios_read_stream(struct request_readwrite_stream_t* request) {
 void _bios_write_stream(struct request_readwrite_stream_t* request) {
     switch(request->device) {
         case DEVICE_STDOUT:
+            bios_video_write(request);
+            request->result = RESULT_OK;
+            return;
         case DEVICE_UART: {
             bios_uart_write(request);
             request->result = RESULT_OK;

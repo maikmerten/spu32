@@ -408,7 +408,6 @@ int main()
         }
 
         bios_video_set_mode(VIDEOMODE_TEXT_40, &videodat, &fontdat);
-        softterm_init((char*)&videodat);
 
     } else {
         printf("could not load /font.dat\n\r");
