@@ -8,23 +8,29 @@
 #define TERM_COLOUR 0x70
 
 uint32_t row, col;
+uint8_t escape;
+char escape_buf[4];
 
-void softterm_init()
+void softterm_clear()
 {
-    if (VIDEO_MODE != VIDEOMODE_TEXT_40) {
-        return;
-    }
-
     char* textbase = (char*)VIDEO_BASE;
-    row = 0;
-    col = 0;
-
     // clear video text buffer;
     for (uint32_t i = 0; i < (TERM_COLS * TERM_ROWS * 2); i += 2) {
         textbase[i] = ' ';
         // set fg colour to light gray, bg colour to black
         textbase[i + 1] = TERM_COLOUR;
     }
+    row = 0;
+    col = 0;
+}
+
+void softterm_init()
+{
+    if (VIDEO_MODE != VIDEOMODE_TEXT_40) {
+        return;
+    }
+    escape = 0;
+    softterm_clear();
 }
 
 void softterm_scroll()
@@ -65,15 +71,42 @@ void softterm_write_char(char c)
     // make cursor invisible
     textbase[offset] = ' ';
 
-    if (c == '\n') {
-        row++;
-        col = 0;
-    } else if (c == '\r') {
-        col = 0;
+    if (escape) {
+
+        for(uint32_t i = 1; i < sizeof(escape_buf); ++i) {
+            escape_buf[i-1] = escape_buf[i];
+        }
+        escape_buf[sizeof(escape_buf) - 1] = c;
+
+
+        switch (c) {
+        case 'm': // graphics/color
+            escape = 0;
+            break;
+        case 'J': // clear screen
+            softterm_clear();
+            escape = 0;
+            break;
+        case 'H': // Home
+            row = 0;
+            col = 0;
+            escape = 0;
+            break;
+        }
+
     } else {
-        textbase[offset] = c;
-        textbase[offset + 1] = (char)0x70; // light gray on black background
-        col++;
+        if (c == '\x1B') {
+            escape = 1;
+        } else if (c == '\n') {
+            row++;
+            col = 0;
+        } else if (c == '\r') {
+            col = 0;
+        } else {
+            textbase[offset] = c;
+            textbase[offset + 1] = (char)0x70; // light gray on black background
+            col++;
+        }
     }
 
     softterm_check_cursor();
