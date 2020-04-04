@@ -4,12 +4,13 @@
 #define TERM_COLS 40
 #define TERM_ROWS 30
 
-// standard colour: light gray text on black background
-#define TERM_COLOUR 0x70
+// standard colour: white text on black background
+#define TERM_DEFAULT_COLOUR 0x70
 
 uint32_t row, col;
 uint8_t escape;
 char escape_buf[4];
+uint8_t term_colour;
 
 void softterm_clear()
 {
@@ -18,7 +19,7 @@ void softterm_clear()
     for (uint32_t i = 0; i < (TERM_COLS * TERM_ROWS * 2); i += 2) {
         textbase[i] = ' ';
         // set fg colour to light gray, bg colour to black
-        textbase[i + 1] = TERM_COLOUR;
+        textbase[i + 1] = term_colour;
     }
     row = 0;
     col = 0;
@@ -30,6 +31,7 @@ void softterm_init()
         return;
     }
     escape = 0;
+    term_colour = TERM_DEFAULT_COLOUR;
     softterm_clear();
 }
 
@@ -45,7 +47,7 @@ void softterm_scroll()
     // clear last line
     for (uint32_t offset = (TERM_ROWS - 1) * (TERM_COLS * 2); offset < (TERM_COLS * TERM_ROWS * 2); offset += 2) {
         textbase[offset] = ' ';
-        textbase[offset + 1] = TERM_COLOUR;
+        textbase[offset + 1] = term_colour;
     }
 
     row--;
@@ -60,6 +62,26 @@ void softterm_check_cursor()
 
     while (row >= TERM_ROWS) {
         softterm_scroll();
+    }
+}
+
+void softterm_change_colours() {
+    uint8_t colour = escape_buf[sizeof(escape_buf) - 2] - '0';
+    uint8_t cmd = escape_buf[sizeof(escape_buf) - 3];
+
+    colour &= 0b0111;
+
+    if(cmd == '3') {
+        // change foreground colour
+        term_colour &= 0x0F;
+        term_colour |= (colour << 4);
+    } else if(cmd == '4') {
+        // change background colour
+        term_colour &= 0xF0;
+        term_colour |= colour;
+    } else {
+        // reset to default colour
+        term_colour = TERM_DEFAULT_COLOUR;
     }
 }
 
@@ -81,6 +103,7 @@ void softterm_write_char(char c)
 
         switch (c) {
         case 'm': // graphics/color
+            softterm_change_colours();
             escape = 0;
             break;
         case 'J': // clear screen
@@ -104,7 +127,7 @@ void softterm_write_char(char c)
             col = 0;
         } else {
             textbase[offset] = c;
-            textbase[offset + 1] = (char)0x70; // light gray on black background
+            textbase[offset + 1] = term_colour; // light gray on black background
             col++;
         }
     }

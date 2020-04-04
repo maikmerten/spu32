@@ -4,6 +4,34 @@
 
 char inputbuf[128];
 
+void load_color_palette()
+{
+    static uint8_t default_palette[8][3] = {
+        { 0, 0, 0 }, // black
+        { 200, 0, 0 }, // red
+        { 0, 200, 0 }, // green
+        { 200, 200, 0 }, // yellow
+        { 0, 0, 200 }, // blue
+        { 200, 0, 200 }, // magenta
+        { 0, 200, 200 }, // cyan
+        { 200, 200, 200 } // "white"
+    };
+
+    uint8_t palette[256 * 3];
+    uint32_t basecolor = 0;
+
+    for (uint32_t idx = 0; idx < sizeof(palette); idx += 3) {
+        palette[idx] = default_palette[basecolor][0];
+        palette[idx + 1] = default_palette[basecolor][1];
+        palette[idx + 2] = default_palette[basecolor][2];
+
+        basecolor++;
+        basecolor &= 0b0111;
+    }
+
+    bios_video_set_palette(palette);
+}
+
 void clear_buf(char* buf, uint32_t len)
 {
     for (uint32_t i = 0; i < len; ++i) {
@@ -401,10 +429,10 @@ int main()
         bios_fs_close(fh);
 
         // clear video text buffer;
-        for(uint32_t i = 0; i < sizeof videodat; i += 2) {
+        for (uint32_t i = 0; i < sizeof videodat; i += 2) {
             videodat[i] = '@';
             // set fg colour to light gray, bg colour to black
-            videodat[i+1] = 0x70;
+            videodat[i + 1] = 0x70;
         }
 
         bios_video_set_mode(VIDEOMODE_TEXT_40, &videodat, &fontdat);
@@ -413,11 +441,14 @@ int main()
         printf("could not load /font.dat\n\r");
     }
 
+    load_color_palette();
+
     printf("\n\r\n\rSPU32 Shell 0.0.1\n\r");
 
     while (1) {
         read_input();
         execute_input();
+        load_color_palette();
     }
 
     return 0;
