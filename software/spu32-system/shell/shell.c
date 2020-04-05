@@ -332,7 +332,10 @@ int do_run(char* arg0, char in_bin)
 
         uint32_t exitcode = (*program)(argn, argv);
 
-        printf("\n\rexit code: %d\n\r", exitcode);
+        if(exitcode != 0) {
+            printf("\n\rexit code: %d\n\r", exitcode);
+        }
+        printf("\n");
     }
     return error;
 }
