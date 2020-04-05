@@ -11,6 +11,7 @@ uint32_t row, col;
 uint8_t escape;
 char escape_buf[4];
 uint8_t term_colour;
+char term_cursor_save; // for the character the cursor overwrites
 
 void softterm_clear()
 {
@@ -32,6 +33,7 @@ void softterm_init()
     }
     escape = 0;
     term_colour = TERM_DEFAULT_COLOUR;
+    term_cursor_save = ' ';
     softterm_clear();
 }
 
@@ -91,7 +93,7 @@ void softterm_write_char(char c)
     uint32_t offset = (2 * ((row * TERM_COLS) + col));
 
     // make cursor invisible
-    textbase[offset] = ' ';
+    textbase[offset] = term_cursor_save;
 
     if (escape) {
 
@@ -125,6 +127,13 @@ void softterm_write_char(char c)
             col = 0;
         } else if (c == '\r') {
             col = 0;
+        } else if (c == '\b') {
+            if(col > 0) {
+                col--;
+            } else if(row > 0) {
+                row--;
+                col = TERM_COLS - 1;
+            }
         } else {
             textbase[offset] = c;
             textbase[offset + 1] = term_colour; // light gray on black background
@@ -134,7 +143,9 @@ void softterm_write_char(char c)
 
     softterm_check_cursor();
     // draw cursor
-    textbase[(2 * ((row * TERM_COLS) + col))] = 0xDB;
+    offset = (2 * ((row * TERM_COLS) + col));
+    term_cursor_save = textbase[offset];
+    textbase[offset] = 0xDB;
 }
 
 result_t bios_video_set_mode(videomode_t mode, void* videobase, void* fontbase)

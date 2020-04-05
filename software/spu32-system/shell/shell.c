@@ -46,16 +46,12 @@ void read_input()
     char cwd[64];
     bios_fs_getcwd(cwd, sizeof(cwd));
 
-    uint8_t reprint = 1;
     uint8_t execute = 0;
     uint32_t bufidx = 0;
 
-    while (!execute) {
-        if (reprint) {
-            printf("%s $ %s", cwd, inputbuf);
-            reprint = 0;
-        }
+    printf("%s $ %s", cwd, inputbuf);
 
+    while (!execute) {
         char c;
         bios_stream_read(DEVICE_STDIN, &c, 1);
         if (c == '\n' || c == '\r') {
@@ -63,9 +59,8 @@ void read_input()
         } else if (c == 127) {
             if (bufidx > 0) {
                 inputbuf[--bufidx] = 0;
+                printf("\b \b");
             }
-            reprint = 1;
-            printf("\n\r");
         } else if (c < 32) {
             // ignore other control characters
         } else if (bufidx < (sizeof(inputbuf) - 1)) {
