@@ -260,7 +260,7 @@ int readPlayerMove(char f[SIZEX][SIZEY], char p) {
     printf(ANSI_COLOR_RESET);
 	printf(" ");
     read_string(buf, sizeof(buf), 1);
-    printf("\033[3D   \r\n"); // move cursor back and remove input
+    printf("\b\b\b   \b\b\b"); // move cursor back and remove input
 
     char c = 'a';
     x = 0;
@@ -485,10 +485,10 @@ int gamemenu() {
 	printf("Players place tokens in turn. Once the number of tokens in a field reaches the number of horizontal and vertical neighbours, the field explodes. ");
 	printf("Upon explosion tokens are redistributed into neighbouring fields, which are now owned by the owner of the exploding field.\n\n\r");
 	printf(ANSI_COLOR_YELLOW);
-	printf("Newly aquired fields may in turn explode, possibly causing a chain reaction.\n\n\r");
+	printf("Aquired fields may in turn explode, possibly causing a chain reaction.\n\n\r");
 	printf(ANSI_COLOR_RESET);
 	printf("A player wins if no fields are left to the other player.\n\n\r");
-	printf("Enter number of players (1 or 2) or 0 to exit: ");
+	printf("Number of players (1 or 2), 0 to exit: ");
 	char buf[2];
 	read_string(buf, sizeof(buf), 1);
 	int players = parse_int(buf);

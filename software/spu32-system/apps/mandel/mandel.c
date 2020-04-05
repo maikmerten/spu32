@@ -45,7 +45,7 @@ void renderMandel(int32_t xmin, int32_t dx, int32_t ymin, int32_t dy, uint32_t m
             printf("%c", " .:-;!/>)|&IH%*#"[iter & 0x0F]);
             cx += dx;
         }
-        printf("\n\r");
+        //printf("\n\r");
         cy += dy;
     }
 }
