@@ -8,7 +8,7 @@ COPY=riscv64-unknown-elf-objcopy
 .PHONY: clean
 
 
-all: argtest.bin mandel.bin memtest.bin dhryston.bin chreact.bin
+all: argtest.bin mandel.bin memtest.bin dhryston.bin chreact.bin vgadraw.bin
 
 
 %.bin: %.elf
@@ -29,6 +29,9 @@ dhryston.bin: ./dhrystone/*.* ../libtinyc/*.a
 
 chreact.elf: ./chainreaction/*.* crt0.s ../libtinyc/*.a ../libspu32/*.a
 	$(CC) $(CFLAGS) -o $@ chainreaction/chainreaction.c crt0.s $(LDFLAGS)
+
+vgadraw.elf: ./vgadraw/*.* crt0.s ../libtinyc/*.a ../libspu32/*.a
+	$(CC) $(CFLAGS) -o $@ vgadraw/vgadraw.c crt0.s $(LDFLAGS)
 
 clean:
 	cd dhrystone && $(MAKE) clean

@@ -1,7 +1,7 @@
 #include <libtinyc.h>
 #include <libspu32.h>
 #include <stdint.h>
-#include "../asm/devices.h"
+#include "../../bios/devices.h"
 
 #define VGA_BASE *((volatile uint32_t*)DEV_VGA_BASE)
 #define VGA_MODE *((volatile uint8_t*)DEV_VGA_MODE)
@@ -18,7 +18,7 @@ uint32_t vgabase = (32*1024);
 
 void setVGABase(uint32_t baseadr) {
     vgabase = baseadr;
-    printf("vga base: %d\n\r", vgabase);
+    //printf("vga base: %d\n\r", vgabase);
 }
 
 void switchVGABase() {
@@ -423,7 +423,7 @@ int main() {
         fillScreen(color);
         color = get_prng_value() & 0xFF;
         end = get_milli_time();
-        printf("time for screen fill: %d\n\r", end - start);
+        //printf("time for screen fill: %d\n\r", end - start);
 
         ///////////////
 
@@ -433,7 +433,7 @@ int main() {
         fillCircle(160, 120, 64, color);
         color = get_prng_value() & 0xFF;
         end = get_milli_time();
-        printf("time for circle fill: %d\n\r", end - start);
+        //printf("time for circle fill: %d\n\r", end - start);
 
         setClip(0, screenwidth-1, 0, screenheight-1);
 
@@ -445,7 +445,7 @@ int main() {
         drawCircle(160, 120, 80, color);
         color = get_prng_value() & 0xFF;
         end = get_milli_time();
-        printf("time for circle draw: %d\n\r", end - start);
+        //printf("time for circle draw: %d\n\r", end - start);
 
         setClip(0, screenwidth-1, 0, screenheight-1);
 
@@ -458,7 +458,7 @@ int main() {
 
         color = get_prng_value() & 0xFF;
         end = get_milli_time();
-        printf("time for triangle fill: %d\n\r", end - start);
+        //printf("time for triangle fill: %d\n\r", end - start);
 
         ///////////////
 
@@ -485,7 +485,7 @@ int main() {
         switchVGABase();
         
         start = get_milli_time();
-        while(get_milli_time() - start < 5000) {
+        while(get_milli_time() - start < 1000) {
         }
 
         count++;
