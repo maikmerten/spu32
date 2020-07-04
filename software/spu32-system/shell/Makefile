@@ -14,7 +14,7 @@ all: shell.bin
 %.bin: %.elf
 	$(COPY) -O binary $< $@
 
-shell.elf: ./*.c crt0.s ../bios_calls/*.* ../libbioscalls/*.* ../libtinyc/*.*
+shell.elf: ./*.c crt0.s ../bios_calls/*.* ../libtinyc/*.*
 	$(CC) $(CFLAGS) -o $@ shell.c crt0.s $(LDFLAGS)
 
 dump: shell.elf
