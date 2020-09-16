@@ -9,6 +9,7 @@
 `include "./timer/timer_wb8.v"
 `include "./rom/rom_wb8.v"
 `include "./ram/sram256kx16_wb8_vga.v"
+`include "./ram/sram256kx16_wb8_vga_ice40.v"
 `include "./ram/bram_wb8.v"
 `include "./prng/prng_wb8.v"
 `include "./vga/vga_wb8_extram.v"
@@ -262,6 +263,8 @@ module top(
     );
 
 
+//`define BRAM 1
+
     reg ram_stb;
     wire ram_ack;
 
@@ -313,7 +316,7 @@ module top(
         );            
     end
 
-/*
+`ifdef BRAM
     reg bram_stb;
     wire bram_ack;
     wire[7:0] bram_dat;
@@ -329,7 +332,7 @@ module top(
         .O_wb_dat(bram_dat),
         .O_wb_ack(bram_ack)
     );
-*/
+`endif
 
     // The iCE40 BRAMs always return zero for a while after device program and reset:
     // https://github.com/cliffordwolf/icestorm/issues/76
@@ -358,15 +361,19 @@ module top(
         irdecoder_stb = 0;
         audio_stb = 0;
         vga_stb = 0;
-        //bram_stb = 0;
+    `ifdef BRAM
+        bram_stb = 0;
+    `endif
 
         casez(cpu_adr[31:0])
 
-            /*{32'h01??????}: begin
+`ifdef BRAM
+            {32'h01??????}: begin
                 arbiter_dat_o = ram_dat;
                 arbiter_ack_o = ram_ack;
                 ram_stb = cpu_stb;
-            end*/
+            end
+`endif
 
             {16'hFFFF, 3'b000, {13{1'b?}}}: begin //0xFFFF0000 - 0xFFFF1FFF: VGA
                 arbiter_dat_o = vga_dat;
@@ -430,14 +437,15 @@ module top(
             end
 
             default: begin
-                /*arbiter_dat_o = bram_dat;
+`ifdef BRAM
+                arbiter_dat_o = bram_dat;
                 arbiter_ack_o = bram_ack;
-                bram_stb = cpu_stb;*/
-
+                bram_stb = cpu_stb;
+`else
                 arbiter_dat_o = ram_dat;
                 arbiter_ack_o = ram_ack;
                 ram_stb = cpu_stb;
-
+`endif
             end
 
         endcase
