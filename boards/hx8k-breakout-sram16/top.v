@@ -264,11 +264,39 @@ module top(
 
 
 //`define BRAM 1
-
+`define SRAM_ICE40 1
     reg ram_stb;
     wire ram_ack;
 
+`ifdef SRAM_ICE40
+    wire[17:0] sram_chip_adr;
+    assign {sram_a0, sram_a1, sram_a2, sram_a3, sram_a4, sram_a5, sram_a6, sram_a7, sram_a8, sram_a9, sram_a10, sram_a11, sram_a12, sram_a13, sram_a14, sram_a15, sram_a16, sram_a17} = sram_chip_adr;
+    wire[15:0] sram_chip_dat = {sram_d15, sram_d14, sram_d13, sram_d12, sram_d11, sram_d10, sram_d9, sram_d8, sram_d7, sram_d6, sram_d5, sram_d4, sram_d3, sram_d2, sram_d1, sram_d0};
 
+    sram256kx16_wb8_vga_ice40 sram_inst(
+        // wiring to wishbone bus
+        .I_wb_clk(clk),
+        .I_wb_adr(cpu_adr[18:0]),
+        .I_wb_dat(cpu_dat),
+        .I_wb_stb(ram_stb),
+        .I_wb_we(cpu_we),
+        .O_wb_dat(ram_dat),
+        .O_wb_ack(ram_ack),
+        .O_wb_stall(ram_stall),
+        // VGA read port
+        .I_vga_req(vga_ram_req),
+        .I_vga_adr(vga_ram_adr),
+        // wiring to SRAM chip
+        .IO_data(sram_chip_dat),
+		.O_address(sram_chip_adr),
+        .O_ce(sram_ce),
+        .O_oe(sram_oe),
+        .O_we(sram_we),
+        .O_lb(sram_lb),
+        .O_ub(sram_ub),
+    );
+
+`else
     wire[15:0] sram_dat_to_chip;
     wire[15:0] sram_dat_from_chip;
     wire sram_output_enable;
@@ -315,6 +343,7 @@ module top(
             .D_IN_0(sram_dat_from_chip[i])
         );            
     end
+`endif
 
 `ifdef BRAM
     reg bram_stb;
