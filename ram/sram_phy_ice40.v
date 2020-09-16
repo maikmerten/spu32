@@ -14,7 +14,7 @@ module sram_phy_ice40
         output O_chip_ub,
         output O_chip_lb,
 
-        input I_stb,
+        input I_en,
         input I_write,
         input I_ub,
         input I_lb,
@@ -30,7 +30,7 @@ module sram_phy_ice40
     wire writepulse = (write1 != write2);
 
     always @(posedge I_clk) begin
-        if(I_stb) begin
+        if(I_en) begin
             if(I_write) begin
                 write1 <= !write2;
             end else begin
@@ -59,7 +59,7 @@ module sram_phy_ice40
         SB_IO #(.PIN_TYPE(6'b 1001_00), .PULLUP(1'b 0)) io_block_instance (
             .PACKAGE_PIN(IO_chip_data[i]),
             .OUTPUT_ENABLE(writepulse),
-            //.CLOCK_ENABLE(1'b1), // defaults to 1 anyways
+            .CLOCK_ENABLE(1'b1), // defaults to 1 anyways
             .INPUT_CLK(I_clk),
             .OUTPUT_CLK(I_clk),
             .D_OUT_0(I_data[i]),
@@ -71,7 +71,7 @@ module sram_phy_ice40
     for(i = 0; i < ADDRBITS; i = i + 1) begin
         SB_IO #(.PIN_TYPE(6'b 0101_01), .PULLUP(1'b 0)) io_block_instance (
             .PACKAGE_PIN(O_chip_addr[i]),
-            //.CLOCK_ENABLE(1'b1), // defaults to 1 anyways
+            .CLOCK_ENABLE(1'b1), // defaults to 1 anyways
             .OUTPUT_CLK(I_clk),
             .D_OUT_0(I_addr[i]),
         );
@@ -85,7 +85,7 @@ module sram_phy_ice40
     for(i = 0; i < $size(ctrl_out); i = i + 1) begin
         SB_IO #(.PIN_TYPE(6'b 0101_01), .PULLUP(1'b 0)) io_block_instance (
             .PACKAGE_PIN(ctrl_out[i]),
-            //.CLOCK_ENABLE(1'b1), // defaults to 1 anyways
+            .CLOCK_ENABLE(1'b1), // defaults to 1 anyways
             .OUTPUT_CLK(I_clk),
             .D_OUT_0(ctrl_in[i]),
         );
@@ -97,8 +97,6 @@ module sram_phy_ice40
     for(i = 0; i < $size(nonreg_out); i = i + 1) begin
         SB_IO #(.PIN_TYPE(6'b 0110_01), .PULLUP(1'b 0)) io_block_instance (
             .PACKAGE_PIN(nonreg_out[i]),
-            //.CLOCK_ENABLE(1'b1), // defaults to 1 anyways
-            .OUTPUT_CLK(I_clk),
             .D_OUT_0(nonreg_in[i]),
         );
     end
