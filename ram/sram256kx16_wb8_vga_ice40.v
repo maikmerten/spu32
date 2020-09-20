@@ -20,6 +20,8 @@ module sram256kx16_wb8_vga_ice40
 		output O_oe, O_ce, O_we, O_lb, O_ub,
 	);
 
+    localparam DATABITS = 16;
+    localparam ADDRBITS = 19;
 	
 	reg write1 = 0;
 	reg write2 = 0;
@@ -31,10 +33,9 @@ module sram256kx16_wb8_vga_ice40
 
 	wire[15:0] writedata = {I_wb_dat, I_wb_dat};
 
-	reg[18:0] address;
-	assign O_address = address[18:1];
-	assign O_lb = address[0];
-	assign O_ub = !address[0];
+	reg address_lsb;
+	assign O_lb = address_lsb;
+	assign O_ub = !address_lsb;
 
 	// control signals are active low, thus negated
 	assign O_ce = 0;
@@ -43,15 +44,25 @@ module sram256kx16_wb8_vga_ice40
 
 	assign O_wb_stall = I_wb_stb & I_vga_req;
 
-	wire[15:0] sram_data;
+	wire[DATABITS-1:0] sram_data;
+    wire[ADDRBITS-2:0] sram_addr = I_vga_req ? I_vga_adr[ADDRBITS-1:1] : I_wb_adr[ADDRBITS-1:1];
 
 	genvar i;
+
+    // SB_IO instances for address lines to SRAM chip
+    for(i = 0; i < (ADDRBITS - 1); i = i + 1) begin
+        SB_IO #(.PIN_TYPE(6'b 0101_01), .PULLUP(1'b 0)) io_block_instance (
+            .PACKAGE_PIN(O_address[i]),
+            .OUTPUT_CLK(I_wb_clk),
+            .D_OUT_0(sram_addr[i]),
+        );
+    end
+
     // SB_IO instances for data signals to SRAM chip
-    for(i = 0; i < 16; i = i + 1) begin
+    for(i = 0; i < DATABITS; i = i + 1) begin
         SB_IO #(.PIN_TYPE(6'b 1001_00), .PULLUP(1'b 0)) io_block_instance (
             .PACKAGE_PIN(IO_data[i]),
             .OUTPUT_ENABLE(writepulse),
-            .CLOCK_ENABLE(1'b1), // defaults to 1 anyways
             .INPUT_CLK(I_wb_clk),
             .OUTPUT_CLK(I_wb_clk),
             .D_OUT_0(writedata[i]),
@@ -59,16 +70,16 @@ module sram256kx16_wb8_vga_ice40
         ); 
     end
 
-	assign O_wb_dat = address[0] ? sram_data[15:8] : sram_data[7:0];
+	assign O_wb_dat = address_lsb ? sram_data[15:8] : sram_data[7:0];
 
 
 	always @(posedge I_wb_clk) begin
 
 		if(I_vga_req) begin
-			address <= I_vga_adr;
+			address_lsb <= I_vga_adr[0];
 			read1 <= !read2; // initiate read
 		end else if(I_wb_stb) begin
-			address <= I_wb_adr;
+			address_lsb <= I_wb_adr[0];
 			if(I_wb_we) begin
 				write1 <= !write2; // initiate write
 			end else begin
