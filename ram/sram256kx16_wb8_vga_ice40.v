@@ -18,7 +18,8 @@ module sram256kx16_wb8_vga_ice40
 		// SRAM signals
 		inout[15:0] IO_data,
 		output[17:0] O_address,
-		output O_oe, O_ce, O_we, O_lb, O_ub,
+		output reg O_lb, O_ub,
+		output O_oe, O_ce, O_we,
 	);
 
     localparam DATABITS = 16;
@@ -33,10 +34,6 @@ module sram256kx16_wb8_vga_ice40
 	wire readpulse = (read1 != read2);
 
 	wire[15:0] writedata = {I_wb_dat, I_wb_dat};
-
-	reg address_lsb;
-	assign O_lb = address_lsb;
-	assign O_ub = !address_lsb;
 
 	// control signals are active low, thus negated
 	assign O_ce = 0;
@@ -71,6 +68,7 @@ module sram256kx16_wb8_vga_ice40
         ); 
     end
 
+	reg address_lsb;
 	assign O_wb_dat = address_lsb ? sram_data[15:8] : sram_data[7:0];
 	assign O_vga_dat = sram_data;
 
@@ -78,10 +76,17 @@ module sram256kx16_wb8_vga_ice40
 	always @(posedge I_wb_clk) begin
 
 		if(I_vga_req) begin
-			address_lsb <= I_vga_adr[0];
 			read1 <= !read2; // initiate read
+
+			// read upper and lower byte
+			O_lb <= 1'b0;
+			O_ub <= 1'b0;
 		end else if(I_wb_stb) begin
 			address_lsb <= I_wb_adr[0];
+
+			O_lb <= I_wb_adr[0];
+			O_ub <= !I_wb_adr[0];
+
 			if(I_wb_we) begin
 				write1 <= !write2; // initiate write
 			end else begin
