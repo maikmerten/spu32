@@ -283,7 +283,7 @@ module top(
         .O_wb_stall(ram_stall),
         // VGA read port
         .I_vga_req(vga_ram_req),
-        .I_vga_adr(vga_ram_adr),
+        .I_vga_adr(vga_ram_adr[18:1]),
         .O_vga_dat(ram_vga_dat),
         // wiring to SRAM chip
         .IO_data(sram_chip_dat),

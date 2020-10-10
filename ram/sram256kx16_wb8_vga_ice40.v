@@ -11,8 +11,9 @@ module sram256kx16_wb8_vga_ice40
 		output O_wb_stall,
 
 		// read port for VGA
+		// addresses 16-bit words
 		input I_vga_req,
-		input[18:0] I_vga_adr,
+		input[17:0] I_vga_adr,
 		output[15:0] O_vga_dat,
 
 		// SRAM signals
@@ -43,7 +44,7 @@ module sram256kx16_wb8_vga_ice40
 	assign O_wb_stall = I_wb_stb & I_vga_req;
 
 	wire[DATABITS-1:0] sram_data;
-    wire[ADDRBITS-2:0] sram_addr = I_vga_req ? I_vga_adr[ADDRBITS-1:1] : I_wb_adr[ADDRBITS-1:1];
+    wire[ADDRBITS-2:0] sram_addr = I_vga_req ? I_vga_adr : I_wb_adr[ADDRBITS-1:1];
 
 	genvar i;
 
