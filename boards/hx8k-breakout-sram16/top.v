@@ -205,6 +205,7 @@ module top(
     wire[18:0] vga_ram_adr;
     wire vga_ram_req;
     wire vga_ack;
+    wire[15:0] ram_vga_dat;
 
 
     vga_wb8_extram vga_inst(
@@ -218,7 +219,7 @@ module top(
         .I_reset(reset),
         .O_ram_req(vga_ram_req),
         .O_ram_adr(vga_ram_adr),
-        .I_ram_dat(ram_dat),
+        .I_ram_dat(vga_ram_adr[0] ? ram_vga_dat[15:8] : ram_vga_dat[7:0]),
         .I_vga_clk(clk),
         .O_vga_vsync(vga_vsync),
         .O_vga_hsync(vga_hsync),
@@ -283,6 +284,7 @@ module top(
         // VGA read port
         .I_vga_req(vga_ram_req),
         .I_vga_adr(vga_ram_adr),
+        .O_vga_dat(ram_vga_dat),
         // wiring to SRAM chip
         .IO_data(sram_chip_dat),
 		.O_address(sram_chip_adr),

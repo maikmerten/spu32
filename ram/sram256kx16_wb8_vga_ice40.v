@@ -13,6 +13,7 @@ module sram256kx16_wb8_vga_ice40
 		// read port for VGA
 		input I_vga_req,
 		input[18:0] I_vga_adr,
+		output[15:0] O_vga_dat,
 
 		// SRAM signals
 		inout[15:0] IO_data,
@@ -71,6 +72,7 @@ module sram256kx16_wb8_vga_ice40
     end
 
 	assign O_wb_dat = address_lsb ? sram_data[15:8] : sram_data[7:0];
+	assign O_vga_dat = sram_data;
 
 
 	always @(posedge I_wb_clk) begin
