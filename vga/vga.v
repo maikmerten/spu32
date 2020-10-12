@@ -14,6 +14,9 @@ module vga (
         input[15:0] I_ram_dat,
         input[17:0] I_base_adr,
         input[17:0] I_font_adr,
+        input I_palette_update_req,
+        input[31:0] I_palette_update,
+        output O_palette_update_ack,
         output[17:0] O_ram_adr,
         output O_ram_req,
         output O_vsync, O_hsync,
@@ -181,12 +184,13 @@ module vga (
     wire[23:0] palette_rgb;
     vga_palette vga_palette_inst(
         .I_clk(I_vga_clk),
-        .I_update_request(palette_update_ack),
-        .I_palette_update(32'h00000000),
+        .I_update_request(I_palette_update_req),
+        .I_palette_update(I_palette_update),
         .I_palette_idx(pixelpipe_palette_idx),
         .O_update_ack(palette_update_ack),
         .O_rgb(palette_rgb)
     );
+    assign O_palette_update_ack = palette_update_ack;
 
 
     reg vsync_delay, hsync_delay, visible_delay;
