@@ -71,7 +71,7 @@ module sram256kx16_wb8_vga_ice40
 
 	reg address_lsb;
 	assign O_wb_dat = address_lsb ? sram_data[15:8] : sram_data[7:0];
-	assign O_vga_dat = sram_data;
+	assign O_vga_dat = {sram_data[7:0], sram_data[15:8]};
 
 
 	always @(posedge I_wb_clk) begin

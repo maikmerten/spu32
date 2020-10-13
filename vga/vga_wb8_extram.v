@@ -62,8 +62,7 @@ module vga_wb8_extram (
     vga vga_inst(
         .I_vga_clk(I_wb_clk),
         .I_mode(vga_mode),
-        // TODO: find out why this byte-shuffle is necessary
-        .I_ram_dat({I_ram_dat[7:0], I_ram_dat[15:8]}),
+        .I_ram_dat(I_ram_dat),
         .I_base_adr(ram_base),
         .I_font_adr(font_base),
         .I_palette_update_req(palette_update_request),
