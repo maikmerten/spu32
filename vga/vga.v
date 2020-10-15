@@ -8,7 +8,12 @@
 `include "vga/vga_palette.v"
 
 
-module vga (
+module vga
+    #(
+        parameter COLBITS = 10,
+        parameter ROWBITS = 10
+    )
+    (
         input I_vga_clk,
         input[3:0] I_mode,
         input[15:0] I_ram_dat,
@@ -20,7 +25,9 @@ module vga (
         output[17:0] O_ram_adr,
         output O_ram_req,
         output O_vsync, O_hsync,
-        output[23:0] O_rgb
+        output[23:0] O_rgb,
+        output[ROWBITS-1:0] O_row,
+        output O_visible
     );
 
     wire[15:0] ram_dat;
@@ -79,6 +86,8 @@ module vga (
         .O_hsync(hsync),
         .O_visible(visible)
     );
+    assign O_row = row;
+    assign O_visible = visible;
 
     
 

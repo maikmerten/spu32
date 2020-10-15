@@ -59,6 +59,8 @@ module vga_wb8_extram (
     wire[17:0] vga_ram_adr;
     wire vga_ram_req, vga_vsync, vga_hsync;
     wire[23:0] vga_rgb;
+    wire[9:0] vga_row;
+    wire vga_visible;
     vga vga_inst(
         .I_vga_clk(I_wb_clk),
         .I_mode(vga_mode),
@@ -72,7 +74,9 @@ module vga_wb8_extram (
         .O_ram_req(vga_ram_req),
         .O_vsync(vga_vsync),
         .O_hsync(vga_hsync),
-        .O_rgb(vga_rgb)
+        .O_rgb(vga_rgb),
+        .O_row(vga_row),
+        .O_visible(vga_visible)
     );
 
     assign O_vga_r = vga_rgb[23:16];
@@ -142,16 +146,15 @@ module vga_wb8_extram (
                     4'hA: O_wb_dat <= palette_update[23:16];
                     4'hB: O_wb_dat <= palette_update[31:24];
 
-                    // TODO: restore access to line number and visible flag
                     // read access to current line
-                    /*4'hC: begin
-                        O_wb_dat <= row[7:0];
-                        tmp[1:0] <= row[9:8];
+                    4'hC: begin
+                        O_wb_dat <= vga_row[7:0];
+                        tmp[1:0] <= vga_row[9:8];
                     end
                     4'hD: O_wb_dat <= {{6{1'b0}}, tmp[1:0]};
 
                     // read access to visible line flag
-                    4'hE: O_wb_dat <= {{7{1'b0}}, row_is_visible};*/
+                    4'hE: O_wb_dat <= {{7{1'b0}}, vga_visible};
 
                     // read access to graphics mode register
                     4'hF: O_wb_dat <= {6'b000000, mode};
