@@ -1,7 +1,7 @@
 #include "bios_video.h"
 #include <stddef.h>
 
-#define TERM_COLS 40
+#define TERM_COLS 80
 #define TERM_ROWS 30
 
 // standard colour: white text on black background
@@ -28,7 +28,7 @@ void softterm_clear()
 
 void softterm_init()
 {
-    if (VIDEO_MODE != VIDEOMODE_TEXT_40) {
+    if (VIDEO_MODE != VIDEOMODE_TEXT_80) {
         return;
     }
     escape = 0;
@@ -158,8 +158,9 @@ result_t bios_video_set_mode(videomode_t mode, void* videobase, void* fontbase)
     VIDEO_FONT = (uint32_t)fontbase;
 
     switch (mode) {
-    case VIDEOMODE_TEXT_40:
+    case VIDEOMODE_TEXT_80:
         softterm_init();
+    case VIDEOMODE_TEXT_40:
     case VIDEOMODE_OFF:
     case VIDEOMODE_GRAPHICS_640:
     case VIDEOMODE_GRAPHICS_320:
@@ -211,6 +212,9 @@ uint32_t bios_video_getcols()
     switch (VIDEO_MODE) {
     VIDEOMODE_TEXT_40:
         return 40;
+    
+    VIDEOMODE_TEXT_80:
+        return 80;
 
     VIDEOMODE_GRAPHICS_640:
         return 640;
@@ -227,6 +231,7 @@ uint32_t bios_video_getrows()
 {
     switch (VIDEO_MODE) {
     VIDEOMODE_TEXT_40:
+    VIDEOMODE_TEXT_80:
         return 30;
 
     VIDEOMODE_GRAPHICS_640:
@@ -242,7 +247,7 @@ uint32_t bios_video_getrows()
 
 void bios_video_write(struct request_readwrite_stream_t* request)
 {
-    if (VIDEO_MODE != VIDEOMODE_TEXT_40) {
+    if (VIDEO_MODE != VIDEOMODE_TEXT_80) {
         return;
     }
 

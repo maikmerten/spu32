@@ -411,18 +411,18 @@ void execute_input()
  */
 int main()
 {
-    uint8_t fontdat[2048];
-    uint8_t videodat[(40 * 30) * 2]; // 40 cols, 30 cols, 2 bytes per character (char, colour)
+    uint8_t fontdat[4096];
+    uint8_t videodat[(80 * 30) * 2]; // 80 cols, 30 rows, 2 bytes per character (char, colour)
 
     // load font file
     filehandle_t fh;
-    result_t res = bios_fs_open(&fh, "/font.dat", MODE_READ);
+    result_t res = bios_fs_open(&fh, "/font80.dat", MODE_READ);
     if (res == RESULT_OK) {
         // read font data
         uint32_t read;
         res = bios_fs_read(fh, &fontdat, sizeof fontdat, &read);
         if (res != RESULT_OK) {
-            printf("could not read /font.dat\n\r");
+            printf("could not read /font80.dat\n\r");
         }
         bios_fs_close(fh);
 
@@ -433,10 +433,10 @@ int main()
             videodat[i + 1] = 0x70;
         }
 
-        bios_video_set_mode(VIDEOMODE_TEXT_40, &videodat, &fontdat);
+        bios_video_set_mode(VIDEOMODE_TEXT_80, &videodat, &fontdat);
 
     } else {
-        printf("could not load /font.dat\n\r");
+        printf("could not load /font80.dat\n\r");
     }
 
     load_color_palette();
