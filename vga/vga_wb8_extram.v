@@ -27,12 +27,13 @@ module vga_wb8_extram (
     );
 
 
-    localparam MODE_OFF = 2'b00;
-    localparam MODE_TEXT_40 = 2'b01;
-    localparam MODE_GRAPHICS_640 = 2'b10;
-    localparam MODE_GRAPHICS_320 = 2'b11;
+    localparam MODE_OFF = 3'b000;
+    localparam MODE_TEXT_40 = 3'b001;
+    localparam MODE_GRAPHICS_640 = 3'b010;
+    localparam MODE_GRAPHICS_320 = 3'b011;
+    localparam MODE_TEXT_80 = 3'b100;
 
-    reg[1:0] mode = MODE_TEXT_40;
+    reg[2:0] mode = MODE_TEXT_40;
     reg[23:0] tmp = 0;
 
     // map old modes to new VGA capabilities
@@ -42,6 +43,7 @@ module vga_wb8_extram (
             MODE_TEXT_40: vga_mode = 4'b0111;
             MODE_GRAPHICS_640: vga_mode = 4'b0100;
             MODE_GRAPHICS_320: vga_mode = 4'b0101;
+            MODE_TEXT_80: vga_mode = 4'b0110;
             default: vga_mode = 4'b0000;
         endcase
     end
@@ -121,7 +123,7 @@ module vga_wb8_extram (
                     // 4'hE visible line - read only
                     
                     // write access to graphics mode register
-                    4'hF: mode <= I_wb_dat[1:0];
+                    4'hF: mode <= I_wb_dat[2:0];
 
                     default: begin end
 
@@ -157,7 +159,7 @@ module vga_wb8_extram (
                     4'hE: O_wb_dat <= {{7{1'b0}}, vga_visible};
 
                     // read access to graphics mode register
-                    4'hF: O_wb_dat <= {6'b000000, mode};
+                    4'hF: O_wb_dat <= {5'b000000, mode};
 
                     default: O_wb_dat <= 8'h00;
                 endcase
