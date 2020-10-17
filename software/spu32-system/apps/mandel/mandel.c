@@ -3,8 +3,8 @@
 
 // fixed point precision, bits for fractional part
 const uint32_t SHIFT = 24;
-const uint32_t PIXELS_X = 40;
-const uint32_t PIXELS_Y = 30;
+const uint32_t PIXELS_X = 80;
+const uint32_t PIXELS_Y = 28;
 
 // originally based on https://rosettacode.org/wiki/Mandelbrot_set#B
 void renderMandel(int32_t xmin, int32_t dx, int32_t ymin, int32_t dy, uint32_t maxiter)
