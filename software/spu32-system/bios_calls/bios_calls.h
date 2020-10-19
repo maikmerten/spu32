@@ -31,7 +31,7 @@ result_t bios_fs_stat(char* path, struct file_info_t* fileinfo);
 
 result_t bios_video_set_mode(videomode_t mode, void* videobase, void* fontbase);
 result_t bios_video_set_palette(uint8_t* palette);
-result_t bios_video_get_mode(videomode_t* mode, uint32_t* videobase, uint32_t* fontbase);
+result_t bios_video_get_mode(videomode_t* mode, void** videobase, void** fontbase);
 
 
 #endif

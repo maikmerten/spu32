@@ -318,7 +318,7 @@ result_t bios_video_set_palette(uint8_t* palette) {
     return req.result;
 }
 
-result_t bios_video_get_mode(videomode_t* mode, uint32_t* videobase, uint32_t* fontbase) {
+result_t bios_video_get_mode(videomode_t* mode, void** videobase, void** fontbase) {
     struct request_video_get_mode_t req;
     req.command = CMD_VIDEO_GETMODE;
     req.mode = mode;

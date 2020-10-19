@@ -5,8 +5,8 @@ int main(int argn, char** argv) {
     const char hex[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
     videomode_t mode;
-    uint32_t videobase;
-    uint32_t fontbase;
+    void* videobase;
+    void* fontbase;
     bios_video_get_mode(&mode, &videobase, &fontbase);
 
     char* text = (char*)videobase;
