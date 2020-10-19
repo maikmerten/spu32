@@ -177,6 +177,14 @@ result_t bios_video_set_mode(videomode_t mode, void* videobase, void* fontbase)
     return result;
 }
 
+result_t bios_video_get_mode(videomode_t* mode, uint32_t* videobase, uint32_t* fontbase)
+{
+    *mode = VIDEO_MODE;
+    *videobase = (uint32_t)VIDEO_BASE;
+    *fontbase = (uint32_t)VIDEO_FONT;
+    return RESULT_OK;
+}
+
 result_t bios_video_set_palette(uint8_t* palette)
 {
     uint8_t idx = 0;

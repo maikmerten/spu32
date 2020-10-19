@@ -37,6 +37,7 @@ void _bios_fs_tell(struct request_fs_tell_t* request);
 void _bios_fs_stat(struct request_fs_stat_t* request);
 void _bios_video_set_mode(struct request_video_set_mode_t* request);
 void _bios_video_set_palette(struct request_video_set_palette_t* request);
+void _bios_video_get_mode(struct request_video_get_mode_t* request);
 
 /**
  * This is the interrupt service routine. Yeah, we can write this in C.
@@ -177,6 +178,9 @@ void bios_isr() {
                     case CMD_VIDEO_SETPALETTE: {
                         _bios_video_set_palette((void*) request_addr);
                         break;
+                    }
+                    case CMD_VIDEO_GETMODE: {
+                        _bios_video_get_mode((void*) request_addr);
                     }
                     default: {
                         // Unknown command requested! Panic? Panic!
@@ -412,6 +416,10 @@ void _bios_video_set_mode(struct request_video_set_mode_t* request) {
 // function set video colour palette
 void _bios_video_set_palette(struct request_video_set_palette_t* request) {
     request->result = bios_video_set_palette(request->palette);
+}
+
+void _bios_video_get_mode(struct request_video_get_mode_t* request) {
+    request->result = bios_video_get_mode(request->mode, request->videobase, request->fontbase);
 }
 
 /// END OF BIOS CODE ///

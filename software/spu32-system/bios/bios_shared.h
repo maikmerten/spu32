@@ -54,7 +54,8 @@ enum command_enum {
     CMD_FS_TELL,
     CMD_FS_STAT,
     CMD_VIDEO_SETMODE,
-    CMD_VIDEO_SETPALETTE
+    CMD_VIDEO_SETPALETTE,
+    CMD_VIDEO_GETMODE
 };
 
 typedef int32_t result_t;
@@ -291,6 +292,15 @@ struct request_video_set_mode_t {
 struct request_video_set_palette_t {
     command_t command; // every request needs to have a command_t at the top!
     uint8_t* palette;
+    result_t result;
+};
+
+// data structure to get video mode
+struct request_video_get_mode_t {
+    command_t command; // every request needs to have a command_t at the top!
+    videomode_t* mode;
+    void* videobase;
+    void* fontbase;
     result_t result;
 };
 
