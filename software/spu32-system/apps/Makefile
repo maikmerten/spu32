@@ -8,7 +8,7 @@ COPY=riscv64-unknown-elf-objcopy
 .PHONY: clean
 
 
-all: argtest.bin mandel.bin minmemtest.bin memtest.bin dhryston.bin chreact.bin vgadraw.bin showfont.bin
+all: argtest.bin mandel.bin minmemtest.bin memtest.bin dhryston.bin chreact.bin vgadraw.bin showfont.bin ls.bin mkdir.bin rm.bin cd.bin mv.bin print.bin cp.bin
 
 
 %.bin: %.elf
@@ -38,6 +38,28 @@ vgadraw.elf: ./vgadraw/*.* crt0.s ../libtinyc/*.a ../libspu32/*.a
 
 showfont.elf: ./showfont/*.* crt0.s ../libtinyc/*.a
 	$(CC) $(CFLAGS) -o $@ showfont/showfont.c crt0.s $(LDFLAGS)
+
+# command line tools
+ls.elf: ./cmds/*.* crt0.s ../libtinyc/*.a
+	$(CC) $(CFLAGS) -o $@ cmds/ls.c cmds/shared.c crt0.s $(LDFLAGS)
+
+mkdir.elf: ./cmds/*.* crt0.s ../libtinyc/*.a
+	$(CC) $(CFLAGS) -o $@ cmds/mkdir.c cmds/shared.c crt0.s $(LDFLAGS)
+
+rm.elf: ./cmds/*.* crt0.s ../libtinyc/*.a
+	$(CC) $(CFLAGS) -o $@ cmds/rm.c cmds/shared.c crt0.s $(LDFLAGS)
+
+cd.elf: ./cmds/*.* crt0.s ../libtinyc/*.a
+	$(CC) $(CFLAGS) -o $@ cmds/cd.c cmds/shared.c crt0.s $(LDFLAGS)
+
+mv.elf: ./cmds/*.* crt0.s ../libtinyc/*.a
+	$(CC) $(CFLAGS) -o $@ cmds/mv.c cmds/shared.c crt0.s $(LDFLAGS)
+
+print.elf: ./cmds/*.* crt0.s ../libtinyc/*.a
+	$(CC) $(CFLAGS) -o $@ cmds/print.c cmds/shared.c crt0.s $(LDFLAGS)
+
+cp.elf: ./cmds/*.* crt0.s ../libtinyc/*.a
+	$(CC) $(CFLAGS) -o $@ cmds/cp.c cmds/shared.c crt0.s $(LDFLAGS)
 
 
 clean:

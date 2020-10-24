@@ -126,139 +126,6 @@ uint32_t count_arguments()
     return n;
 }
 
-void arg1_func(void (*fun)(char*))
-{
-    char arg1[64];
-
-    get_argument(arg1, sizeof(arg1), 1);
-    if (arg1[0] == 0) {
-        printf("needs an argument\n\r");
-        return;
-    }
-
-    (*fun)(arg1);
-}
-
-void arg2_func(void (*fun)(char*, char*))
-{
-    char arg1[64];
-    char arg2[64];
-
-    get_argument(arg1, sizeof(arg1), 1);
-    get_argument(arg2, sizeof(arg2), 2);
-    if (arg1[0] == 0 || arg2[0] == 0) {
-        printf("needs two arguments\n\r");
-        return;
-    }
-
-    (*fun)(arg1, arg2);
-}
-
-void do_ls()
-{
-    result_t res;
-
-    char pattern[16];
-    clear_buf(pattern, sizeof(pattern));
-    get_argument(pattern, 16, 1);
-    if (pattern[0] == 0) {
-        // no argument provided, search for *
-        pattern[0] = '*';
-    }
-
-    // List contents of current dir
-    printf("\n\r");
-    struct file_info_t finfo;
-    res = bios_fs_findfirst(".", pattern, &finfo);
-    while (res == RESULT_OK && finfo.name[0] != 0) {
-        char padding[16];
-        clear_buf(padding, sizeof(padding));
-        uint32_t namelen = strlen(finfo.name);
-        for (uint32_t i = 0; i < (sizeof(padding) - namelen); ++i) {
-            padding[i] = ' ';
-        }
-        printf("%s", finfo.name);
-        printf("%s %s   ", padding, (finfo.attrib & ATTRIB_DIR) != 0 ? "<DIR>" : "     ");
-        printf("%d bytes\n\r", finfo.size);
-        res = bios_fs_findnext(&finfo);
-    }
-
-    uint64_t free;
-    res = bios_fs_free(&free);
-    if (res == RESULT_OK) {
-        uint32_t freekibi = free / 1024;
-        uint32_t freemibi = freekibi / 1024;
-        uint32_t freegibi = freemibi / 1024;
-        printf("---\n\rfree: %d GiB, %d MiB, %d KiB\n\r", freegibi, freemibi, freekibi);
-    } else {
-        printf("could not determine number of free bytes\n\r");
-    }
-
-    printf("\n\r");
-}
-
-void do_mkdir(char* arg1)
-{
-    result_t res = bios_fs_mkdir(arg1);
-    if (res != RESULT_OK) {
-        printf("could not make directory %s\n\r", arg1);
-    }
-}
-
-void do_rm(char* arg1)
-{
-    struct file_info_t finfo;
-    result_t res = bios_fs_findfirst(".", arg1, &finfo);
-    while (res == RESULT_OK && finfo.name[0] != 0) {
-        result_t unlink_res = bios_fs_unlink(finfo.name);
-        if (unlink_res != RESULT_OK) {
-            printf("could not remove %s\n\r", finfo.name);
-        }
-        res = bios_fs_findnext(&finfo);
-    }
-}
-
-void do_cd(char* arg1)
-{
-    result_t res = bios_fs_chdir(arg1);
-    if (res != RESULT_OK) {
-        printf("could not change directory to %s\n\r", arg1);
-    }
-}
-
-void do_mv(char* arg1, char* arg2)
-{
-    result_t res = bios_fs_rename(arg1, arg2);
-    if (res != RESULT_OK) {
-        printf("could not rename %s\n\r", arg1);
-    }
-}
-
-void do_print(char* arg1)
-{
-    filehandle_t fh;
-    result_t res = bios_fs_open(&fh, arg1, MODE_READ);
-    if (res != RESULT_OK) {
-        printf("could not open input file\n\r");
-        return;
-    }
-
-    uint32_t read;
-    char buf[512];
-    clear_buf(buf, sizeof(buf));
-    res = bios_fs_read(fh, buf, sizeof(buf), &read);
-    while (res == RESULT_OK && read > 0) {
-        printf("%s", buf);
-        clear_buf(buf, sizeof(buf));
-        res = bios_fs_read(fh, buf, sizeof(buf), &read);
-    }
-
-    res = bios_fs_close(fh);
-    if (res != RESULT_OK) {
-        printf("could not close file\n\r");
-    }
-}
-
 int do_run(char* arg0, char in_bin)
 {
 
@@ -335,44 +202,8 @@ int do_run(char* arg0, char in_bin)
         if(exitcode != 0) {
             printf("\n\rexit code: %d\n\r", exitcode);
         }
-        printf("\n");
     }
     return error;
-}
-
-void do_cp(char* arg1, char* arg2)
-{
-    filehandle_t fh1;
-    result_t res = bios_fs_open(&fh1, arg1, MODE_READ);
-    if (res != RESULT_OK) {
-        printf("could not open input file\n\r");
-        return;
-    }
-
-    filehandle_t fh2;
-    res = bios_fs_open(&fh2, arg2, MODE_WRITE | MODE_CREATE_ALWAYS);
-    if (res != RESULT_OK) {
-        printf("could not open output file\n\r");
-        bios_fs_close(fh1);
-        return;
-    }
-
-    uint32_t read;
-    char buf[8192];
-    clear_buf(buf, sizeof(buf));
-    res = bios_fs_read(fh1, buf, sizeof(buf), &read);
-    while (res == RESULT_OK && read > 0) {
-        uint32_t written;
-        result_t write_res = bios_fs_write(fh2, buf, read, &written);
-        if (write_res != RESULT_OK) {
-            printf("error writing to output file\n\r");
-            break;
-        }
-        res = bios_fs_read(fh1, buf, sizeof(buf), &read);
-    }
-
-    bios_fs_close(fh1);
-    bios_fs_close(fh2);
 }
 
 void execute_input()
@@ -385,20 +216,6 @@ void execute_input()
     get_argument(arg0, sizeof(arg0), 0);
     if (!do_run(arg0, 1)) {
         // executed program from /bin
-    } else if (strcmp(arg0, "ls") == 0 || strcmp(arg0, "dir") == 0) {
-        do_ls();
-    } else if (strcmp(arg0, "mkdir") == 0) {
-        arg1_func(&do_mkdir);
-    } else if (strcmp(arg0, "rm") == 0) {
-        arg1_func(&do_rm);
-    } else if (strcmp(arg0, "cd") == 0) {
-        arg1_func(&do_cd);
-    } else if (strcmp(arg0, "mv") == 0) {
-        arg2_func(&do_mv);
-    } else if (strcmp(arg0, "print") == 0) {
-        arg1_func(&do_print);
-    } else if (strcmp(arg0, "cp") == 0) {
-        arg2_func(&do_cp);
     } else {
         if (do_run(arg0, 0)) {
             printf("could not execute %s\n\r", arg0);
