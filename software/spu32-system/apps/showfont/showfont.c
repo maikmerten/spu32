@@ -16,18 +16,27 @@ int main(int argn, char** argv) {
         printf("\n");
     }
 
-    // skip a few lines
-    text += (2*80) * 3;
-    text += 8*2;
+    const int ROWBYTES = 2 * 80;
+    const int COLBYTES = 2;
 
+    // print column header
+    int offset = (1 * ROWBYTES) + (6 * COLBYTES);
     for(int i = 0; i < 16; ++i) {
-        int nextline = 2 * 80;
+        text[(i * 2 * COLBYTES) + offset] = hex[i];
+    }
+
+    // print row header
+    offset = (3 * ROWBYTES) + (2 * COLBYTES);
+    for(int i = 0; i < 16; ++i) {
+        text[(i * ROWBYTES) + offset] = hex[i];
+    }
+
+    // print 256 font characters in 16x16 grid
+    offset = (3 * ROWBYTES) + (6 * COLBYTES);
+    for(int i = 0; i < 16; ++i) {
         for(int j = 0; j < 16; ++j) {
-            *text = (char)((i << 4) | j);
-            text += 4;
-            nextline -= 4;
+            text[(i * ROWBYTES) + (j * 2 * COLBYTES) + offset] = (char)((i << 4) | j);
         }
-        text += nextline;
     }
 
     
