@@ -36,9 +36,6 @@ chreact.elf: ./chainreaction/*.* crt0.s ../libtinyc/*.a ../libspu32/*.a
 vgadraw.elf: ./vgadraw/*.* crt0.s ../libtinyc/*.a ../libspu32/*.a
 	$(CC) $(CFLAGS) -o $@ vgadraw/vgadraw.c crt0.s $(LDFLAGS)
 
-showfont.elf: ./showfont/*.* crt0.s ../libtinyc/*.a
-	$(CC) $(CFLAGS) -o $@ showfont/showfont.c crt0.s $(LDFLAGS)
-
 # command line tools
 ls.elf: ./cmds/*.* crt0.s ../libtinyc/*.a
 	$(CC) $(CFLAGS) -o $@ cmds/ls.c cmds/shared.c crt0.s $(LDFLAGS)
@@ -63,6 +60,9 @@ cp.elf: ./cmds/*.* crt0.s ../libtinyc/*.a
 
 cls.elf: ./cmds/*.* crt0.s ../libtinyc/*.a
 	$(CC) $(CFLAGS) -o $@ cmds/cls.c cmds/shared.c crt0.s $(LDFLAGS)
+
+showfont.elf: ./cmds/*.* crt0.s ../libtinyc/*.a
+	$(CC) $(CFLAGS) -o $@ cmds/showfont.c crt0.s $(LDFLAGS)
 
 
 clean:
