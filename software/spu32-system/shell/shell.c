@@ -263,6 +263,15 @@ int main()
     while (1) {
         read_input();
         execute_input();
+
+        videomode_t videomode;
+        void* videobase;
+        void* fontbase;
+        bios_video_get_mode(&videomode, &videobase, &fontbase);
+        if(videomode != VIDEOMODE_TEXT_80) {
+            bios_video_set_mode(VIDEOMODE_TEXT_80, &videodat, &fontdat);
+        }
+
         load_color_palette();
     }
 
