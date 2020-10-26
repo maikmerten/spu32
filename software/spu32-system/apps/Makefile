@@ -8,7 +8,7 @@ COPY=riscv64-unknown-elf-objcopy
 .PHONY: clean
 
 
-all: argtest.bin mandel.bin mandel2.bin minmemtest.bin memtest.bin dhryston.bin chreact.bin vgadraw.bin showfont.bin ls.bin mkdir.bin rm.bin cd.bin mv.bin print.bin cp.bin cls.bin loadfont.bin
+all: argtest.bin mandel.bin mandel2.bin minmemtest.bin memtest.bin dhryston.bin chreact.bin vgadraw.bin showfont.bin ls.bin mkdir.bin rm.bin cd.bin mv.bin print.bin cp.bin cls.bin loadfont.bin sum.bin
 
 
 %.bin: %.elf
@@ -69,6 +69,9 @@ showfont.elf: ./cmds/*.* crt0.s ../libtinyc/*.a
 
 loadfont.elf: ./cmds/*.* crt0.s ../libtinyc/*.a
 	$(CC) $(CFLAGS) -o $@ cmds/loadfont.c cmds/shared.c crt0.s $(LDFLAGS)
+
+sum.elf: ./cmds/*.* crt0.s ../libtinyc/*.a
+	$(CC) $(CFLAGS) -o $@ cmds/sum.c cmds/shared.c crt0.s $(LDFLAGS)
 
 
 clean:
