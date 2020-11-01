@@ -126,7 +126,7 @@ uint32_t count_arguments()
     return n;
 }
 
-int do_run(char* arg0, char in_bin)
+int do_run(char* arg0, char in_bin, int* exitcode)
 {
 
     uint32_t arglen = strlen(arg0);
@@ -197,30 +197,29 @@ int do_run(char* arg0, char in_bin)
             }
         }
 
-        uint32_t exitcode = (*program)(argn, argv);
-
-        if(exitcode != 0) {
-            printf("\n\rexit code: %d\n\r", exitcode);
-        }
+        *exitcode = (*program)(argn, argv);
     }
     return error;
 }
 
-void execute_input()
+int execute_input()
 {
     char arg0[16];
     uint32_t narg = count_arguments();
     if (narg == 0) {
-        return;
+        return 0;
     }
+
+    int exitcode = 0;
     get_argument(arg0, sizeof(arg0), 0);
-    if (!do_run(arg0, 1)) {
+    if (!do_run(arg0, 1, &exitcode)) {
         // executed program from /bin
     } else {
-        if (do_run(arg0, 0)) {
+        if (do_run(arg0, 0, &exitcode)) {
             printf("could not execute %s\n\r", arg0);
         }
     }
+    return exitcode;
 }
 
 /**
@@ -262,7 +261,7 @@ int main()
 
     while (1) {
         read_input();
-        execute_input();
+        int exitcode = execute_input();
 
         videomode_t videomode;
         void* videobase;
@@ -270,6 +269,9 @@ int main()
         bios_video_get_mode(&videomode, &videobase, &fontbase);
         if(videomode != VIDEOMODE_TEXT_80) {
             bios_video_set_mode(VIDEOMODE_TEXT_80, &videodat, &fontdat);
+        }
+        if(exitcode) {
+            printf("\nexit code: %d\n", exitcode);
         }
 
         load_color_palette();
