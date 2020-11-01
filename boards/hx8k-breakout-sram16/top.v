@@ -314,6 +314,8 @@ module top(
     );
 `endif
 
+    wire uart_reset_blocked = (leds_value == 8'hFF);
+
     // The iCE40 BRAMs always return zero for a while after device program and reset:
     // https://github.com/cliffordwolf/icestorm/issues/76
     // Assert reset for a while until things should have settled.
@@ -324,7 +326,8 @@ module top(
       end else reset <= 0;
 
       // use UART rts (active low) for reset
-      if(!uart_rts || !reset_button) begin
+      // evil hack: ignore UART rts if all LEDs are set
+      if(((!uart_rts) && (!uart_reset_blocked)) || !reset_button) begin
         resetcnt <= 1;
       end
     end
