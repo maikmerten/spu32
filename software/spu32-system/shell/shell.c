@@ -270,11 +270,12 @@ int main()
         if(videomode != VIDEOMODE_TEXT_80) {
             bios_video_set_mode(VIDEOMODE_TEXT_80, &videodat, &fontdat);
         }
+        load_color_palette();
+
         if(exitcode) {
             printf("\nexit code: %d\n", exitcode);
         }
 
-        load_color_palette();
     }
 
     return 0;
