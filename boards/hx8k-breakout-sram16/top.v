@@ -1,7 +1,5 @@
 `default_nettype none
 
-`include "./boards/hx8k-breakout/config-local.vh"
-
 `include "./cpu/cpu.v"
 `include "./leds/leds_wb8.v"
 `include "./uart/uart_wb8.v"
