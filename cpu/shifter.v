@@ -41,13 +41,13 @@ endmodule
 
 module spu32_cpu_shifter_formal(
         input I_clk,
-        input signed[31:0] I_data,
+        input[31:0] I_data,
         input[4:0] I_shift,
         input I_signextend,
         input I_leftshift,
     );
 
-    reg signed[31:0] data;
+    reg[31:0] data;
     reg[4:0] shift;
     reg signextend, leftshift;
     wire[31:0] shifter_output;
