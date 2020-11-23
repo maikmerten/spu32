@@ -36,6 +36,7 @@ endmodule
 
 
 `ifdef FORMAL
+`ifndef ALUFORMAL // skip this code during ALU formal verification
 // --- formal verification code ---
 
 module spu32_cpu_shifter_formal(
@@ -93,4 +94,5 @@ module spu32_cpu_shifter_formal(
 
 endmodule
 
-`endif
+`endif // ALUFORMAL
+`endif // FORMAL

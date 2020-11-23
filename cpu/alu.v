@@ -1,8 +1,16 @@
 `default_nettype none
 
+`ifdef FORMAL
+    // There are other files included with their own formal verification setup.
+    // Define ALUFORMAL to skip their respective formal verification code - their assertions
+    // won't hold with the assumptions made for ALU formal verification.
+    `define ALUFORMAL
+`endif
+
 `include "./cpu/aludefs.vh"
 `include "./cpu/mul.v"
 `include "./cpu/shifter.v"
+
 
 module spu32_cpu_alu(
         input I_clk,

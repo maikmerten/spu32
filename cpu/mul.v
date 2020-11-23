@@ -120,6 +120,7 @@ module spu32_cpu_mul(
 // --- FORMAL VERIFICATION --- //
 
 `ifdef FORMAL
+`ifndef ALUFORMAL // skip this code during ALU formal verification
 
     reg past_valid = 1'b0;
     reg[63:0] mul_unsigned_unsigned;
@@ -172,7 +173,8 @@ module spu32_cpu_mul(
     end
 
 
-`endif
+`endif // ALUFORMAL
+`endif // FORMAL
 
 
 
