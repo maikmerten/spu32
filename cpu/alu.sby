@@ -17,3 +17,5 @@ prep -top spu32_cpu_alu
 [files]
 cpu/alu.v alu.v
 cpu/aludefs.vh aludefs.vh
+cpu/mul.v mul.v
+cpu/shifter.v shifter.v

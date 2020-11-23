@@ -1,0 +1,14 @@
+[options]
+mode prove
+
+
+[engines]
+smtbmc
+
+[script]
+read -formal shifter.v
+prep -top spu32_cpu_shifter_formal
+
+[files]
+shifter.v shifter.v
+

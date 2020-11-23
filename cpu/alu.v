@@ -2,6 +2,7 @@
 
 `include "./cpu/aludefs.vh"
 `include "./cpu/mul.v"
+`include "./cpu/shifter.v"
 
 module spu32_cpu_alu(
         input I_clk,
@@ -40,12 +41,19 @@ module spu32_cpu_alu(
     );
 
 
-//`define SINGLE_CYCLE_SHIFTER
+`define SINGLE_CYCLE_SHIFTER
 `ifdef SINGLE_CYCLE_SHIFTER
-    wire[31:0] sll, sr;
-    assign sll = (I_dataS1 << I_dataS2[4:0]);
-    // sign-extension for SRA, zero-extension for SRL
-    assign sr = ($signed({I_aluop[0] ? I_dataS1[31] : 1'b0, I_dataS1}) >>> I_dataS2[4:0]);
+    wire[31:0] shifter_out;
+    wire leftshift = (I_aluop == `ALUOP_SLL);
+    wire signextend = (I_aluop == `ALUOP_SRA);
+    spu32_cpu_shifter spu32_cpu_shifter_inst(
+        .I_data(I_dataS1),
+        .I_shift(I_dataS2[4:0]),
+        .I_leftshift(leftshift),
+        .I_signextend(signextend),
+        .O_data(shifter_out)
+    );
+
     assign O_busy = mul_busy;
 `else
     assign O_busy = (busy || mul_busy);
@@ -110,8 +118,7 @@ module spu32_cpu_alu(
                 end
                 `else
                 // single-cycle shifting
-                `ALUOP_SLL: result <= sll;
-                `ALUOP_SRA, `ALUOP_SRL: result <= sr;
+                `ALUOP_SLL, `ALUOP_SRA, `ALUOP_SRL: result <= shifter_out;
                 `endif
 
                 `ALUOP_MUL: result <= mul_result[31:0];

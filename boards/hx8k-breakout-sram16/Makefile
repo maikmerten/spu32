@@ -21,7 +21,7 @@ top.json: top.v
 	cd ../.. && yosys -p 'synth_ice40; attrmvcp; write_json ./boards/hx8k-breakout-sram16/top.json' ./boards/hx8k-breakout-sram16/top.v
 
 top.asc: top.json hx8k-breakout-sram16.pcf
-	nextpnr-ice40 --randomize-seed --placer heap --hx8k --package ct256 --json top.json --pcf hx8k-breakout-sram16.pcf --asc top.asc --freq 28
+	nextpnr-ice40 --randomize-seed --placer heap --hx8k --package ct256 --json top.json --pcf hx8k-breakout-sram16.pcf --asc top.asc --freq 26
 
 top.bin: top.asc
 	icepack top.asc top.bin
