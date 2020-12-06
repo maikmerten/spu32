@@ -49,11 +49,11 @@ module vga_dither_24_to_12(
             // 2x2 dither matrix for even frames
             3'b000: threshold = 4'd15;
             3'b001: threshold = 4'd3;
-            3'b010: threshold = 4'd11;
-            3'b011: threshold = 4'd7;
+            3'b010: threshold = 4'd7;
+            3'b011: threshold = 4'd11;
             // 2x2 dither matrix for odd frames
-            3'b100: threshold = 4'd7;
-            3'b101: threshold = 4'd11;
+            3'b100: threshold = 4'd11;
+            3'b101: threshold = 4'd7;
             3'b110: threshold = 4'd3;
             3'b111: threshold = 4'd15;
         endcase
