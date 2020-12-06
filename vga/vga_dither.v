@@ -19,7 +19,7 @@ module vga_dither_channel_8_to_4(
     wire[3:0] adjustment = upper_gt_lower ? 4'hF : 4'h1;
 
     // determine delta = abs(upper - lower)
-    wire[3:0] delta = upper_gt_lower ? (upper - lower) : (lower - upper);
+    wire[3:0] delta = (upper_gt_lower ? upper : lower) - (upper_gt_lower ? lower : upper);
     
     // if the delta >= threshold, then adjust the output value    
     wire adjust = (delta >= thres);
