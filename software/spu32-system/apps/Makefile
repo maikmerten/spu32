@@ -8,7 +8,7 @@ COPY=riscv64-unknown-elf-objcopy
 .PHONY: clean
 
 
-all: argtest.bin mandel.bin mandel2.bin minmemtest.bin memtest.bin dhryston.bin chreact.bin vgadraw.bin showfont.bin ls.bin mkdir.bin rm.bin cd.bin mv.bin print.bin cp.bin cls.bin loadfont.bin sum.bin
+all: argtest.bin filesrv.bin mandel.bin mandel2.bin minmemtest.bin memtest.bin dhryston.bin chreact.bin vgadraw.bin showfont.bin ls.bin mkdir.bin rm.bin cd.bin mv.bin print.bin cp.bin cls.bin loadfont.bin sum.bin
 
 
 %.bin: %.elf
@@ -16,6 +16,9 @@ all: argtest.bin mandel.bin mandel2.bin minmemtest.bin memtest.bin dhryston.bin 
 
 argtest.elf: ./argtest/*.* crt0.s ../libtinyc/*.a
 	$(CC) $(CFLAGS) -o $@ argtest/argtest.c crt0.s $(LDFLAGS)
+
+filesrv.elf: ./filesrv/*.* crt0.s ../libtinyc/*.a ../libspu32/*.a
+	$(CC) $(CFLAGS) -o $@ ../../filesrv/filesrv_shared.c filesrv/filesrv.c crt0.s $(LDFLAGS)
 
 mandel.elf: ./mandel/*.* crt0.s ../libtinyc/*.a
 	$(CC) $(CFLAGS) -o $@ mandel/mandel.c crt0.s $(LDFLAGS)
