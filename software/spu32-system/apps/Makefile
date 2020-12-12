@@ -17,7 +17,7 @@ all: argtest.bin filesrv.bin mandel.bin mandel2.bin minmemtest.bin memtest.bin d
 argtest.elf: ./argtest/*.* crt0.s ../libtinyc/*.a
 	$(CC) $(CFLAGS) -o $@ argtest/argtest.c crt0.s $(LDFLAGS)
 
-filesrv.elf: ./filesrv/*.* crt0.s ../libtinyc/*.a ../libspu32/*.a
+filesrv.elf: ./filesrv/*.* ../../filesrv/filesrv_shared.c crt0.s ../libtinyc/*.a ../libspu32/*.a 
 	$(CC) $(CFLAGS) -o $@ ../../filesrv/filesrv_shared.c filesrv/filesrv.c crt0.s $(LDFLAGS)
 
 mandel.elf: ./mandel/*.* crt0.s ../libtinyc/*.a
