@@ -13,10 +13,8 @@
 #include "filesrv_shared.h"
 
 int fd_tty;
-int testrun = 0;
 int exitcode = 0;
 
-const int CHUNKSIZE = 64;
 
 int set_interface_attribs(int fd, int speed)
 {
@@ -336,8 +334,6 @@ int main(int argc, char* argv[])
         }
     }
 
-    // command to prevent control line change (reset!) on device open:
-    // stty -F /dev/ttyUSB1 -hupcl
 
     printf("selected serial port: %s\n", portname);
     fd_tty = open(portname, O_RDWR | O_NOCTTY | O_SYNC);
@@ -347,18 +343,6 @@ int main(int argc, char* argv[])
     }
     set_interface_attribs(fd_tty, B115200);
 
-    /*
-    if (1) {
-        int error = send_file(filename, "receive.dat");
-        if (error) {
-            printf("send_file failed\n");
-        }
-    } else {
-        int error = receive_file("receive.dat", "receive.dat"); // local dest, remote src
-    }
-*/
-
-    //exit_filesrv();
     cmdline();
 
     return exitcode;

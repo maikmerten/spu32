@@ -13,6 +13,7 @@
 *.bak
 *.dat
 software/serial-uploader/uploader
+software/filesrv/filesrv_client
 *config-local.vh
 software/testgen/testcollection.s
 software/testgen/.testcollection.s.swp
