@@ -80,25 +80,28 @@ module spu32_cpu_bus (
         endcase
     end
 
-    wire extension = signextend ? (halfword ? I_bus_data[15] : I_bus_data[7]) : 1'b0;
-
     reg[31:0] extendeddata;
     // extend incoming data as needed
     always @(*) begin
-        case({halfword, fullword})
-            2'b00: begin
-                // 8 bits -> 32 bits
-                extendeddata = {{24{extension}}, I_bus_data[7:0]};
+        case(I_op)
+            `BUSOP_READB: begin
+                extendeddata = {{24{I_bus_data[7]}}, I_bus_data[7:0]};
             end
 
-            2'b10: begin
-                // 16 bits -> 32 bits
-                extendeddata = {{16{extension}}, I_bus_data[15:0]};
+            `BUSOP_READBU: begin
+                extendeddata = {{24{1'b0}}, I_bus_data[7:0]};
+            end
+
+            `BUSOP_READH: begin
+                extendeddata = {{16{I_bus_data[15]}}, I_bus_data[15:0]};
+            end
+
+            `BUSOP_READHU: begin
+                extendeddata = {{16{1'b0}}, I_bus_data[15:0]};
             end
 
             default: begin
-                // 32 bits -> 32 bits
-                extendeddata = I_bus_data;
+                extendeddata = I_bus_data[31:0];
             end
         endcase
     end
