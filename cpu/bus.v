@@ -27,7 +27,7 @@ module spu32_cpu_bus (
     assign O_bus_data = I_data;
     assign O_bus_addr = I_addr;
 
-    reg halfword, fullword, write;
+    reg halfword, fullword, signextend, write;
     assign O_bus_halfword = halfword;
     assign O_bus_fullword = fullword;
     assign O_bus_write = write;
@@ -68,6 +68,19 @@ module spu32_cpu_bus (
         endcase
     end
 
+    // determine sign-extension (sign-extend or zero-extend)
+    always @(*) begin
+        case(I_op)
+            `BUSOP_READB, `BUSOP_READH: begin
+                signextend = 1'b1;
+            end
+
+            default: begin
+                signextend = 1'b0;
+            end
+        endcase
+    end
+
     // remember last bus operation so incoming data gets proper sign-extension
     // even if the control logic already has issued the next busop
     reg[2:0] last_busop;
@@ -77,33 +90,24 @@ module spu32_cpu_bus (
         end
     end
 
-
-    reg signextend;
-    reg[23:0] extension24;
-    reg[15:0] extension16;
-    always @(*) begin
-        case(last_busop)
-            `BUSOP_READB, `BUSOP_READH: signextend = 1'b1;
-            default:                    signextend = 1'b0;
-        endcase
-    end
-
-    always @(*) begin
-        extension16 = {16{I_data[15] & signextend}};
-        extension24 = {24{I_data[7]  & signextend}};
-    end
-
-
     reg[31:0] extendeddata;
     // extend incoming data as needed
     always @(*) begin
         case(last_busop)
-            `BUSOP_READB, `BUSOP_READBU: begin
-                extendeddata = {extension24, I_bus_data[7:0]};
+            `BUSOP_READB: begin
+                extendeddata = {{24{I_bus_data[7]}}, I_bus_data[7:0]};
             end
 
-            `BUSOP_READH, `BUSOP_READHU: begin
-                extendeddata = {extension16, I_bus_data[15:0]};
+            `BUSOP_READBU: begin
+                extendeddata = {{24{1'b0}}, I_bus_data[7:0]};
+            end
+
+            `BUSOP_READH: begin
+                extendeddata = {{16{I_bus_data[15]}}, I_bus_data[15:0]};
+            end
+
+            `BUSOP_READHU: begin
+                extendeddata = {{16{1'b0}}, I_bus_data[15:0]};
             end
 
             default: begin
@@ -111,7 +115,6 @@ module spu32_cpu_bus (
             end
         endcase
     end
-
 
     assign O_data = extendeddata;
 
