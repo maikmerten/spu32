@@ -2,6 +2,7 @@
 `include "./cpu/busdefs.vh"
 
 module spu32_cpu_bus (
+        input I_clk,
         // signals for CPU internals
         input I_en,
         input[2:0] I_op,
@@ -80,10 +81,19 @@ module spu32_cpu_bus (
         endcase
     end
 
+    // remember last bus operation so incoming data gets proper sign-extension
+    // even if the control logic already has issued the next busop
+    reg[2:0] last_busop;
+    always @(posedge I_clk) begin
+        if(I_en) begin
+            last_busop <= I_op;
+        end
+    end
+
     reg[31:0] extendeddata;
     // extend incoming data as needed
     always @(*) begin
-        case(I_op)
+        case(last_busop)
             `BUSOP_READB: begin
                 extendeddata = {{24{I_bus_data[7]}}, I_bus_data[7:0]};
             end
