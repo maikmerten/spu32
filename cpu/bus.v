@@ -27,7 +27,7 @@ module spu32_cpu_bus (
     assign O_bus_data = I_data;
     assign O_bus_addr = I_addr;
 
-    reg halfword, fullword, signextend, write;
+    reg halfword, fullword, write;
     assign O_bus_halfword = halfword;
     assign O_bus_fullword = fullword;
     assign O_bus_write = write;
@@ -64,19 +64,6 @@ module spu32_cpu_bus (
 
             default: begin
                 write = 1'b0;
-            end
-        endcase
-    end
-
-    // determine sign-extension (sign-extend or zero-extend)
-    always @(*) begin
-        case(I_op)
-            `BUSOP_READB, `BUSOP_READH: begin
-                signextend = 1'b1;
-            end
-
-            default: begin
-                signextend = 1'b0;
             end
         endcase
     end
