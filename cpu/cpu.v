@@ -1,7 +1,7 @@
+`default_nettype none
+
 `include "./cpu/alu.v"
-`include "./cpu/bus_wb8.v"
 `include "./cpu/bus.v"
-`include "./cpu/bus_wb8_new.v"
 `include "./cpu/decoder.v"
 `include "./cpu/registers.v"
 
@@ -12,22 +12,22 @@ module spu32_cpu
         parameter VECTOR_EXCEPTION = 32'd16
     )
     (
-        input CLK_I,
-        input ACK_I,
-        input STALL_I,
-        input[7:0] DAT_I,
-        input RST_I,
-        input INTERRUPT_I,
-        output[31:0] ADR_O,
-        output[7:0] DAT_O,
-        output CYC_O,
-        output STB_O,
-        output WE_O
+        input I_clk,
+        input I_reset,
+        input I_wait,
+        input I_interrupt,
+        input[31:0] I_data,
+        output[31:0] O_data,
+        output[31:0] O_addr,
+        output O_strobe,
+        output O_write,
+        output O_halfword,
+        output O_fullword
     );
 
     wire clk, reset;
-    assign clk = CLK_I;
-    assign reset = RST_I;
+    assign clk = I_clk;
+    assign reset = I_reset;
 
     // MSRS
     reg[31:2] pc, pcnext, epc;
@@ -74,31 +74,8 @@ module spu32_cpu
     wire[31:0] reg_val1, reg_val2;
     reg[31:0] reg_datain;
 
-`define OLDBUS
-`ifdef OLDBUS
-    // Bus instance
-    spu32_cpu_bus_wb8 bus_inst(
-        .I_en(bus_en),
-        .I_op(bus_op),
-        .I_data(reg_val2),
-        .I_addr(bus_addr),
-        .O_data(bus_dataout),
-        .O_busy(bus_busy),
-
-        .CLK_I(clk),
-        .ACK_I(ACK_I),
-        .STALL_I(STALL_I),
-        .DAT_I(DAT_I),
-        .RST_I(RST_I),
-        .ADR_O(ADR_O),
-        .DAT_O(DAT_O),
-        .CYC_O(CYC_O),
-        .STB_O(STB_O),
-        .WE_O(WE_O)
-    );
-`else
-    wire[31:0] ntbus_dataout, ntbus_datain, ntbus_addr;
-    wire ntbus_strobe, ntbus_write, ntbus_halfword, ntbus_fullword, ntbus_wait;
+    wire[31:0] ntbus_dataout, ntbus_addr;
+    wire ntbus_strobe, ntbus_write, ntbus_halfword, ntbus_fullword;
     spu32_cpu_bus bus_inst(
         .I_clk(clk),
         .I_en(bus_en),
@@ -114,33 +91,18 @@ module spu32_cpu
         .O_bus_write(ntbus_write),
         .O_bus_halfword(ntbus_halfword),
         .O_bus_fullword(ntbus_fullword),
-        .I_bus_data(ntbus_datain),
-        .I_bus_wait(ntbus_wait)
+        .I_bus_data(I_data),
+        .I_bus_wait(I_wait)
     );
 
-    spu32_cpu_bus_wb8_new wb8_bus_inst(
-        .I_clk(clk),
-        // signals to CPU bus
-        .I_strobe(ntbus_strobe),
-        .I_write(ntbus_write),
-        .I_halfword(ntbus_halfword),
-        .I_fullword(ntbus_fullword),
-        .I_addr(ntbus_addr),
-        .I_data(ntbus_dataout),
-        .O_data(ntbus_datain),
-        .O_wait(ntbus_wait),
-        // Wishbone signals
-        .ACK_I(ACK_I),
-        .STALL_I(STALL_I),
-        .DAT_I(DAT_I),
-        .RST_I(RST_I),
-        .ADR_O(ADR_O),
-        .DAT_O(DAT_O),
-        .CYC_O(CYC_O),
-        .STB_O(STB_O),
-        .WE_O(WE_O)
-    );
-`endif
+    assign O_data = ntbus_dataout;
+    assign O_addr = ntbus_addr;
+    assign O_strobe = ntbus_strobe;
+    assign O_write = ntbus_write;
+    assign O_halfword = ntbus_halfword;
+    assign O_fullword = ntbus_fullword;
+
+
 
     // Decoder instance
     wire[4:0] dec_rs1, dec_rs2, dec_rd;
@@ -222,7 +184,7 @@ module spu32_cpu
     wire[31:0] mcause32;
     assign mcause32 = {mcause[4], {27{1'b0}}, mcause[3:0]};
     wire[31:0] mstatus32;
-    assign mstatus32 = {{29{1'b0}}, INTERRUPT_I, meie_prev, meie};
+    assign mstatus32 = {{29{1'b0}}, I_interrupt, meie_prev, meie};
 
     localparam MSR_MSTATUS = 2'b00;
     localparam MSR_CAUSE   = 2'b01;
@@ -345,7 +307,7 @@ module spu32_cpu
 
                 // checking for interrupt here because no bus operations are active here
                 // TODO: find a proper place that doesn't let an instruction fetch go to waste
-                if(meie & INTERRUPT_I) begin
+                if(meie & I_interrupt) begin
                     mcause <= CAUSE_EXTERNAL_INTERRUPT;
                     nextstate <= STATE_TRAP1;
                 end

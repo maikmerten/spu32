@@ -20,3 +20,4 @@ software/testgen/.testcollection.s.swp
 .vscode/*
 cpu/alu_prf/
 cpu/alu_cvr/
+a.out

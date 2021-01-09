@@ -1,4 +1,7 @@
+`default_nettype none
+
 `include "./cpu/cpu.v"
+`include "./cpu/bus_wb8_new.v"
 `include "./ram/bram_wb8_vga.v"
 `include "./leds/leds_wb8.v"
 
@@ -9,9 +12,8 @@ module cpu_tb();
     reg reset = 1;
     reg interrupt = 0;
 
-    wire cpu_cyc, cpu_stb, cpu_we;
-    wire[7:0] cpu_dat;
-    wire[31:0] cpu_adr;
+    wire cpu_strobe, cpu_write, cpu_halfword, cpu_fullword;
+    wire[31:0] cpu_dat, cpu_adr;
 
     reg[7:0] arbiter_dat_o;
     reg arbiter_ack_o;
@@ -19,18 +21,49 @@ module cpu_tb();
     reg stall = 0;
     wire ram_stall;
 
+    wire wb_cpu_wait;
+    wire[31:0] wb_cpu_data;
+
     spu32_cpu cpu_inst(
-        .CLK_I(clk),
+        .I_clk(clk),
+        .I_reset(reset),
+        .I_wait(wb_cpu_wait),
+        .I_interrupt(interrupt),
+        .I_data(wb_cpu_data),
+        .O_data(cpu_dat),
+        .O_addr(cpu_adr),
+        .O_strobe(cpu_strobe),
+        .O_write(cpu_write),
+        .O_halfword(cpu_halfword),
+        .O_fullword(cpu_fullword)
+    );
+
+    wire wb_ack_i, wb_cyc_o, wb_stb_o, wb_we_o;
+    wire[31:0] wb_adr_o;
+    wire[7:0] wb_dat_o;
+
+    spu32_cpu_bus_wb8_new wb8_inst(
+        .I_clk(clk),
+        // signals to CPU bus
+        .I_strobe(cpu_strobe),
+        .I_write(cpu_write),
+        .I_halfword(cpu_halfword),
+        .I_fullword(cpu_fullword),
+        .I_addr(cpu_adr),
+        .I_data(cpu_dat),
+        .O_data(wb_cpu_data),
+        .O_wait(wb_cpu_wait),
+        // wired to outside world, RAM, devices etc.
+        //naming of signals taken from Wishbone B4 spec
         .ACK_I(arbiter_ack_o),
         .STALL_I(ram_stall),
         .DAT_I(arbiter_dat_o),
         .RST_I(reset),
-        .INTERRUPT_I(interrupt),
-        .ADR_O(cpu_adr),
-        .DAT_O(cpu_dat),
-        .CYC_O(cpu_cyc),
-        .STB_O(cpu_stb),
-        .WE_O(cpu_we)
+        .ADR_O(wb_adr_o),
+        .DAT_O(wb_dat_o),
+        .CYC_O(wb_cyc_o),
+        .STB_O(wb_stb_o),
+        .WE_O(wb_we_o)
     );
 
     wire ram_ack;
@@ -42,9 +75,9 @@ module cpu_tb();
     ) ram_inst (
         .I_wb_clk(clk),
         .I_wb_stb(ram_stb),
-        .I_wb_we(cpu_we),
-        .I_wb_adr(cpu_adr[12:0]),
-        .I_wb_dat(cpu_dat),
+        .I_wb_we(wb_we_o),
+        .I_wb_adr(wb_adr_o[12:0]),
+        .I_wb_dat(wb_dat_o),
         .O_wb_dat(ram_dat),
         .O_wb_ack(ram_ack),
         .O_wb_stall(ram_stall),
@@ -58,9 +91,9 @@ module cpu_tb();
 
     leds_wb8 leds_inst(
         .I_wb_clk(clk),
-        .I_wb_dat(cpu_dat),
+        .I_wb_dat(wb_dat_o),
         .I_wb_stb(leds_stb),
-        .I_wb_we(cpu_we),
+        .I_wb_we(wb_we_o),
         .I_reset(1'b0),
         .O_wb_dat(leds_dat),
         .O_wb_ack(leds_ack),
@@ -81,17 +114,17 @@ module cpu_tb();
         ram_stb = 0;
         leds_stb = 0;
 
-        case(cpu_adr[31:28])
+        case(wb_adr_o[31:28])
             4'hF: begin
                 arbiter_dat_o = leds_dat;
                 arbiter_ack_o = leds_ack;
-                leds_stb = cpu_stb;
+                leds_stb = wb_stb_o;
             end
 
             default: begin
                 arbiter_dat_o = ram_dat;
                 arbiter_ack_o = ram_ack;
-                ram_stb = cpu_stb;
+                ram_stb = wb_stb_o;
             end
         endcase
 
@@ -100,7 +133,7 @@ module cpu_tb();
 
     initial begin
         $dumpfile("./cpu/tests/cpu_tb.lxt");
-        $dumpvars(0, clk, error, reset, cpu_cyc, cpu_stb, cpu_we, cpu_dat, cpu_adr, ram_ack, ram_dat, cpu_inst.state, cpu_inst.busy, cpu_inst.alu_en, cpu_inst.alu_op, cpu_inst.bus_en, cpu_inst.bus_op, cpu_inst.reg_re, cpu_inst.reg_we, cpu_inst.bus_addr, cpu_inst.alu_dataout, cpu_inst.reg_val1, cpu_inst.reg_val2, cpu_inst.dec_rs1, cpu_inst.dec_rs2, cpu_inst.dec_rd, cpu_inst.reg_datain, cpu_inst.bus_dataout, cpu_inst.pc, cpu_inst.pcnext, leds_value, stall, ram_stall);
+        $dumpvars(0, clk, error, reset, wb_cyc_o, wb_stb_o, wb_we_o, cpu_write, wb_we_o, cpu_dat, cpu_adr, ram_ack, ram_dat, cpu_inst.state, cpu_inst.busy, cpu_inst.alu_en, cpu_inst.alu_op, cpu_inst.bus_en, cpu_inst.bus_op, cpu_inst.reg_re, cpu_inst.reg_we, cpu_inst.bus_addr, cpu_inst.alu_dataout, cpu_inst.reg_val1, cpu_inst.reg_val2, cpu_inst.dec_rs1, cpu_inst.dec_rs2, cpu_inst.dec_rd, cpu_inst.reg_datain, cpu_inst.bus_dataout, cpu_inst.pc, cpu_inst.pcnext, leds_value, stall, ram_stall);
 
         #3
         reset = 0;

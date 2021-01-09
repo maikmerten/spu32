@@ -1,6 +1,7 @@
 `default_nettype none
 
 `include "./cpu/cpu.v"
+`include "./cpu/bus_wb8_new.v"
 `include "./leds/leds_wb8.v"
 `include "./uart/uart_wb8.v"
 `include "./spi/spi_wb8.v"
@@ -66,29 +67,60 @@ module top(
     reg reset = 1;
     reg[10:0] resetcnt = 1;
 
-    wire cpu_cyc, cpu_stb, cpu_we;
-    wire[7:0] cpu_dat;
-    wire[31:0] cpu_adr;
+    wire cpu_strobe, cpu_write, cpu_halfword, cpu_fullword;
+    wire[31:0] cpu_dat, cpu_adr;
 
     reg[7:0] arbiter_dat_o;
     reg arbiter_ack_o;
     wire ram_stall;
 
+    wire wb_cpu_wait;
+    wire[31:0] wb_cpu_data;
+
     spu32_cpu #(
         .VECTOR_RESET(32'hFFFFF000)
     ) cpu_inst(
-        .CLK_I(clk),
-	    .ACK_I(arbiter_ack_o),
-        .STALL_I(ram_stall),
-	    .DAT_I(arbiter_dat_o),
-	    .RST_I(reset),
-        .INTERRUPT_I(timer_interrupt),
-	    .ADR_O(cpu_adr),
-	    .DAT_O(cpu_dat),
-	    .CYC_O(cpu_cyc),
-	    .STB_O(cpu_stb),
-	    .WE_O(cpu_we)
+        .I_clk(clk),
+        .I_reset(reset),
+        .I_wait(wb_cpu_wait),
+        .I_interrupt(timer_interrupt),
+        .I_data(wb_cpu_data),
+        .O_data(cpu_dat),
+        .O_addr(cpu_adr),
+        .O_strobe(cpu_strobe),
+        .O_write(cpu_write),
+        .O_halfword(cpu_halfword),
+        .O_fullword(cpu_fullword)
     );
+
+    wire wb_ack_i, wb_cyc_o, wb_stb_o, wb_we_o;
+    wire[31:0] wb_adr_o;
+    wire[7:0] wb_dat_o;
+
+    spu32_cpu_bus_wb8_new wb8_inst(
+        .I_clk(clk),
+        // signals to CPU bus
+        .I_strobe(cpu_strobe),
+        .I_write(cpu_write),
+        .I_halfword(cpu_halfword),
+        .I_fullword(cpu_fullword),
+        .I_addr(cpu_adr),
+        .I_data(cpu_dat),
+        .O_data(wb_cpu_data),
+        .O_wait(wb_cpu_wait),
+        // wired to outside world, RAM, devices etc.
+        //naming of signals taken from Wishbone B4 spec
+        .ACK_I(arbiter_ack_o),
+        .STALL_I(ram_stall),
+        .DAT_I(arbiter_dat_o),
+        .RST_I(reset),
+        .ADR_O(wb_adr_o),
+        .DAT_O(wb_dat_o),
+        .CYC_O(wb_cyc_o),
+        .STB_O(wb_stb_o),
+        .WE_O(wb_we_o)
+    );
+
 
     wire rom_ack;
     reg rom_stb;
@@ -99,7 +131,7 @@ module top(
     ) rom_inst (
 	    .I_wb_clk(clk),
 	    .I_wb_stb(rom_stb),
-	    .I_wb_adr(cpu_adr[8:0]),
+	    .I_wb_adr(wb_adr_o[8:0]),
 	    .O_wb_dat(rom_dat),
 	    .O_wb_ack(rom_ack)
     );
@@ -110,9 +142,9 @@ module top(
 
     leds_wb8 leds_inst(
         .I_wb_clk(clk),
-        .I_wb_dat(cpu_dat),
+        .I_wb_dat(wb_dat_o),
         .I_wb_stb(leds_stb),
-        .I_wb_we(cpu_we),
+        .I_wb_we(wb_we_o),
         .I_reset(reset),
         .O_wb_dat(leds_dat),
         .O_wb_ack(leds_ack),
@@ -128,10 +160,10 @@ module top(
         .CLOCKFREQ(CLOCKFREQ)
     ) uart_inst(
         .I_wb_clk(clk),
-        .I_wb_adr(cpu_adr[1:0]),
-        .I_wb_dat(cpu_dat),
+        .I_wb_adr(wb_adr_o[1:0]),
+        .I_wb_dat(wb_dat_o),
         .I_wb_stb(uart_stb),
-        .I_wb_we(cpu_we),
+        .I_wb_we(wb_we_o),
         .O_wb_dat(uart_dat),
         .O_wb_ack(uart_ack),
         .O_tx(uart_tx),
@@ -148,10 +180,10 @@ module top(
 
     spi_wb8 spi_inst(
         .I_wb_clk(clk),
-        .I_wb_adr(cpu_adr[1:0]),
-        .I_wb_dat(cpu_dat),
+        .I_wb_adr(wb_adr_o[1:0]),
+        .I_wb_dat(wb_dat_o),
         .I_wb_stb(spi_wb_stb),
-        .I_wb_we(cpu_we),
+        .I_wb_we(wb_we_o),
         .O_wb_dat(spi_wb_dat),
         .O_wb_ack(spi_wb_ack),
         .I_spi_miso(spi1_miso),
@@ -171,10 +203,10 @@ module top(
         .CLOCKFREQ(CLOCKFREQ)
     )timer_inst(
         .I_wb_clk(clk),
-        .I_wb_adr(cpu_adr[2:0]),
+        .I_wb_adr(wb_adr_o[2:0]),
         .I_wb_dat(cpu_dat),
         .I_wb_stb(timer_stb),
-        .I_wb_we(cpu_we),
+        .I_wb_we(wb_we_o),
         .O_wb_dat(timer_dat),
         .O_wb_ack(timer_ack),
         .O_interrupt(timer_interrupt)
@@ -186,10 +218,10 @@ module top(
 
     prng_wb8 prng_inst(
         .I_wb_clk(clk),
-        .I_wb_adr(cpu_adr[1:0]),
-        .I_wb_dat(cpu_dat),
+        .I_wb_adr(wb_adr_o[1:0]),
+        .I_wb_dat(wb_dat_o),
         .I_wb_stb(prng_stb),
-        .I_wb_we(cpu_we),
+        .I_wb_we(wb_we_o),
         .O_wb_dat(prng_dat),
         .O_wb_ack(prng_ack)
     );
@@ -209,10 +241,10 @@ module top(
 
     vga_wb8_extram vga_inst(
         .I_wb_clk(clk),
-        .I_wb_adr(cpu_adr[12:0]),
-        .I_wb_dat(cpu_dat),
+        .I_wb_adr(wb_adr_o[12:0]),
+        .I_wb_dat(wb_dat_o),
         .I_wb_stb(vga_stb),
-        .I_wb_we(cpu_we),
+        .I_wb_we(wb_we_o),
         .O_wb_dat(vga_dat),
         .O_wb_ack(vga_ack),
         .I_reset(reset),
@@ -251,9 +283,9 @@ module top(
         .CLOCKFREQ(CLOCKFREQ)
     ) irdecoder_inst(
         .I_wb_clk(clk),
-        .I_wb_adr(cpu_adr[2:0]),
+        .I_wb_adr(wb_adr_o[2:0]),
         .I_wb_stb(irdecoder_stb),
-        .I_wb_we(cpu_we),
+        .I_wb_we(wb_we_o),
         .O_wb_dat(irdecoder_dat),
         .O_wb_ack(irdecoder_ack),
         .I_ir_signal(ir_receiver)
@@ -264,9 +296,9 @@ module top(
     wire audio_ack;
     sn76489_wb8 sn76489_inst(
         .I_wb_clk(clk),
-        .I_wb_dat(cpu_dat),
+        .I_wb_dat(wb_dat_o),
         .I_wb_stb(audio_stb),
-        .I_wb_we(cpu_we),
+        .I_wb_we(wb_we_o),
         .O_wb_ack(audio_ack),
         .O_wb_dat(audio_dat),
         .I_reset(reset),
@@ -285,10 +317,10 @@ module top(
     sram256kx16_wb8_vga_ice40 sram_inst(
         // wiring to wishbone bus
         .I_wb_clk(clk),
-        .I_wb_adr(cpu_adr[18:0]),
-        .I_wb_dat(cpu_dat),
+        .I_wb_adr(wb_adr_o[18:0]),
+        .I_wb_dat(wb_dat_o),
         .I_wb_stb(ram_stb),
-        .I_wb_we(cpu_we),
+        .I_wb_we(wb_we_o),
         .O_wb_dat(ram_dat),
         .O_wb_ack(ram_ack),
         .O_wb_stall(ram_stall),
@@ -316,10 +348,10 @@ module top(
         .ADDRBITS(13)
     ) bram_inst(
         .I_wb_clk(clk),
-        .I_wb_adr(cpu_adr[12:0]),
-        .I_wb_dat(cpu_dat),
+        .I_wb_adr(wb_adr_o[12:0]),
+        .I_wb_dat(wb_dat_o),
         .I_wb_stb(bram_stb),
-        .I_wb_we(cpu_we),
+        .I_wb_we(wb_we_o),
         .O_wb_dat(bram_dat),
         .O_wb_ack(bram_ack)
     );
@@ -359,38 +391,38 @@ module top(
         bram_stb = 0;
     `endif
 
-        casez(cpu_adr[31:0])
+        casez(wb_adr_o[31:0])
 
 `ifdef BRAM
             {32'h01??????}: begin
                 arbiter_dat_o = ram_dat;
                 arbiter_ack_o = ram_ack;
-                ram_stb = cpu_stb;
+                ram_stb = wb_stb_o;
             end
 `endif
 
             {16'hFFFF, 3'b000, {13{1'b?}}}: begin //0xFFFF0000 - 0xFFFF1FFF: VGA
                 arbiter_dat_o = vga_dat;
                 arbiter_ack_o = vga_ack;
-                vga_stb = cpu_stb;
+                vga_stb = wb_stb_o;
             end
 
             {20'hFFFFF, 1'b0, {11{1'b?}}}: begin // 0xFFFFF000 - 0xFFFFF7FF: boot ROM
                 arbiter_dat_o = rom_dat;
                 arbiter_ack_o = rom_ack;
-                rom_stb = cpu_stb;
+                rom_stb = wb_stb_o;
             end
 
             {32'hFFFFF8??}: begin // 0xFFFFF8xx: UART
                 arbiter_dat_o = uart_dat;
                 arbiter_ack_o = uart_ack;
-                uart_stb = cpu_stb;
+                uart_stb = wb_stb_o;
             end
 
             {32'hFFFFF9??}: begin // 0xFFFFF9xx: SPI port
                 arbiter_dat_o = spi_wb_dat;
                 arbiter_ack_o = spi_wb_ack;
-                spi_wb_stb = cpu_stb;
+                spi_wb_stb = wb_stb_o;
             end
 
             // reserved:
@@ -400,25 +432,25 @@ module top(
             {32'hFFFFFC??}: begin // 0xFFFFFCxx: IR receiver
                 arbiter_dat_o = irdecoder_dat;
                 arbiter_ack_o = irdecoder_ack;
-                irdecoder_stb = cpu_stb;
+                irdecoder_stb = wb_stb_o;
             end
 
             {32'hFFFFFD??}: begin // 0xFFFFFDxx: Timer
                 arbiter_dat_o = timer_dat;
                 arbiter_ack_o = timer_ack;
-                timer_stb = cpu_stb;
+                timer_stb = wb_stb_o;
             end
 
             {32'hFFFFFE??}: begin // 0xFFFFFExx: predictable random number generator
                 arbiter_dat_o = prng_dat;
                 arbiter_ack_o = prng_ack;
-                prng_stb = cpu_stb;
+                prng_stb = wb_stb_o;
             end
 
             {32'hFFFFFF0?}: begin // 0xFFFFFF0x: audio
                 arbiter_dat_o = audio_dat;
                 arbiter_ack_o = audio_ack;
-                audio_stb = cpu_stb;
+                audio_stb = wb_stb_o;
             end
 
             // reserved:
@@ -427,18 +459,18 @@ module top(
             {32'hFFFFFFF?}: begin // 0xFFFFFFFx LEDs
                 arbiter_dat_o = leds_dat;
                 arbiter_ack_o = leds_ack;
-                leds_stb = cpu_stb;                      
+                leds_stb = wb_stb_o;                      
             end
 
             default: begin
 `ifdef BRAM
                 arbiter_dat_o = bram_dat;
                 arbiter_ack_o = bram_ack;
-                bram_stb = cpu_stb;
+                bram_stb = wb_stb_o;
 `else
                 arbiter_dat_o = ram_dat;
                 arbiter_ack_o = ram_ack;
-                ram_stb = cpu_stb;
+                ram_stb = wb_stb_o;
 `endif
             end
 
