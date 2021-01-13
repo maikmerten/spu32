@@ -1,7 +1,7 @@
 `default_nettype none
 
 `include "./cpu/cpu.v"
-`include "./cpu/bus_wb8_new.v"
+`include "./bus/wishbone8.v"
 `include "./leds/leds_wb8.v"
 `include "./uart/uart_wb8.v"
 `include "./spi/spi_wb8.v"
@@ -97,7 +97,7 @@ module top(
     wire[31:0] wb_adr_o;
     wire[7:0] wb_dat_o;
 
-    spu32_cpu_bus_wb8_new wb8_inst(
+    spu32_bus_wishbone8 wb8_inst(
         .I_clk(clk),
         // signals to CPU bus
         .I_strobe(cpu_strobe),

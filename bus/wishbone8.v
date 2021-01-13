@@ -1,7 +1,7 @@
 `default_nettype none
 `include "./cpu/busdefs.vh"
 
-module spu32_cpu_bus_wb8_new(
+module spu32_bus_wishbone8(
         input I_clk,
         // signals to CPU bus
         input I_strobe,
