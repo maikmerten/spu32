@@ -2,12 +2,13 @@
 
 `include "./cpu/cpu.v"
 `include "./bus/wishbone8.v"
+`include "./bus/memory16.v"
 `include "./leds/leds_wb8.v"
 `include "./uart/uart_wb8.v"
 `include "./spi/spi_wb8.v"
 `include "./timer/timer_wb8.v"
 `include "./rom/rom_wb8.v"
-`include "./ram/sram256kx16_wb8_vga_ice40.v"
+`include "./ram/sram256kx16_membus_vga_ice40.v"
 `include "./ram/bram_wb8.v"
 `include "./prng/prng_wb8.v"
 `include "./vga/vga_wb8_extram.v"
@@ -74,17 +75,28 @@ module top(
     reg arbiter_ack_o;
     wire ram_stall;
 
-    wire wb_cpu_wait;
-    wire[31:0] wb_cpu_data;
+    wire wb_cpu_wait, membus_cpu_wait;
+    wire[31:0] wb_cpu_data, membus_cpu_data;
+
+    wire membus_selected = (cpu_adr[31] == 1'b0);
+    wire wb_selected = !membus_selected;
+
+    reg dataselect_wb;
+    always @(posedge clk) begin
+        // the CPU changes address on negative clock edges, but puts data into
+        // registers on positive clock edges. Thus keep incoming data for the CPU
+        // stable for a bit so that data is read from correct bus system.
+        dataselect_wb <= wb_selected;
+    end
 
     spu32_cpu #(
         .VECTOR_RESET(32'hFFFFF000)
     ) cpu_inst(
         .I_clk(clk),
         .I_reset(reset),
-        .I_wait(wb_cpu_wait),
+        .I_wait(wb_selected ? wb_cpu_wait : membus_cpu_wait),
         .I_interrupt(timer_interrupt),
-        .I_data(wb_cpu_data),
+        .I_data(dataselect_wb ? wb_cpu_data : membus_cpu_data),
         .O_data(cpu_dat),
         .O_addr(cpu_adr),
         .O_strobe(cpu_strobe),
@@ -100,8 +112,8 @@ module top(
     spu32_bus_wishbone8 wb8_inst(
         .I_clk(clk),
         // signals to CPU bus
-        .I_strobe(cpu_strobe),
-        .I_write(cpu_write),
+        .I_strobe(cpu_strobe & wb_selected),
+        .I_write(cpu_write & wb_selected),
         .I_halfword(cpu_halfword),
         .I_fullword(cpu_fullword),
         .I_addr(cpu_adr),
@@ -111,7 +123,7 @@ module top(
         // wired to outside world, RAM, devices etc.
         //naming of signals taken from Wishbone B4 spec
         .ACK_I(arbiter_ack_o),
-        .STALL_I(ram_stall),
+        .STALL_I(1'b0),
         .DAT_I(arbiter_dat_o),
         .RST_I(reset),
         .ADR_O(wb_adr_o),
@@ -121,6 +133,35 @@ module top(
         .WE_O(wb_we_o)
     );
 
+
+    wire[15:0] membus_sram_data;
+    wire[17:0] membus_sram_addr;
+    wire[3:0] membus_sram_request;
+    wire membus_sram_we, membus_sram_ub, membus_sram_lb;
+
+    spu32_bus_memory16 bus_memory_inst
+    (
+        .I_clk(clk),
+        // signals to/from CPU
+        .I_data(cpu_dat),
+        .I_addr(cpu_adr),
+        .I_strobe(cpu_strobe & membus_selected),
+        .I_write(cpu_write & membus_selected),
+        .I_halfword(cpu_halfword),
+        .I_fullword(cpu_fullword),
+        .O_data(membus_cpu_data),
+        .O_wait(membus_cpu_wait),
+        // signals to/from SRAM
+        .I_sram_ack(sram_membus_ack),
+        .I_sram_stall(sram_membus_stall),
+        .I_sram_data(sram_membus_data),
+        .O_sram_data(membus_sram_data),
+        .O_sram_addr(membus_sram_addr),
+        .O_sram_request(membus_sram_request),
+        .O_sram_we(membus_sram_we),
+        .O_sram_ub(membus_sram_ub),
+        .O_sram_lb(membus_sram_lb)
+    );
 
     wire rom_ack;
     reg rom_stb;
@@ -204,7 +245,7 @@ module top(
     )timer_inst(
         .I_wb_clk(clk),
         .I_wb_adr(wb_adr_o[2:0]),
-        .I_wb_dat(cpu_dat),
+        .I_wb_dat(wb_dat_o),
         .I_wb_stb(timer_stb),
         .I_wb_we(wb_we_o),
         .O_wb_dat(timer_dat),
@@ -225,9 +266,6 @@ module top(
         .O_wb_dat(prng_dat),
         .O_wb_ack(prng_ack)
     );
-
-    wire[7:0] ram_dat;
-
 
 
     reg vga_stb = 0;
@@ -307,23 +345,26 @@ module top(
 
 
 //`define BRAM 1
-    reg ram_stb;
-    wire ram_ack;
+    wire[3:0] sram_membus_ack;
+    wire[15:0] sram_membus_data;
+    wire sram_membus_stall;
 
     wire[17:0] sram_chip_adr;
     assign {sram_a0, sram_a1, sram_a2, sram_a3, sram_a4, sram_a5, sram_a6, sram_a7, sram_a8, sram_a9, sram_a10, sram_a11, sram_a12, sram_a13, sram_a14, sram_a15, sram_a16, sram_a17} = sram_chip_adr;
     wire[15:0] sram_chip_dat = {sram_d15, sram_d14, sram_d13, sram_d12, sram_d11, sram_d10, sram_d9, sram_d8, sram_d7, sram_d6, sram_d5, sram_d4, sram_d3, sram_d2, sram_d1, sram_d0};
 
-    sram256kx16_wb8_vga_ice40 sram_inst(
+    sram256kx16_membus_vga_ice40 sram_inst(
         // wiring to wishbone bus
-        .I_wb_clk(clk),
-        .I_wb_adr(wb_adr_o[18:0]),
-        .I_wb_dat(wb_dat_o),
-        .I_wb_stb(ram_stb),
-        .I_wb_we(wb_we_o),
-        .O_wb_dat(ram_dat),
-        .O_wb_ack(ram_ack),
-        .O_wb_stall(ram_stall),
+        .I_clk(clk),
+        .I_request(membus_sram_request),
+        .I_we(membus_sram_we),
+        .I_ub(membus_sram_ub),
+        .I_lb(membus_sram_lb),
+        .I_addr(membus_sram_addr),
+        .I_data(membus_sram_data),
+        .O_data(sram_membus_data),
+        .O_ack(sram_membus_ack),
+        .O_stall(sram_membus_stall),
         // VGA read port
         .I_vga_req(vga_ram_req),
         .I_vga_adr(vga_ram_adr[17:0]),
@@ -357,7 +398,7 @@ module top(
     );
 `endif
 
-    wire uart_reset_blocked = (leds_value == 8'hFF);
+    wire uart_reset_blocked = 1'b0; //(leds_value == 8'hFF);
 
     // The iCE40 BRAMs always return zero for a while after device program and reset:
     // https://github.com/cliffordwolf/icestorm/issues/76
@@ -375,14 +416,13 @@ module top(
       end
     end
 
-    // bus arbiter
+    // wishbone bus arbiter
     always @(*) begin
         leds_stb = 0;
         uart_stb = 0;
         spi_wb_stb = 0;
         timer_stb = 0;
         rom_stb = 0;
-        ram_stb = 0;
         prng_stb = 0;
         irdecoder_stb = 0;
         audio_stb = 0;
@@ -392,14 +432,6 @@ module top(
     `endif
 
         casez(wb_adr_o[31:0])
-
-`ifdef BRAM
-            {32'h01??????}: begin
-                arbiter_dat_o = ram_dat;
-                arbiter_ack_o = ram_ack;
-                ram_stb = wb_stb_o;
-            end
-`endif
 
             {16'hFFFF, 3'b000, {13{1'b?}}}: begin //0xFFFF0000 - 0xFFFF1FFF: VGA
                 arbiter_dat_o = vga_dat;
@@ -468,9 +500,8 @@ module top(
                 arbiter_ack_o = bram_ack;
                 bram_stb = wb_stb_o;
 `else
-                arbiter_dat_o = ram_dat;
-                arbiter_ack_o = ram_ack;
-                ram_stb = wb_stb_o;
+                arbiter_dat_o = 8'h00;
+                arbiter_ack_o = 1'b1;
 `endif
             end
 
