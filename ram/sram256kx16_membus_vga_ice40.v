@@ -28,7 +28,7 @@ module sram256kx16_membus_vga_ice40
 	);
 
     localparam DATABITS = 16;
-    localparam ADDRBITS = 19;
+    localparam ADDRBITS = 18;
 
 	reg[3:0] ack = 4'h0;
     assign O_ack = ack;
@@ -56,12 +56,12 @@ module sram256kx16_membus_vga_ice40
 
 
 	wire[DATABITS-1:0] sram_data;
-    wire[ADDRBITS-2:0] sram_addr = I_vga_req ? I_vga_adr : I_addr;
+    wire[ADDRBITS-1:0] sram_addr = I_vga_req ? I_vga_adr : I_addr;
 
 	genvar i;
 
     // SB_IO instances for address lines to SRAM chip
-    for(i = 0; i < (ADDRBITS - 1); i = i + 1) begin
+    for(i = 0; i < ADDRBITS; i = i + 1) begin
         SB_IO #(.PIN_TYPE(6'b 0101_01), .PULLUP(1'b 0)) io_block_instance (
             .PACKAGE_PIN(O_address[i]),
             .OUTPUT_CLK(I_clk),
