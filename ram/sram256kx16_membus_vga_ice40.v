@@ -24,7 +24,7 @@ module sram256kx16_membus_vga_ice40
 		inout[15:0] IO_data,
 		output[17:0] O_address,
 		output reg O_lb, O_ub,
-		output O_oe, O_ce, O_we,
+		output O_oe, O_ce, O_we
 	);
 
     localparam DATABITS = 16;
@@ -94,8 +94,8 @@ module sram256kx16_membus_vga_ice40
 			O_lb <= 1'b0;
 			O_ub <= 1'b0;
 		end else if(en) begin
-			O_lb <= I_lb;
-			O_ub <= I_ub;
+			O_lb <= !I_lb; // active low
+			O_ub <= !I_ub; // active low
 
 			if(I_we) begin
 				write1 <= !write2; // initiate write
