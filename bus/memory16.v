@@ -1,4 +1,4 @@
-module spu32_bus_memory
+module spu32_bus_memory16
     #(
         parameter SRAM_ADDR_BITS = 18
     )

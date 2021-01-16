@@ -1,8 +1,8 @@
 `default_nettype none
-`include "./bus/memory.v"
-`include "./bus/tests/memorysim.v"
+`include "./bus/memory16.v"
+`include "./bus/tests/memory16_sim.v"
 
-module memorytb();
+module memory16_tb();
 
 
     parameter CLKPERIOD = 2;
@@ -35,7 +35,7 @@ module memorytb();
     wire sram_stall;
     wire[15:0] sram_data;
 
-    spu32_bus_memory bus_memory_inst
+    spu32_bus_memory16 bus_memory_inst
     (
         .I_clk(clk),
         // signals to CPU
@@ -59,7 +59,7 @@ module memorytb();
         .O_sram_lb(bus_sram_lb)
     );
 
-    spu32_memory_sim memory_sim_inst
+    spu32_memory16_sim memory_sim_inst
     (
         .I_clk(clk),
         .I_request(bus_sram_request),
