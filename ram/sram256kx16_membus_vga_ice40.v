@@ -23,7 +23,7 @@ module sram256kx16_membus_vga_ice40
 		// SRAM signals
 		inout[15:0] IO_data,
 		output[17:0] O_address,
-		output reg O_lb, O_ub,
+		output O_lb, O_ub,
 		output O_oe, O_ce, O_we
 	);
 
@@ -38,25 +38,51 @@ module sram256kx16_membus_vga_ice40
 	reg stall;
 	assign O_stall = stall;
 
-
 	reg write1 = 0;
 	reg write2 = 0;
 	wire writepulse = (write1 != write2);
 
-	reg read1 = 0;
-	reg read2 = 0;
-	wire readpulse = (read1 != read2);
-
 	wire[15:0] writedata = I_data;
-
-	// control signals are active low, thus negated
-	assign O_ce = 0;
-	assign O_we = !writepulse;
-	assign O_oe = !readpulse;
-
 
 	wire[DATABITS-1:0] sram_data;
     wire[ADDRBITS-1:0] sram_addr = I_vga_req ? I_vga_adr : I_addr;
+
+	// control signals are active low, thus negated
+	assign O_ce = 0;
+	wire ub = I_vga_req ? 1'b0 : !(en & I_ub);
+	wire lb = I_vga_req ? 1'b0 : !(en & I_lb);
+	wire we = I_vga_req ? 1'b1 : !(en & I_we);
+	wire oe = I_vga_req ? 1'b0 : !(en & !I_we);
+
+	// upper-byte control line
+	SB_IO #(.PIN_TYPE(6'b 0101_01), .PULLUP(1'b 0)) io_block_instance_ub (
+		.PACKAGE_PIN(O_ub),
+		.OUTPUT_CLK(I_clk),
+		.D_OUT_0(ub),
+	);
+
+	// lower-byte control line
+	SB_IO #(.PIN_TYPE(6'b 0101_01), .PULLUP(1'b 0)) io_block_instance_lb (
+		.PACKAGE_PIN(O_lb),
+		.OUTPUT_CLK(I_clk),
+		.D_OUT_0(lb),
+	);
+
+	// write control line (DDR output)
+	SB_IO #(.PIN_TYPE(6'b 0100_01), .PULLUP(1'b 0)) io_block_instance_we (
+		.PACKAGE_PIN(O_we),
+		.OUTPUT_CLK(I_clk),
+		.D_OUT_0(we),
+		.D_OUT_1(1'b1) // disable after negative clock edge
+	);
+
+	// output-enable control line (DDR output)
+	SB_IO #(.PIN_TYPE(6'b 0100_01), .PULLUP(1'b 0)) io_block_instance_oe (
+		.PACKAGE_PIN(O_oe),
+		.OUTPUT_CLK(I_clk),
+		.D_OUT_0(oe),
+		.D_OUT_1(1'b1) // disable after negative clock edge
+	);
 
 	genvar i;
 
@@ -87,22 +113,10 @@ module sram256kx16_membus_vga_ice40
 
 	always @(posedge I_clk) begin
 
-		if(I_vga_req) begin
-			read1 <= !read2; // initiate read
-
-			// read upper and lower byte
-			O_lb <= 1'b0;
-			O_ub <= 1'b0;
-		end else if(en) begin
-			O_lb <= !I_lb; // active low
-			O_ub <= !I_ub; // active low
-
-			if(I_we) begin
-				write1 <= !write2; // initiate write
-			end else begin
-				read1 <= !read2; // initiate read
-			end
-		end
+        // set up writes
+        if(en && !I_vga_req && I_we) begin
+            write1 <= !write2;
+        end
 
 		ack <= I_request;
 		stall <= I_vga_req;
@@ -110,7 +124,6 @@ module sram256kx16_membus_vga_ice40
 
 	always @(negedge I_clk) begin
 		write2 <= write1;
-		read2 <= read1;
 	end
 
 endmodule
