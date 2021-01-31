@@ -46,21 +46,47 @@ module top(
 
     );
 
-    wire clk, clk_pll, pll_locked;
-    // Instantiate PLL, 25.125 MHz
+    wire clk_multiplied, clk, clk_90deg, pll_locked;
+    // multiply incoming 12 MHz clock to 100.5 MHz
     SB_PLL40_CORE #(							
         .FEEDBACK_PATH("SIMPLE"),				
         .DIVR(4'b0000),
         .DIVF(7'b1000010),
-        .DIVQ(3'b101),
+        .DIVQ(3'b011),
         .FILTER_RANGE(3'b001)
-    ) mypll (								
-        .LOCK(pll_locked),					
+    ) mypll1 (								
         .RESETB(1'b1),						
         .BYPASS(1'b0),						
         .REFERENCECLK(clk_12mhz),				
-        .PLLOUTCORE(clk)				
+        .PLLOUTCORE(clk_multiplied)				
     );
+
+    // scale 100.5 MHz down to 25.125 MHz, also generate clock with 90 degree phase offset
+    SB_PLL40_2F_CORE #(							
+        .DIVR(4'b0011),
+        .DIVF(7'b0000000),
+        .DIVQ(3'b101),
+        .FILTER_RANGE(3'b001),
+        .FEEDBACK_PATH("PHASE_AND_DELAY"),
+        .DELAY_ADJUSTMENT_MODE_FEEDBACK("FIXED"),
+        .FDA_FEEDBACK(4'b0000),
+        .DELAY_ADJUSTMENT_MODE_RELATIVE("FIXED"),
+        .FDA_RELATIVE(4'b0000),
+        .SHIFTREG_DIV_MODE(2'b00),
+        .PLLOUT_SELECT_PORTA("SHIFTREG_0deg"),
+        .PLLOUT_SELECT_PORTB("SHIFTREG_90deg"),
+        .ENABLE_ICEGATE_PORTA(1'b0),
+        .ENABLE_ICEGATE_PORTB(1'b0)
+    ) mypll2 (								
+        .LOCK(pll_locked),					
+        .RESETB(1'b1),						
+        .BYPASS(1'b0),						
+        .REFERENCECLK(clk_multiplied),				
+        .PLLOUTGLOBALA(clk),
+        .PLLOUTGLOBALB(clk_90deg)
+    );
+
+
     localparam CLOCKFREQ = 25125000;
 
 
@@ -356,6 +382,7 @@ module top(
     sram256kx16_membus_vga_ice40 sram_inst(
         // wiring to wishbone bus
         .I_clk(clk),
+        .I_clk_90deg(clk_90deg),
         .I_request(membus_sram_request),
         .I_we(membus_sram_we),
         .I_ub(membus_sram_ub),

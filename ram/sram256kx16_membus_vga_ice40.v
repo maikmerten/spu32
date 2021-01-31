@@ -3,6 +3,7 @@
 module sram256kx16_membus_vga_ice40
 	(
 		input I_clk,
+        input I_clk_90deg,
 		// signals to memory bus adapter
         input[3:0] I_request,
         input I_we,
