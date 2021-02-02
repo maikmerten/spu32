@@ -9,6 +9,7 @@
 `include "./timer/timer_wb8.v"
 `include "./rom/rom_wb8.v"
 `include "./ram/sram256kx16_membus_vga_ice40.v"
+`include "./ram/sram256kx16_wb8_vga_ice40.v"
 `include "./ram/bram_wb8.v"
 `include "./prng/prng_wb8.v"
 `include "./vga/vga_wb8_extram.v"
@@ -98,11 +99,17 @@ module top(
     wire[31:0] cpu_dat, cpu_adr;
 
     reg[7:0] arbiter_dat_o;
-    reg arbiter_ack_o;
+    reg arbiter_ack_o, arbiter_stall_o;
     wire ram_stall;
 
-    wire wb_cpu_wait, membus_cpu_wait;
-    wire[31:0] wb_cpu_data, membus_cpu_data;
+//`define FASTMEM
+
+    wire wb_cpu_wait;
+    wire[31:0] wb_cpu_data;
+
+`ifdef FASTMEM
+    wire membus_cpu_wait;
+    wire[31:0] membus_cpu_data;
 
     wire membus_selected = (cpu_adr[31] == 1'b0);
     wire wb_selected = !membus_selected;
@@ -115,14 +122,22 @@ module top(
         dataselect_wb <= wb_selected;
     end
 
+    wire bus_cpu_wait = wb_selected ? wb_cpu_wait : membus_cpu_wait;
+    wire[31:0] bus_cpu_data = dataselect_wb ? wb_cpu_data : membus_cpu_data;
+`else
+    wire wb_selected = 1'b1;
+    wire bus_cpu_wait = wb_cpu_wait;
+    wire[31:0] bus_cpu_data = wb_cpu_data;
+`endif
+
     spu32_cpu #(
         .VECTOR_RESET(32'hFFFFF000)
     ) cpu_inst(
         .I_clk(clk),
         .I_reset(reset),
-        .I_wait(wb_selected ? wb_cpu_wait : membus_cpu_wait),
+        .I_wait(bus_cpu_wait),
         .I_interrupt(timer_interrupt),
-        .I_data(dataselect_wb ? wb_cpu_data : membus_cpu_data),
+        .I_data(bus_cpu_data),
         .O_data(cpu_dat),
         .O_addr(cpu_adr),
         .O_strobe(cpu_strobe),
@@ -149,7 +164,7 @@ module top(
         // wired to outside world, RAM, devices etc.
         //naming of signals taken from Wishbone B4 spec
         .ACK_I(arbiter_ack_o),
-        .STALL_I(1'b0),
+        .STALL_I(arbiter_stall_o),
         .DAT_I(arbiter_dat_o),
         .RST_I(reset),
         .ADR_O(wb_adr_o),
@@ -159,7 +174,7 @@ module top(
         .WE_O(wb_we_o)
     );
 
-
+`ifdef FASTMEM
     wire[15:0] membus_sram_data;
     wire[17:0] membus_sram_addr;
     wire[3:0] membus_sram_request;
@@ -188,6 +203,7 @@ module top(
         .O_sram_ub(membus_sram_ub),
         .O_sram_lb(membus_sram_lb)
     );
+`endif
 
     wire rom_ack;
     reg rom_stb;
@@ -371,16 +387,18 @@ module top(
 
 
 //`define BRAM 1
-    wire[3:0] sram_membus_ack;
-    wire[15:0] sram_membus_data;
-    wire sram_membus_stall;
 
     wire[17:0] sram_chip_adr;
     assign {sram_a0, sram_a1, sram_a2, sram_a3, sram_a4, sram_a5, sram_a6, sram_a7, sram_a8, sram_a9, sram_a10, sram_a11, sram_a12, sram_a13, sram_a14, sram_a15, sram_a16, sram_a17} = sram_chip_adr;
     wire[15:0] sram_chip_dat = {sram_d15, sram_d14, sram_d13, sram_d12, sram_d11, sram_d10, sram_d9, sram_d8, sram_d7, sram_d6, sram_d5, sram_d4, sram_d3, sram_d2, sram_d1, sram_d0};
 
+`ifdef FASTMEM
+    wire[3:0] sram_membus_ack;
+    wire[15:0] sram_membus_data;
+    wire sram_membus_stall;
+
     sram256kx16_membus_vga_ice40 sram_inst(
-        // wiring to wishbone bus
+        // wiring to "fast-path" membus
         .I_clk(clk),
         .I_clk_90deg(clk_90deg),
         .I_request(membus_sram_request),
@@ -405,6 +423,35 @@ module top(
         .O_lb(sram_lb),
         .O_ub(sram_ub),
     );
+`else
+    reg ram_stb;
+    wire ram_ack;
+    wire[7:0] ram_dat;
+
+    sram256kx16_wb8_vga_ice40 sram_inst(
+        // wiring to wishbone bus
+        .I_wb_clk(clk),
+        .I_wb_adr(wb_adr_o[18:0]),
+        .I_wb_dat(wb_dat_o),
+        .I_wb_stb(ram_stb),
+        .I_wb_we(wb_we_o),
+        .O_wb_dat(ram_dat),
+        .O_wb_ack(ram_ack),
+        .O_wb_stall(ram_stall),
+        // VGA read port
+        .I_vga_req(vga_ram_req),
+        .I_vga_adr(vga_ram_adr[17:0]),
+        .O_vga_dat(ram_vga_dat),
+        // wiring to SRAM chip
+        .IO_data(sram_chip_dat),
+		.O_address(sram_chip_adr),
+        .O_ce(sram_ce),
+        .O_oe(sram_oe),
+        .O_we(sram_we),
+        .O_lb(sram_lb),
+        .O_ub(sram_ub),
+    );
+`endif
 
 
 `ifdef BRAM
@@ -457,6 +504,11 @@ module top(
     `ifdef BRAM
         bram_stb = 0;
     `endif
+    `ifndef FASTMEM
+        ram_stb = 0;
+    `endif
+
+        arbiter_stall_o = 0;
 
         casez(wb_adr_o[31:0])
 
@@ -527,8 +579,15 @@ module top(
                 arbiter_ack_o = bram_ack;
                 bram_stb = wb_stb_o;
 `else
+    `ifdef FASTMEM
                 arbiter_dat_o = 8'h00;
                 arbiter_ack_o = 1'b1;
+    `else
+                arbiter_dat_o = ram_dat;
+                arbiter_ack_o = ram_ack;
+                arbiter_stall_o = ram_stall;
+                ram_stb = wb_stb_o;
+    `endif
 `endif
             end
 
