@@ -204,14 +204,12 @@ module spu32_cpu
     // Muxer for register data input
     localparam MUX_REGINPUT_ALU = 0;
     localparam MUX_REGINPUT_BUS = 1;
-    localparam MUX_REGINPUT_IMM = 2;
-    localparam MUX_REGINPUT_MSR = 3;
+    localparam MUX_REGINPUT_MSR = 2;
     reg[1:0] mux_reg_input_sel = MUX_REGINPUT_ALU;
     always @(*) begin
         case(mux_reg_input_sel)
             MUX_REGINPUT_ALU: reg_datain = alu_dataout;
             MUX_REGINPUT_BUS: reg_datain = bus_dataout;
-            MUX_REGINPUT_IMM: reg_datain = dec_imm;
             default:          reg_datain = msr_data; // MUX_REGINPUT_MSR
         endcase
     end
@@ -318,20 +316,27 @@ module spu32_cpu
                 // ALU output when coming from decode is PC+4... store it in pcnext
                 if(!busy) pcnext <= alu_dataout[31:2];
 
+                alu_en <= 1;
+                alu_op <= dec_aluop;
+
                 case(dec_opcode)
-                    `OP_OP, `OP_OPIMM: begin
-                        alu_en <= 1;
+                    `OP_OP: begin
                         mux_alu_s1_sel <= MUX_ALUDAT1_REGVAL1;
-                        mux_alu_s2_sel <= (dec_opcode[3]) ? MUX_ALUDAT2_REGVAL2 : MUX_ALUDAT2_IMM;
-                        alu_op <= dec_aluop;
+                        mux_alu_s2_sel <= MUX_ALUDAT2_REGVAL2;
+                        // do register writeback in FETCH
+                        writeback_from_alu <= 1;
+                        nextstate <= STATE_FETCH;
+                    end
+
+                    `OP_OPIMM, `OP_LUI: begin
+                        mux_alu_s1_sel <= MUX_ALUDAT1_REGVAL1;
+                        mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
                         // do register writeback in FETCH
                         writeback_from_alu <= 1;
                         nextstate <= STATE_FETCH;
                     end
 
                     `OP_LOAD, `OP_STORE: begin // compute load/store address on ALU
-                        alu_en <= 1;
-                        alu_op <= `ALUOP_ADD;
                         mux_alu_s1_sel <= MUX_ALUDAT1_REGVAL1;
                         mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
                         nextstate <= STATE_LOADSTORE;
@@ -343,8 +348,6 @@ module spu32_cpu
                         mux_reg_input_sel <= MUX_REGINPUT_ALU;
 
                         // compute jal/jalr address
-                        alu_en <= 1;
-                        alu_op <= `ALUOP_ADD;
                         mux_alu_s1_sel <= (dec_opcode[1]) ? MUX_ALUDAT1_PC : MUX_ALUDAT1_REGVAL1;
                         mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
 
@@ -353,26 +356,16 @@ module spu32_cpu
                     end
 
                     `OP_BRANCH: begin // use ALU for comparisons
-                        alu_en <= 1;
-                        alu_op <= `ALUOP_ADD; // doesn't really matter
                         mux_alu_s1_sel <= MUX_ALUDAT1_REGVAL1;
                         mux_alu_s2_sel <= MUX_ALUDAT2_REGVAL2;
                         nextstate <= STATE_BRANCH2;
                     end
 
                     `OP_AUIPC: begin // compute PC + IMM on ALU
-                        alu_en <= 1;
-                        alu_op <= `ALUOP_ADD;
                         mux_alu_s1_sel <= MUX_ALUDAT1_PC;
                         mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
                         // do register writeback in FETCH
                         writeback_from_alu <= 1;
-                        nextstate <= STATE_FETCH;
-                    end
-
-                    `OP_LUI: begin
-                        reg_we <= 1;
-                        mux_reg_input_sel <= MUX_REGINPUT_IMM;
                         nextstate <= STATE_FETCH;
                     end
 

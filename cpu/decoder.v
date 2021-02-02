@@ -31,8 +31,11 @@ module spu32_cpu_decoder(
     assign O_funct3 = funct3;
     assign O_opcode = opcode;
 
+    // LUI is handled as reg+imm addition, with rs1 being hardwired to zero
+    wire is_lui_op = I_instr[6:2] == `OP_LUI;
+
     // combinatorial decode of source register information to allow for register read during decode
-    assign O_rs1 = I_instr[19:15];
+    assign O_rs1 =  is_lui_op ? 5'b00000 : I_instr[19:15];
     assign O_rs2 = I_instr[24:20];
 
     reg isbranch = 0;
@@ -94,7 +97,12 @@ module spu32_cpu_decoder(
             default:            aluop_opimm = `ALUOP_ADD;
         endcase
 
-        O_aluop = (opcode == `OP_OPIMM ? aluop_opimm : aluop_op);
+        // select op for alu
+        case(opcode)
+            `OP_OP   : O_aluop = aluop_op;
+            `OP_OPIMM: O_aluop = aluop_opimm;
+            default  : O_aluop = `ALUOP_ADD;
+        endcase
 
         // OP_LOAD
         case(funct3)
