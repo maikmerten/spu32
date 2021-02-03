@@ -46,7 +46,6 @@ module spu32_cpu
 
     // ALU instance
     reg alu_en = 0;
-    reg[3:0] alu_op = 0;
     wire[31:0] alu_dataout;
     reg[31:0] alu_dataS1, alu_dataS2;
     wire alu_busy, alu_lt, alu_ltu, alu_eq;
@@ -57,7 +56,7 @@ module spu32_cpu
         .I_reset(reset),
         .I_dataS1(alu_dataS1),
         .I_dataS2(alu_dataS2),
-        .I_aluop(alu_op),
+        .I_aluop(dec_aluop),
         .O_busy(alu_busy),
         .O_data(alu_dataout),
         .O_lt(alu_lt),
@@ -270,8 +269,6 @@ module spu32_cpu
 
         mux_reg_input_sel <= MUX_REGINPUT_ALU;
 
-        alu_op <= `ALUOP_ADD;
-
         // remember currently active state to return to if busy
         prevstate <= state;
 
@@ -337,7 +334,6 @@ module spu32_cpu
                 pcnext <= bru_nextpc[31:2];
 
                 alu_en <= 1;
-                alu_op <= dec_aluop;
 
                 case(dec_opcode)
                     `OP_OP, `OP_OPIMM, `OP_LUI, `OP_AUIPC: begin
