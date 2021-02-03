@@ -340,13 +340,7 @@ module spu32_cpu
                 alu_op <= dec_aluop;
 
                 case(dec_opcode)
-                    `OP_OP: begin
-                        // do register writeback in FETCH
-                        writeback_from_alu <= 1;
-                        nextstate <= STATE_FETCH;
-                    end
-
-                    `OP_OPIMM, `OP_LUI: begin
+                    `OP_OP, `OP_OPIMM, `OP_LUI, `OP_AUIPC: begin
                         // do register writeback in FETCH
                         writeback_from_alu <= 1;
                         nextstate <= STATE_FETCH;
@@ -367,12 +361,6 @@ module spu32_cpu
 
                     `OP_BRANCH: begin // use ALU for comparisons
                         nextstate <= STATE_BRANCH2;
-                    end
-
-                    `OP_AUIPC: begin // compute PC + IMM on ALU
-                        // do register writeback in FETCH
-                        writeback_from_alu <= 1;
-                        nextstate <= STATE_FETCH;
                     end
 
                     `OP_MISCMEM:    nextstate <= STATE_FETCH; // nop
