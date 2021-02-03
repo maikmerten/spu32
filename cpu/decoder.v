@@ -15,8 +15,18 @@ module spu32_cpu_decoder(
         output[2:0] O_funct3,
         output reg[5:0] O_branchmask,
         output reg[3:0] O_aluop,
-        output reg[2:0] O_busop
+        output reg[2:0] O_busop,
+        output reg O_alumux1,
+        output reg O_alumux2
     );
+
+    // Muxer for first operand of ALU
+    localparam MUX_ALUDAT1_REGVAL1 = 0;
+    localparam MUX_ALUDAT1_PC      = 1;
+
+    // Muxer for second operand of ALU
+    localparam MUX_ALUDAT2_REGVAL2 = 0;
+    localparam MUX_ALUDAT2_IMM     = 1;
 
     reg[31:0] instr;
 
@@ -53,8 +63,19 @@ module spu32_cpu_decoder(
             `OP_JAL: imm = {{11{instr[31]}}, instr[31], instr[19:12], instr[20], instr[30:25], instr[24:21], 1'b0}; // UJ-type
             default: imm = {{20{instr[31]}}, instr[31:20]}; // I-type and R-type. Immediate has no meaning for R-type instructions
         endcase
-
         O_imm = imm;
+
+        // determine first ALU data input
+        case(opcode)
+            `OP_JAL, `OP_AUIPC: O_alumux1 = MUX_ALUDAT1_PC;
+            default:            O_alumux1 = MUX_ALUDAT1_REGVAL1;
+        endcase
+
+        // determien second ALU data input
+        case(opcode)
+            `OP_OP, `OP_BRANCH: O_alumux2 = MUX_ALUDAT2_REGVAL2;
+            default:            O_alumux2 = MUX_ALUDAT2_IMM;
+        endcase
 
         isbranch = (opcode == `OP_BRANCH);
         O_branchmask = 0;

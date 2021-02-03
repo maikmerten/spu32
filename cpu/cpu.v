@@ -113,6 +113,7 @@ module spu32_cpu
     wire[5:0] dec_branchmask;
     wire[3:0] dec_aluop;
     wire[2:0] dec_busop;
+    wire dec_alumux1, dec_alumux2;
     reg dec_en;
 
     spu32_cpu_decoder dec_inst(
@@ -127,7 +128,9 @@ module spu32_cpu
         .O_funct3(dec_funct3),
         .O_branchmask(dec_branchmask),
         .O_aluop(dec_aluop),
-        .O_busop(dec_busop)
+        .O_busop(dec_busop),
+        .O_alumux1(dec_alumux1),
+        .O_alumux2(dec_alumux2)
     );
 
     // Registers instance
@@ -166,9 +169,8 @@ module spu32_cpu
     // Muxer for first operand of ALU
     localparam MUX_ALUDAT1_REGVAL1 = 0;
     localparam MUX_ALUDAT1_PC      = 1;
-    reg mux_alu_s1_sel = MUX_ALUDAT1_REGVAL1;
     always @(*) begin
-        case(mux_alu_s1_sel)
+        case(dec_alumux1)
             MUX_ALUDAT1_REGVAL1: alu_dataS1 = reg_val1;
             default:             alu_dataS1 = {pc, 2'b00}; // MUX_ALUDAT1_PC
         endcase
@@ -177,9 +179,8 @@ module spu32_cpu
     // Muxer for second operand of ALU
     localparam MUX_ALUDAT2_REGVAL2 = 0;
     localparam MUX_ALUDAT2_IMM     = 1;
-    reg mux_alu_s2_sel = MUX_ALUDAT2_REGVAL2;
     always @(*) begin
-        case(mux_alu_s2_sel)
+        case(dec_alumux2)
             MUX_ALUDAT2_REGVAL2: alu_dataS2 = reg_val2;
             default:             alu_dataS2 = dec_imm; // MUX_ALUDAT_IMM
         endcase
@@ -267,8 +268,6 @@ module spu32_cpu
         reg_re <= 0;
         reg_we <= 0;
 
-        mux_alu_s1_sel <= MUX_ALUDAT1_REGVAL1;
-        mux_alu_s2_sel <= MUX_ALUDAT2_REGVAL2;
         mux_reg_input_sel <= MUX_REGINPUT_ALU;
 
         alu_op <= `ALUOP_ADD;
@@ -342,24 +341,18 @@ module spu32_cpu
 
                 case(dec_opcode)
                     `OP_OP: begin
-                        mux_alu_s1_sel <= MUX_ALUDAT1_REGVAL1;
-                        mux_alu_s2_sel <= MUX_ALUDAT2_REGVAL2;
                         // do register writeback in FETCH
                         writeback_from_alu <= 1;
                         nextstate <= STATE_FETCH;
                     end
 
                     `OP_OPIMM, `OP_LUI: begin
-                        mux_alu_s1_sel <= MUX_ALUDAT1_REGVAL1;
-                        mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
                         // do register writeback in FETCH
                         writeback_from_alu <= 1;
                         nextstate <= STATE_FETCH;
                     end
 
                     `OP_LOAD, `OP_STORE: begin // compute load/store address on ALU
-                        mux_alu_s1_sel <= MUX_ALUDAT1_REGVAL1;
-                        mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
                         nextstate <= STATE_LOADSTORE;
                     end
 
@@ -368,23 +361,15 @@ module spu32_cpu
                         reg_we <= 1;
                         mux_reg_input_sel <= MUX_REGINPUT_BRU;
 
-                        // compute jal/jalr address
-                        mux_alu_s1_sel <= (dec_opcode[1]) ? MUX_ALUDAT1_PC : MUX_ALUDAT1_REGVAL1;
-                        mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
-
                         nextpc_from_alu <= 1;
                         nextstate <= STATE_FETCH;
                     end
 
                     `OP_BRANCH: begin // use ALU for comparisons
-                        mux_alu_s1_sel <= MUX_ALUDAT1_REGVAL1;
-                        mux_alu_s2_sel <= MUX_ALUDAT2_REGVAL2;
                         nextstate <= STATE_BRANCH2;
                     end
 
                     `OP_AUIPC: begin // compute PC + IMM on ALU
-                        mux_alu_s1_sel <= MUX_ALUDAT1_PC;
-                        mux_alu_s2_sel <= MUX_ALUDAT2_IMM;
                         // do register writeback in FETCH
                         writeback_from_alu <= 1;
                         nextstate <= STATE_FETCH;
