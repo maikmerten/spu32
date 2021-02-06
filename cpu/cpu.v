@@ -33,7 +33,7 @@ module spu32_cpu
     // MSRS
     reg[31:2] pc, pcnext, epc;
     reg[31:2] evect = VECTOR_EXCEPTION[31:2];
-    reg nextpc_from_alu, nextpc_from_bru, writeback_from_alu, writeback_from_bus;
+    reg nextpc_from_alu, nextpc_from_bru, writeback_in_fetch;
      // current and previous machine-mode external interrupt enable
     reg meie = 0, meie_prev = 0;
      // machine cause register, mcause[4] denotes interrupt, mcause[3:0] encodes exception code
@@ -113,6 +113,7 @@ module spu32_cpu
     wire[3:0] dec_aluop;
     wire[2:0] dec_busop;
     wire dec_alumux1, dec_alumux2;
+    wire[1:0] dec_reginputmux;
     reg dec_en;
 
     spu32_cpu_decoder dec_inst(
@@ -129,7 +130,8 @@ module spu32_cpu
         .O_aluop(dec_aluop),
         .O_busop(dec_busop),
         .O_alumux1(dec_alumux1),
-        .O_alumux2(dec_alumux2)
+        .O_alumux2(dec_alumux2),
+        .O_reginputmux(dec_reginputmux)
     );
 
     // Registers instance
@@ -225,9 +227,8 @@ module spu32_cpu
     localparam MUX_REGINPUT_BUS = 1;
     localparam MUX_REGINPUT_BRU = 2;
     localparam MUX_REGINPUT_MSR = 3;
-    reg[1:0] mux_reg_input_sel = MUX_REGINPUT_ALU;
     always @(*) begin
-        case(mux_reg_input_sel)
+        case(dec_reginputmux)
             MUX_REGINPUT_ALU: reg_datain = alu_dataout;
             MUX_REGINPUT_BUS: reg_datain = bus_dataout;
             MUX_REGINPUT_BRU: reg_datain = bru_nextpc;
@@ -267,8 +268,6 @@ module spu32_cpu
         reg_re <= 0;
         reg_we <= 0;
 
-        mux_reg_input_sel <= MUX_REGINPUT_ALU;
-
         // remember currently active state to return to if busy
         prevstate <= state;
 
@@ -280,16 +279,13 @@ module spu32_cpu
                 nextstate <= STATE_FETCH;
                 nextpc_from_alu <= 0;
                 nextpc_from_bru <= 0;
-                writeback_from_alu <= 0;
-                writeback_from_bus <= 0;
+                writeback_in_fetch <= 0;
             end
 
             STATE_FETCH: begin
                 // write result of previous instruction to registers if requested
-                mux_reg_input_sel <= writeback_from_alu ? MUX_REGINPUT_ALU : MUX_REGINPUT_BUS;
-                reg_we <= writeback_from_alu | writeback_from_bus;
-                writeback_from_alu <= 0;
-                writeback_from_bus <= 0;
+                reg_we <= writeback_in_fetch;
+                writeback_in_fetch <= 0;
 
                 // update PC
                 // TODO: if alu_dataout contains a misaligned address, raise exception
@@ -338,7 +334,7 @@ module spu32_cpu
                 case(dec_opcode)
                     `OP_OP, `OP_OPIMM, `OP_LUI, `OP_AUIPC: begin
                         // do register writeback in FETCH
-                        writeback_from_alu <= 1;
+                        writeback_in_fetch <= 1;
                         nextstate <= STATE_FETCH;
                     end
 
@@ -349,7 +345,6 @@ module spu32_cpu
                     `OP_JAL, `OP_JALR: begin
                         // return address computed in branch unit during decode, write to register
                         reg_we <= 1;
-                        mux_reg_input_sel <= MUX_REGINPUT_BRU;
 
                         nextpc_from_alu <= 1;
                         nextstate <= STATE_FETCH;
@@ -370,8 +365,7 @@ module spu32_cpu
                 bus_en <= 1;
                 mux_bus_addr_sel <= MUX_BUSADDR_ALU;
                 bus_op <= dec_busop;
-                //writeback_from_bus <= !dec_opcode[3];
-                writeback_from_bus <= (dec_opcode == `OP_LOAD);
+                writeback_in_fetch <= (dec_opcode == `OP_LOAD);
                 nextstate <= STATE_FETCH;
             end
 
@@ -423,7 +417,6 @@ module spu32_cpu
 
             STATE_CSRRW1: begin
                 // write MSR-value to register
-                mux_reg_input_sel <= MUX_REGINPUT_MSR;
                 reg_we <= 1;
                 nextstate <= STATE_CSRRW2;
             end

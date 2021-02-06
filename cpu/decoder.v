@@ -17,7 +17,8 @@ module spu32_cpu_decoder(
         output reg[3:0] O_aluop,
         output reg[2:0] O_busop,
         output reg O_alumux1,
-        output reg O_alumux2
+        output reg O_alumux2,
+        output reg[1:0] O_reginputmux
     );
 
     // Muxer for first operand of ALU
@@ -27,6 +28,12 @@ module spu32_cpu_decoder(
     // Muxer for second operand of ALU
     localparam MUX_ALUDAT2_REGVAL2 = 0;
     localparam MUX_ALUDAT2_IMM     = 1;
+
+    // Muxer for register data input
+    localparam MUX_REGINPUT_ALU = 0;
+    localparam MUX_REGINPUT_BUS = 1;
+    localparam MUX_REGINPUT_BRU = 2;
+    localparam MUX_REGINPUT_MSR = 3;
 
     reg[31:0] instr;
 
@@ -71,10 +78,18 @@ module spu32_cpu_decoder(
             default:            O_alumux1 = MUX_ALUDAT1_REGVAL1;
         endcase
 
-        // determien second ALU data input
+        // determine second ALU data input
         case(opcode)
             `OP_OP, `OP_BRANCH: O_alumux2 = MUX_ALUDAT2_REGVAL2;
             default:            O_alumux2 = MUX_ALUDAT2_IMM;
+        endcase
+
+        // determine register writeback input
+        case(opcode)
+            `OP_LOAD:           O_reginputmux = MUX_REGINPUT_BUS;
+            `OP_JAL, `OP_JALR:  O_reginputmux = MUX_REGINPUT_BRU;
+            `OP_SYSTEM:         O_reginputmux = MUX_REGINPUT_MSR;
+            default:            O_reginputmux = MUX_REGINPUT_ALU;
         endcase
 
         isbranch = (opcode == `OP_BRANCH);
