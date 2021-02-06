@@ -244,9 +244,7 @@ module spu32_cpu
     localparam STATE_BRANCH2        = 5;
     localparam STATE_TRAP1          = 6;
     localparam STATE_SYSTEM         = 7;
-    localparam STATE_CSRRW1         = 8;
-    localparam STATE_CSRRW2         = 9;
-
+    localparam STATE_CSRRW          = 8;
 
     reg[3:0] state, prevstate = STATE_RESET, nextstate = STATE_RESET;
 
@@ -398,7 +396,9 @@ module spu32_cpu
 
                     `FUNC_CSRRW: begin
                         // handle csrrw here
-                        nextstate <= STATE_CSRRW1;
+                        // write current MSR-value to register, before modification
+                        reg_we <= 1;
+                        nextstate <= STATE_CSRRW;
                     end
 
                     // unsupported SYSTEM instruction
@@ -415,13 +415,7 @@ module spu32_cpu
                 nextstate <= STATE_FETCH;
             end
 
-            STATE_CSRRW1: begin
-                // write MSR-value to register
-                reg_we <= 1;
-                nextstate <= STATE_CSRRW2;
-            end
-
-            STATE_CSRRW2: begin
+            STATE_CSRRW: begin
                 // update MSRs with value of rs1
                 if(!dec_imm[11]) begin // denotes a writable non-standard machine-mode MSR
                     case(dec_imm[1:0])
