@@ -55,34 +55,37 @@ module sram256kx16_membus_vga_ice40
 	wire we = I_vga_req ? 1'b1 : !(en & I_we);
 	wire oe = I_vga_req ? 1'b0 : !(en & !I_we);
 
-	// upper-byte control line
-	SB_IO #(.PIN_TYPE(6'b 0101_01), .PULLUP(1'b 0)) io_block_instance_ub (
+
+	reg ub_reg, lb_reg;
+
+	// upper-byte control line (DDR)
+	SB_IO #(.PIN_TYPE(6'b 0100_01), .PULLUP(1'b 0)) io_block_instance_ub (
 		.PACKAGE_PIN(O_ub),
-		.OUTPUT_CLK(I_clk),
-		.D_OUT_0(ub),
+		.OUTPUT_CLK(I_clk_90deg),
+		.D_OUT_0(ub_reg),
+		.D_OUT_1(1'b1)
 	);
 
-	// lower-byte control line
-	SB_IO #(.PIN_TYPE(6'b 0101_01), .PULLUP(1'b 0)) io_block_instance_lb (
+	// lower-byte control line (DDR)
+	SB_IO #(.PIN_TYPE(6'b 0100_01), .PULLUP(1'b 0)) io_block_instance_lb (
 		.PACKAGE_PIN(O_lb),
-		.OUTPUT_CLK(I_clk),
-		.D_OUT_0(lb),
+		.OUTPUT_CLK(I_clk_90deg),
+		.D_OUT_0(lb_reg),
+		.D_OUT_1(1'b1)
 	);
 
-	// write control line (DDR output)
-	SB_IO #(.PIN_TYPE(6'b 0100_01), .PULLUP(1'b 0)) io_block_instance_we (
+	// write control line 
+	SB_IO #(.PIN_TYPE(6'b 0101_01), .PULLUP(1'b 0)) io_block_instance_we (
 		.PACKAGE_PIN(O_we),
 		.OUTPUT_CLK(I_clk),
 		.D_OUT_0(we),
-		.D_OUT_1(1'b1) // disable after negative clock edge
 	);
 
-	// output-enable control line (DDR output)
-	SB_IO #(.PIN_TYPE(6'b 0100_01), .PULLUP(1'b 0)) io_block_instance_oe (
+	// output-enable control line 
+	SB_IO #(.PIN_TYPE(6'b 0101_01), .PULLUP(1'b 0)) io_block_instance_oe (
 		.PACKAGE_PIN(O_oe),
 		.OUTPUT_CLK(I_clk),
 		.D_OUT_0(oe),
-		.D_OUT_1(1'b1) // disable after negative clock edge
 	);
 
 	genvar i;
@@ -97,10 +100,12 @@ module sram256kx16_membus_vga_ice40
     end
 
     // SB_IO instances for data signals to SRAM chip
+    wire outputenable = en & !I_vga_req & I_we;
     for(i = 0; i < DATABITS; i = i + 1) begin
-        SB_IO #(.PIN_TYPE(6'b 1001_00), .PULLUP(1'b 0)) io_block_instance (
+        // output registered and output-enable registered
+        SB_IO #(.PIN_TYPE(6'b 1101_00), .PULLUP(1'b 0)) io_block_instance (
             .PACKAGE_PIN(IO_data[i]),
-            .OUTPUT_ENABLE(writepulse),
+            .OUTPUT_ENABLE(outputenable),
             .INPUT_CLK(I_clk),
             .OUTPUT_CLK(I_clk),
             .D_OUT_0(writedata[i]),
@@ -113,18 +118,13 @@ module sram256kx16_membus_vga_ice40
 
 
 	always @(posedge I_clk) begin
+		ub_reg <= ub;
+		lb_reg <= lb;
 
-        // set up writes
-        if(en && !I_vga_req && I_we) begin
-            write1 <= !write2;
-        end
 
 		ack <= I_request;
 		stall <= I_vga_req;
 	end
 
-	always @(negedge I_clk) begin
-		write2 <= write1;
-	end
 
 endmodule
