@@ -72,10 +72,10 @@ module top(
         .DELAY_ADJUSTMENT_MODE_FEEDBACK("FIXED"),
         .FDA_FEEDBACK(4'b0000),
         .DELAY_ADJUSTMENT_MODE_RELATIVE("FIXED"),
-        .FDA_RELATIVE(4'b1111),
+        .FDA_RELATIVE(4'b1111), // delay port A by 16 * 150ps
         .SHIFTREG_DIV_MODE(2'b00),
         .PLLOUT_SELECT_PORTA("SHIFTREG_0deg"),
-        .PLLOUT_SELECT_PORTB("SHIFTREG_0deg"),
+        .PLLOUT_SELECT_PORTB("SHIFTREG_90deg"),
         .ENABLE_ICEGATE_PORTA(1'b0),
         .ENABLE_ICEGATE_PORTB(1'b0)
     ) mypll2 (								
@@ -83,8 +83,8 @@ module top(
         .RESETB(1'b1),						
         .BYPASS(1'b0),						
         .REFERENCECLK(clk_multiplied),				
-        .PLLOUTGLOBALA(clk_shifted),
-        .PLLOUTGLOBALB(clk)
+        .PLLOUTGLOBALA(clk),
+        .PLLOUTGLOBALB(clk_shifted) // delayed by about 8.5 ns respective to clk
     );
 
 
