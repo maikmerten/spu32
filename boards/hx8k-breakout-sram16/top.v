@@ -102,7 +102,7 @@ module top(
     reg arbiter_ack_o, arbiter_stall_o;
     wire ram_stall;
 
-`define FASTMEM
+//`define FASTMEM
 
     wire wb_cpu_wait;
     wire[31:0] wb_cpu_data;
@@ -392,7 +392,7 @@ module top(
     assign {sram_a0, sram_a1, sram_a2, sram_a3, sram_a4, sram_a5, sram_a6, sram_a7, sram_a8, sram_a9, sram_a10, sram_a11, sram_a12, sram_a13, sram_a14, sram_a15, sram_a16, sram_a17} = sram_chip_adr;
     wire[15:0] sram_chip_dat = {sram_d15, sram_d14, sram_d13, sram_d12, sram_d11, sram_d10, sram_d9, sram_d8, sram_d7, sram_d6, sram_d5, sram_d4, sram_d3, sram_d2, sram_d1, sram_d0};
 
-//`ifdef FASTMEM
+`ifdef FASTMEM
     wire[3:0] sram_membus_ack;
     wire[15:0] sram_membus_data;
     wire sram_membus_stall;
