@@ -3,7 +3,7 @@
 module sram256kx16_membus_vga_ice40
 	(
 		input I_clk,
-        input I_clk_90deg,
+        input I_clk_shifted,
 		// signals to memory bus adapter
         input[3:0] I_request,
         input I_we,
@@ -61,7 +61,7 @@ module sram256kx16_membus_vga_ice40
 	// upper-byte control line (DDR)
 	SB_IO #(.PIN_TYPE(6'b 0100_01), .PULLUP(1'b 0)) io_block_instance_ub (
 		.PACKAGE_PIN(O_ub),
-		.OUTPUT_CLK(I_clk_90deg),
+		.OUTPUT_CLK(I_clk_shifted),
 		.D_OUT_0(ub_reg),
 		.D_OUT_1(1'b1)
 	);
@@ -69,7 +69,7 @@ module sram256kx16_membus_vga_ice40
 	// lower-byte control line (DDR)
 	SB_IO #(.PIN_TYPE(6'b 0100_01), .PULLUP(1'b 0)) io_block_instance_lb (
 		.PACKAGE_PIN(O_lb),
-		.OUTPUT_CLK(I_clk_90deg),
+		.OUTPUT_CLK(I_clk_shifted),
 		.D_OUT_0(lb_reg),
 		.D_OUT_1(1'b1)
 	);
