@@ -2,7 +2,7 @@ LINK=riscv64-unknown-elf-gcc -march=rv32i -mabi=ilp32 -O0 -nostdlib -nostartfile
 DUMP=riscv64-unknown-elf-objdump
 COPY=riscv64-unknown-elf-objcopy
 
-all: blink-test.dat blink-test.bin uart-echo.dat spi-test.dat trap-test.dat timer-test.dat bootrom.dat bootrom.bin
+all: blink-test.dat blink-test.bin uart-echo.dat spi-test.dat trap-test.dat timer-test.dat bootrom.dat bootrom.bin bootrom_onlyuart.dat bootrom_onlyuart.bin
 
 %.o: %.s
 	$(LINK) -o $@ $<
