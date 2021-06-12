@@ -6,7 +6,10 @@
 
 
 main:
+    li t0, 1
+    sb t0, DEV_LED(zero)
     jal receive_uart
+    sb zero, DEV_LED(zero)
     # check for "U" (load from UART)
     li t0, 0x55
     beq a0, t0, load_from_uart
@@ -70,13 +73,10 @@ transmit_uart:
     ret
 
 receive_uart:
-    lw t1, DEV_TIMER(zero)
-receive_uart_wait_receive:
     lbu t0, DEV_UART_RX_READY(zero)
-    beqz t0, receive_uart_wait_receive
+    beqz t0, receive_uart
     lbu a0, DEV_UART_DATA(zero)
     ret
-
 
 
 
