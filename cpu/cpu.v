@@ -31,7 +31,7 @@ module spu32_cpu
     assign reset = I_reset;
 
     // MSRS
-    reg[31:2] pc, pcnext, epc;
+    reg[31:2] pc, pc_alu, pcnext, epc;
     reg[31:2] evect = VECTOR_EXCEPTION[31:2];
     reg nextpc_from_alu, nextpc_from_bru, writeback_in_fetch;
      // current and previous machine-mode external interrupt enable
@@ -173,7 +173,7 @@ module spu32_cpu
     always @(*) begin
         case(dec_alumux1)
             MUX_ALUDAT1_REGVAL1: alu_dataS1 = reg_val1;
-            default:             alu_dataS1 = {pc, 2'b00}; // MUX_ALUDAT1_PC
+            default:             alu_dataS1 = {pc_alu, 2'b00}; // MUX_ALUDAT1_PC
         endcase
     end
 
@@ -254,6 +254,11 @@ module spu32_cpu
     // only transition to new state if not busy    
     always @(*) begin
         state = busy ? prevstate : nextstate;
+    end
+
+    always @(posedge clk) begin
+        // posedge-registered copy of PC to avoid negedge -> posedge critical path in ALU
+        pc_alu <= pc;
     end
 
     always @(negedge clk) begin
