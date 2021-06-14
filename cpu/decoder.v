@@ -77,7 +77,7 @@ module spu32_cpu_decoder(
 
         // determine if opcode needs register writeback
         case(opcode)
-            `OP_OP, `OP_OPIMM, `OP_LUI, `OP_AUIPC, `OP_LOAD:  writeback = 1'b1;
+            `OP_OP, `OP_OPIMM, `OP_LUI, `OP_AUIPC, `OP_LOAD, `OP_JAL, `OP_JALR:  writeback = 1'b1;
             default: writeback = 1'b0;
         endcase
 

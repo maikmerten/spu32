@@ -346,9 +346,8 @@ module spu32_cpu
                     end
 
                     `OP_JAL, `OP_JALR: begin
-                        // return address computed in branch unit during decode, write to register
-                        reg_we <= 1;
-
+                        // return address computed in branch unit during DECODE and
+                        // will be written to register in FETCH
                         nextpc_from_alu <= 1;
                         nextstate <= STATE_FETCH;
                     end
@@ -368,7 +367,6 @@ module spu32_cpu
                 bus_en <= 1;
                 mux_bus_addr_sel <= MUX_BUSADDR_ALU;
                 bus_op <= dec_busop;
-                //writeback_in_fetch <= (dec_opcode == `OP_LOAD);
                 nextstate <= STATE_FETCH;
             end
 
