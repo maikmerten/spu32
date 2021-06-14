@@ -112,7 +112,7 @@ module spu32_cpu
     wire[5:0] dec_branchmask;
     wire[3:0] dec_aluop;
     wire[2:0] dec_busop;
-    wire dec_alumux1, dec_alumux2;
+    wire dec_alumux1, dec_alumux2, dec_writeback;
     wire[1:0] dec_reginputmux;
     reg dec_en;
 
@@ -125,6 +125,7 @@ module spu32_cpu
         .O_rd(dec_rd),
         .O_imm(dec_imm),
         .O_opcode(dec_opcode),
+        .O_writeback(dec_writeback),
         .O_funct3(dec_funct3),
         .O_branchmask(dec_branchmask),
         .O_aluop(dec_aluop),
@@ -333,11 +334,10 @@ module spu32_cpu
                 pcnext <= bru_nextpc[31:2];
 
                 alu_en <= 1;
+                writeback_in_fetch <= dec_writeback;
 
                 case(dec_opcode)
                     `OP_OP, `OP_OPIMM, `OP_LUI, `OP_AUIPC: begin
-                        // do register writeback in FETCH
-                        writeback_in_fetch <= 1;
                         nextstate <= STATE_FETCH;
                     end
 
@@ -368,7 +368,7 @@ module spu32_cpu
                 bus_en <= 1;
                 mux_bus_addr_sel <= MUX_BUSADDR_ALU;
                 bus_op <= dec_busop;
-                writeback_in_fetch <= (dec_opcode == `OP_LOAD);
+                //writeback_in_fetch <= (dec_opcode == `OP_LOAD);
                 nextstate <= STATE_FETCH;
             end
 

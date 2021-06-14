@@ -12,6 +12,7 @@ module spu32_cpu_decoder(
         output reg[4:0] O_rd,
         output reg[31:0] O_imm,
         output[4:0] O_opcode,
+        output O_writeback,
         output[2:0] O_funct3,
         output reg[5:0] O_branchmask,
         output reg[3:0] O_aluop,
@@ -38,6 +39,7 @@ module spu32_cpu_decoder(
     reg[31:0] instr;
 
     reg[4:0] opcode;
+    reg writeback;
     reg[31:0] imm;
     reg[2:0] funct3;
     reg[6:0] funct7;
@@ -47,6 +49,7 @@ module spu32_cpu_decoder(
 
     assign O_funct3 = funct3;
     assign O_opcode = opcode;
+    assign O_writeback = writeback;
 
     // LUI is handled as reg+imm addition, with rs1 being hardwired to zero
     wire is_lui_op = I_instr[6:2] == `OP_LUI;
@@ -71,6 +74,12 @@ module spu32_cpu_decoder(
             default: imm = {{20{instr[31]}}, instr[31:20]}; // I-type and R-type. Immediate has no meaning for R-type instructions
         endcase
         O_imm = imm;
+
+        // determine if opcode needs register writeback
+        case(opcode)
+            `OP_OP, `OP_OPIMM, `OP_LUI, `OP_AUIPC, `OP_LOAD:  writeback = 1'b1;
+            default: writeback = 1'b0;
+        endcase
 
         // determine first ALU data input
         case(opcode)
