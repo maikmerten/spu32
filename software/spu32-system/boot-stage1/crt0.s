@@ -26,6 +26,6 @@ _init:
     sb zero, -1(zero)
 
 	# jump into stage 2 bootloader
-	li s1, (256 * 1024);
+	li s1, (8 * 1024);
 	jr s1
 
