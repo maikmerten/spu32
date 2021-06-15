@@ -26,7 +26,7 @@ Binary size: 4 Kibibyte
 
 #define STAGE2_FLASH_LOCATION (4 * 1024)
 #define STAGE2_SIZE (4 * 1024)
-#define STAGE2_RAM_LOCATION (8 * 1024)
+#define STAGE2_RAM_LOCATION (64 * 1024)
 
 #define BIOS_FLASH_LOCATION (8 * 1024)
 #define BIOS_SIZE (32 * 1024)
