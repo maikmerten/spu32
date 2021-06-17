@@ -73,7 +73,7 @@ module decoder_tb;
 
         instr <= 32'hf0f0f2b7; // lui t0,0xf0f0f
         @(negedge clk)
-        if(rs1 !== `R1) error <= 21;
+        if(rs1 !== `R0) error <= 21; // LUI is handled as reg+imm addition, with rs1 being hardwired to zero
         if(rd !== `T0) error <= 22;
         if(imm !== 32'hf0f0f000) error <= 23;
 
