@@ -11,9 +11,9 @@ module spu32_cpu_decoder(
         output[4:0]	O_rs1, O_rs2,
         output reg[4:0] O_rd,
         output reg[31:0] O_imm,
-        output[4:0] O_opcode,
-        output O_writeback,
-        output[2:0] O_funct3,
+        output reg[4:0] O_opcode,
+        output reg O_writeback,
+        output reg[2:0] O_funct3,
         output reg[5:0] O_branchmask,
         output reg[3:0] O_aluop,
         output reg[2:0] O_busop,
@@ -36,20 +36,21 @@ module spu32_cpu_decoder(
     localparam MUX_REGINPUT_BRU = 2;
     localparam MUX_REGINPUT_MSR = 3;
 
-    reg[31:0] instr;
+    wire[31:0] instr = I_instr;
 
     reg[4:0] opcode;
     reg writeback;
     reg[31:0] imm;
+    reg[4:0] rd;
     reg[2:0] funct3;
     reg[6:0] funct7;
+    reg[5:0] branchmask;
+    reg[3:0] aluop;
 
     reg[3:0] aluop_op, aluop_opimm;
-    reg[2:0] busop_load, busop_store;
-
-    assign O_funct3 = funct3;
-    assign O_opcode = opcode;
-    assign O_writeback = writeback;
+    reg[2:0] busop, busop_load, busop_store;
+    reg alumux1, alumux2;
+    reg[1:0] reginputmux;
 
     // LUI is handled as reg+imm addition, with rs1 being hardwired to zero
     wire is_lui_op = I_instr[6:2] == `OP_LUI;
@@ -64,7 +65,7 @@ module spu32_cpu_decoder(
         opcode = instr[6:2];
         funct3 = instr[14:12];
         funct7 = instr[31:25];
-        O_rd = instr[11:7];
+        rd = instr[11:7];
 
         case(opcode)
             `OP_STORE: imm = {{20{instr[31]}}, instr[31:25], instr[11:8], instr[7]}; // S-type
@@ -73,7 +74,6 @@ module spu32_cpu_decoder(
             `OP_JAL: imm = {{11{instr[31]}}, instr[31], instr[19:12], instr[20], instr[30:25], instr[24:21], 1'b0}; // UJ-type
             default: imm = {{20{instr[31]}}, instr[31:20]}; // I-type and R-type. Immediate has no meaning for R-type instructions
         endcase
-        O_imm = imm;
 
         // determine if opcode needs register writeback
         case(opcode)
@@ -83,33 +83,33 @@ module spu32_cpu_decoder(
 
         // determine first ALU data input
         case(opcode)
-            `OP_JAL, `OP_AUIPC: O_alumux1 = MUX_ALUDAT1_PC;
-            default:            O_alumux1 = MUX_ALUDAT1_REGVAL1;
+            `OP_JAL, `OP_AUIPC: alumux1 = MUX_ALUDAT1_PC;
+            default:            alumux1 = MUX_ALUDAT1_REGVAL1;
         endcase
 
         // determine second ALU data input
         case(opcode)
-            `OP_OP, `OP_BRANCH: O_alumux2 = MUX_ALUDAT2_REGVAL2;
-            default:            O_alumux2 = MUX_ALUDAT2_IMM;
+            `OP_OP, `OP_BRANCH: alumux2 = MUX_ALUDAT2_REGVAL2;
+            default:            alumux2 = MUX_ALUDAT2_IMM;
         endcase
 
         // determine register writeback input
         case(opcode)
-            `OP_LOAD:           O_reginputmux = MUX_REGINPUT_BUS;
-            `OP_JAL, `OP_JALR:  O_reginputmux = MUX_REGINPUT_BRU;
-            `OP_SYSTEM:         O_reginputmux = MUX_REGINPUT_MSR;
-            default:            O_reginputmux = MUX_REGINPUT_ALU;
+            `OP_LOAD:           reginputmux = MUX_REGINPUT_BUS;
+            `OP_JAL, `OP_JALR:  reginputmux = MUX_REGINPUT_BRU;
+            `OP_SYSTEM:         reginputmux = MUX_REGINPUT_MSR;
+            default:            reginputmux = MUX_REGINPUT_ALU;
         endcase
 
         isbranch = (opcode == `OP_BRANCH);
-        O_branchmask = 0;
+        branchmask = 0;
         case(funct3)
-            `FUNC_BEQ:  O_branchmask[0] = isbranch;
-            `FUNC_BNE:  O_branchmask[1] = isbranch;
-            `FUNC_BLT:  O_branchmask[2] = isbranch;
-            `FUNC_BGE:  O_branchmask[3] = isbranch;
-            `FUNC_BLTU: O_branchmask[4] = isbranch;
-            `FUNC_BGEU: O_branchmask[5] = isbranch;
+            `FUNC_BEQ:  branchmask[0] = isbranch;
+            `FUNC_BNE:  branchmask[1] = isbranch;
+            `FUNC_BLT:  branchmask[2] = isbranch;
+            `FUNC_BGE:  branchmask[3] = isbranch;
+            `FUNC_BLTU: branchmask[4] = isbranch;
+            `FUNC_BGEU: branchmask[5] = isbranch;
         endcase
         
         // OP_OP
@@ -144,9 +144,9 @@ module spu32_cpu_decoder(
 
         // select op for alu
         case(opcode)
-            `OP_OP   : O_aluop = aluop_op;
-            `OP_OPIMM: O_aluop = aluop_opimm;
-            default  : O_aluop = `ALUOP_ADD;
+            `OP_OP   : aluop = aluop_op;
+            `OP_OPIMM: aluop = aluop_opimm;
+            default  : aluop = `ALUOP_ADD;
         endcase
 
         // OP_LOAD
@@ -165,13 +165,24 @@ module spu32_cpu_decoder(
             default:    busop_store = `BUSOP_WRITEW; // FUNC_SW
         endcase
 
-        O_busop = (opcode == `OP_LOAD ? busop_load : busop_store);
+        busop = (opcode == `OP_LOAD ? busop_load : busop_store);
 
     end
 
     always @(posedge I_clk) begin
         if(I_en) begin
-            instr <= I_instr;
+            // register output signals to gain timing headroom
+            O_imm <= imm;
+            O_opcode <= opcode;
+            O_writeback <= writeback;
+            O_funct3 <= funct3;
+            O_branchmask <= branchmask;
+            O_aluop <= aluop;
+            O_rd <= rd;
+            O_busop <= busop;
+            O_alumux1 <= alumux1;
+            O_alumux2 <= alumux2;
+            O_reginputmux <= reginputmux;
         end
     end
 
