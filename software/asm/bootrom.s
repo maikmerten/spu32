@@ -168,13 +168,15 @@ load_from_spi:
     li a0, 0x0B
     jal transmit_spi
 
-    # send address (0x0 in this case) and dummy byte for fast read
-    li t0, 4
-load_from_spi_send_address_and_dummy:    
-    li a0, 0
+    # send address (0x100000 in this case) and dummy byte for fast read
+    li a0, 0x10 # addr[23:16]
     jal transmit_spi
-    addi t0, t0, -1
-    bnez t0, load_from_spi_send_address_and_dummy
+    li a0, 0x00 # addr[15:8]
+    jal transmit_spi
+    li a0, 0x00 # addr[7:0]
+    jal transmit_spi
+    li a0, 0x00 # dummy byte
+    jal transmit_spi
 
     # read bytes from SPI flash and write to memory, starting at address 0x0
     mv t0, zero

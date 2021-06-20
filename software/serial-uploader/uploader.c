@@ -328,14 +328,12 @@ void eraseBlocks(int startaddr, int endaddr) {
 }
 
 
-void programFile(char *filename) {
+void programFile(char *filename, int addr) {
     FILE* fp = fopen(filename, "r");
     if(fp == NULL) {
         perror("could not open input file");
         return;
     }
-
-    int addr = 0;
 
     // determine file size
     fseek(fp, 0L, SEEK_END);
@@ -477,7 +475,7 @@ int main(int argc, char *argv[])
     
 
     if(program) {
-        programFile(filename);
+        programFile(filename, 0x100000);
     } else {
         drainfd();
         uploadFile(filename, 0);
