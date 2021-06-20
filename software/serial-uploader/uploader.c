@@ -16,6 +16,7 @@ int testrun = 0;
 int exitcode = 0;
 
 const char CMD_CHIP_ERASE = (char) 0x60;
+const char CMD_BLOCK64KB_ERASE = (char) 0xD8;
 const char CMD_FASTREAD = (char) 0x0B;
 const char CMD_PAGE_PROGRAM = (char) 0x02;
 const char CMD_READ_STATUS = (char) 0x05;
@@ -305,21 +306,56 @@ void programChunk(int addr, char *data, int chunksize) {
     }
 }
 
+void eraseBlocks(int startaddr, int endaddr) {
+    char cmd[4];
+    int addr;
+    
+    printf("erasing block data...\n");
+
+    for(addr = startaddr; addr < endaddr; addr += (64 * 1024)) {
+        printf("   @ 0x%06x\n", addr);
+        
+        enableWrite();
+        cmd[0] = CMD_BLOCK64KB_ERASE;
+        addr24(addr, &cmd[1]);
+        writeToSPI(cmd, cmd, sizeof cmd);
+        while(isBusy()) {
+            usleep(1 * 1000);
+        }
+    }
+
+    printf("... aaaand it's gone!\n\n\r");
+}
+
+
 void programFile(char *filename) {
-    int fd = open (filename, O_RDONLY);
-    if(fd == -1) {
+    FILE* fp = fopen(filename, "r");
+    if(fp == NULL) {
         perror("could not open input file");
         return;
     }
 
-    int chunk = 0;
     int addr = 0;
+
+    // determine file size
+    fseek(fp, 0L, SEEK_END);
+    int size = ftell(fp);
+    fseek(fp, 0L, SEEK_SET);
+
+    printf("input file is %d bytes long\n", size);
+
+    // erasing blocks according to file size to be programmed
+    eraseBlocks(addr, addr + size);
+
+    printf("writing data...\n");
+
+    int chunk = 0;
     int n;
     do {
         char buf[CHUNKSIZE];
         char buf2[CHUNKSIZE];
 
-        n = read(fd, buf, CHUNKSIZE);
+        n = fread(buf, 1, sizeof buf, fp);
 
         programChunk(addr, buf, n);
         readChunk(addr, buf2, n);
@@ -335,7 +371,9 @@ void programFile(char *filename) {
         addr += n;
     } while(n > 0);
 
-    close(fd);
+    fclose(fp);
+
+    printf("... aaaand it's done!\n\n\r");
 }
 
 void eraseChip() {
@@ -439,16 +477,7 @@ int main(int argc, char *argv[])
     
 
     if(program) {
-        enableWrite();
-        eraseChip();
-        printf("erasing chip...\n");
-        while(isBusy()) {}
-        printf("... aaaand it's gone!\n");
-        printf("\n\r");
-        printf("writing data...\n");
         programFile(filename);
-        printf("... aaaand it's done!\n");
-        printf("\n\r");
     } else {
         drainfd();
         uploadFile(filename, 0);
