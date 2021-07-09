@@ -444,10 +444,12 @@ void _bios_video_get_mode(struct request_video_get_mode_t* request) {
 
 void _bios_set_stdout(struct request_stdout_set_get_t* request) {
     bios_stdout_device = request->device;
+    request->result = RESULT_OK;
 }
 
 void _bios_get_stdout(struct request_stdout_set_get_t* request) {
     request->device = bios_stdout_device;
+    request->result = RESULT_OK;
 }
 
 
