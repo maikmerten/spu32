@@ -15,6 +15,7 @@ enum device_enum {
     DEVICE_SD,
     DEVICE_STDIN,
     DEVICE_STDOUT,
+    DEVICE_VIDEO
 };
 
 
@@ -55,7 +56,9 @@ enum command_enum {
     CMD_FS_STAT,
     CMD_VIDEO_SETMODE,
     CMD_VIDEO_SETPALETTE,
-    CMD_VIDEO_GETMODE
+    CMD_VIDEO_GETMODE,
+    CMD_SET_STDOUT,
+    CMD_GET_STDOUT
 };
 
 typedef int32_t result_t;
@@ -301,6 +304,13 @@ struct request_video_get_mode_t {
     videomode_t* mode;
     void* videobase;
     void* fontbase;
+    result_t result;
+};
+
+// data structure to set stdout to a specified device or get current configuration
+struct request_stdout_set_get_t {
+    command_t command; // every request needs to have a command_t at the top!
+    device_t device;
     result_t result;
 };
 

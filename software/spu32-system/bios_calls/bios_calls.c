@@ -328,3 +328,20 @@ result_t bios_video_get_mode(videomode_t* mode, void** videobase, void** fontbas
     return req.result;
 }
 
+// set stdout to the specified device
+result_t bios_set_stdout(device_t dev) {
+    struct request_stdout_set_get_t req;
+    req.command = CMD_SET_STDOUT;
+    req.device = dev;
+    call_environment(&req);
+    return req.result;
+}
+
+// retrieve device stdout is currently set to
+result_t bios_get_stdout(device_t* dev) {
+    struct request_stdout_set_get_t req;
+    req.command = CMD_GET_STDOUT;
+    call_environment(&req);
+    *dev = req.device;
+    return req.result;
+}

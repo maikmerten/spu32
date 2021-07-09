@@ -7,6 +7,11 @@
 #include "bios_uart.h"
 #include "bios_fatfs.h"
 #include "bios_video.h"
+// ------------------------------------------------------------------------------------
+/// VARIABLES ///
+
+device_t bios_stdout_device = DEVICE_UART;
+
 
 // ------------------------------------------------------------------------------------
 
@@ -38,6 +43,8 @@ void _bios_fs_stat(struct request_fs_stat_t* request);
 void _bios_video_set_mode(struct request_video_set_mode_t* request);
 void _bios_video_set_palette(struct request_video_set_palette_t* request);
 void _bios_video_get_mode(struct request_video_get_mode_t* request);
+void _bios_set_stdout(struct request_stdout_set_get_t* request);
+void _bios_get_stdout(struct request_stdout_set_get_t* request);
 
 /**
  * This is the interrupt service routine. Yeah, we can write this in C.
@@ -181,6 +188,14 @@ void bios_isr() {
                     }
                     case CMD_VIDEO_GETMODE: {
                         _bios_video_get_mode((void*) request_addr);
+                        break;
+                    }
+                    case CMD_SET_STDOUT: {
+                        _bios_set_stdout((void*) request_addr);
+                        break;
+                    }
+                    case CMD_GET_STDOUT: {
+                        _bios_get_stdout((void*) request_addr);
                     }
                     default: {
                         // Unknown command requested! Panic? Panic!
@@ -298,8 +313,13 @@ void _bios_read_stream(struct request_readwrite_stream_t* request) {
 
 // function to handle stream write requests
 void _bios_write_stream(struct request_readwrite_stream_t* request) {
-    switch(request->device) {
-        case DEVICE_STDOUT:
+    device_t device = request->device;
+    if(device == DEVICE_STDOUT) {
+        device = bios_stdout_device;
+    }
+
+    switch(device) {
+        case DEVICE_VIDEO:
             bios_video_write(request);
             request->result = RESULT_OK;
             return;
@@ -421,6 +441,16 @@ void _bios_video_set_palette(struct request_video_set_palette_t* request) {
 void _bios_video_get_mode(struct request_video_get_mode_t* request) {
     request->result = bios_video_get_mode(request->mode, request->videobase, request->fontbase);
 }
+
+void _bios_set_stdout(struct request_stdout_set_get_t* request) {
+    bios_stdout_device = request->device;
+}
+
+void _bios_get_stdout(struct request_stdout_set_get_t* request) {
+    request->device = bios_stdout_device;
+}
+
+
 
 /// END OF BIOS CODE ///
 
