@@ -1,0 +1,38 @@
+
+set_io --warn-no-port clk_12mhz 35 # FTDI_CLK
+
+
+set_io --warn-no-port uart_tx 9 # Tx_TTL
+set_io --warn-no-port uart_rx 6 # Rx_TTL
+set_io --warn-no-port uart_rts 18 # ~RTS, not by default connected 
+
+
+# onboard SPI flash device
+set_io --warn-no-port spi1_clk 15
+set_io --warn-no-port -pullup yes spi1_miso 17
+set_io --warn-no-port spi1_mosi 14
+set_io --warn-no-port spi1_flash_cs 16 # SPI Flash on icebreaker
+set_io --warn-no-port spi1_sdcard_cs 41 # SD-Card CS on RGB2
+
+
+set_io led0 37 # ~LEDG
+set_io led1 11 # ~LEDR
+
+
+set_io reset_button 10 # ~BUTTON
+
+# VGA signals
+set_io vga_hsync 42
+set_io vga_vsync 36
+set_io vga_r0 4
+set_io vga_r1 2
+set_io vga_r2 47
+set_io vga_r3 45
+set_io vga_g0 43
+set_io vga_g1 38
+set_io vga_g2 34
+set_io vga_g3 31
+set_io vga_b0 3
+set_io vga_b1 48
+set_io vga_b2 46
+set_io vga_b3 44
