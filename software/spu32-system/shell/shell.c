@@ -212,10 +212,11 @@ int execute_input()
 
     int exitcode = 0;
     get_argument(arg0, sizeof(arg0), 0);
-    if (!do_run(arg0, 1, &exitcode)) {
-        // executed program from /bin
+    if (!do_run(arg0, 0, &exitcode)) {
+        // executed program from current dir
     } else {
-        if (do_run(arg0, 0, &exitcode)) {
+        // execute progrom from /bin
+        if (do_run(arg0, 1, &exitcode)) {
             printf("could not execute %s\n\r", arg0);
         }
     }
