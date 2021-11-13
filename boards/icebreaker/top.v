@@ -266,7 +266,7 @@ module top(
 
     spi_wb8 spi_inst(
         .I_wb_clk(clk),
-        .I_wb_adr(wb_adr_o[1:0]),
+        .I_wb_adr(wb_adr_o[3:2]),
         .I_wb_dat(wb_dat_o),
         .I_wb_stb(spi_wb_stb),
         .I_wb_we(wb_we_o),
