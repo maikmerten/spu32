@@ -1,10 +1,12 @@
-CC=riscv64-unknown-elf-gcc
-CFLAGSBIOS=-march=rv32im -mno-div -mabi=ilp32 -msave-restore -static -nostdlib -fno-builtin-printf -Os -fdata-sections -ffunction-sections
+include ../../Makefile.vars
+
+CC=${RV_GCC}
+CFLAGSBIOS=-march=rv32im -mno-div -mabi=ilp32 -msave-restore -static -nostdlib -fno-builtin -ffreestanding -Os -fdata-sections -ffunction-sections
 LDFLAGSBIOS=-lgcc -Tbios_link.ld -Xlinker --gc-sections
 # useful additions for LDFLAGS if linking fails: -Xlinker --verbose 
 
-DUMP=riscv64-unknown-elf-objdump
-COPY=riscv64-unknown-elf-objcopy
+DUMP=${RV_OBJDUMP}
+COPY=${RV_OBJCOPY}
 TRUNCATE=truncate
 CP=cp
 
