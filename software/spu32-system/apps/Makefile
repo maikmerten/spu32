@@ -1,14 +1,16 @@
-CC=riscv64-unknown-elf-gcc
+include ../../Makefile.vars
+
+CC=${RV_GCC}
 CFLAGS=-I../libtinyc -I../libspu32 -march=rv32im -mno-div -mabi=ilp32 -msave-restore -static -nostdlib -fno-builtin-printf -Os -fPIC -fdata-sections -ffunction-sections
 LDFLAGS=-L../libtinyc -ltinyc -L../libspu32 -lspu32 -lgcc -Tlink.ld -Xlinker --gc-sections
 # useful additions for LDFLAGS if linking fails: -Xlinker --verbose 
 
-COPY=riscv64-unknown-elf-objcopy
+COPY=${RV_OBJCOPY}
 
 .PHONY: clean
 
 
-all: argtest.bin filesrv.bin mandel.bin mandel2.bin minmemtest.bin memtest.bin dhryston.bin chreact.bin vgadraw.bin showfont.bin ls.bin mkdir.bin rm.bin cd.bin mv.bin print.bin cp.bin cls.bin loadfont.bin sum.bin
+all: argtest.bin filesrv.bin mandel.bin mandel2.bin minmemtest.bin memtest.bin chreact.bin vgadraw.bin showfont.bin ls.bin mkdir.bin rm.bin cd.bin mv.bin print.bin cp.bin cls.bin loadfont.bin sum.bin dhryston.bin
 
 
 %.bin: %.elf

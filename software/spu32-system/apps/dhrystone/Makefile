@@ -1,10 +1,12 @@
-CC=riscv64-unknown-elf-gcc
+include ../../../Makefile.vars
+
+CC=${RV_GCC}
 CFLAGS=-I../../libtinyc -I../../libspu32 -march=rv32im -mno-div -mabi=ilp32 -static -nostdlib -fno-builtin-printf -O3 -fno-inline -fdata-sections -ffunction-sections
 LDFLAGS=-L../../libtinyc -ltinyc -L../../libspu32 -lspu32 -lgcc -Tlink.ld -Xlinker --gc-sections
 # useful additions for LDFLAGS if linking fails: -Xlinker --verbose 
 
-DUMP=riscv64-unknown-elf-objdump
-COPY=riscv64-unknown-elf-objcopy
+DUMP=${RV_OBJDUMP}
+COPY=${RV_OBJCOPY}
 
 all: dhrystone.o dhrystone_main.bin
 
