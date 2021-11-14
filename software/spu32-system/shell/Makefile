@@ -1,12 +1,12 @@
-CC=riscv64-unknown-elf-gcc
+include ../../Makefile.vars
+
+CC=${RV_GCC}
 CFLAGS=-I../libtinyc -march=rv32im -mno-div -mabi=ilp32 -msave-restore -static -nostdlib -fno-builtin-printf -Os -fPIC -fdata-sections -ffunction-sections
 LDFLAGS=-L../libtinyc -ltinyc -lgcc -Tlink.ld -Xlinker --gc-sections
 # useful additions for LDFLAGS if linking fails: -Xlinker --verbose 
 
-COPY=riscv64-unknown-elf-objcopy
-DUMP=riscv64-unknown-elf-objdump
-TRUNCATE=truncate
-CP=cp
+COPY=${RV_OBJCOPY}
+DUMP=${RV_OBJDUMP}
 
 all: shell.bin
 
