@@ -17,6 +17,8 @@ long long parse_long(char *str);
 
 
 void *memcpy(void *str1, const void *str2, size_t n);
+void *memset(void *str, int c, size_t n);
+void *memmove(void *str1, const void *str2, size_t n);
 
 size_t strlen(const char *s);
 char *strncat(char *dest, const char *src, size_t n);

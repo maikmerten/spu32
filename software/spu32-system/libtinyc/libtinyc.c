@@ -168,6 +168,37 @@ void* memcpy(void* str1, const void* str2, size_t n)
     return str1;
 }
 
+void *memset(void* str, int c, size_t n)
+{
+    unsigned char* ptr = str;
+
+    while(n > 0) {
+      *(ptr) = c;
+      ptr++;
+      n--;
+    }
+    return str;
+}
+
+void *memmove(void *str1, const void *str2, size_t n)
+{
+    unsigned char* ptr_dest = str1;
+    const unsigned char* ptr_src = str2;
+
+    unsigned char buf[n];
+    // copy src to buf
+    for(int i = 0; i < n; i++) {
+        buf[i] = ptr_src[i];
+    }
+
+    // copy buf to dest
+    for(int i = 0; i < n; i++) {
+        ptr_dest[i] = buf[i];
+    }
+
+    return str1;
+}
+
 size_t strlen(const char* s)
 {
     size_t len = 0;
