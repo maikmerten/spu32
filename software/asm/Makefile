@@ -1,6 +1,8 @@
-LINK=riscv64-unknown-elf-gcc -march=rv32i -mabi=ilp32 -O0 -nostdlib -nostartfiles -Tlink.ld -x assembler-with-cpp
-DUMP=riscv64-unknown-elf-objdump
-COPY=riscv64-unknown-elf-objcopy
+include ../Makefile.vars
+
+LINK=${RV_GCC} -march=rv32i -mabi=ilp32 -O0 -nostdlib -nostartfiles -Tlink.ld -x assembler-with-cpp
+DUMP=${RV_OBJDUMP}
+COPY=${RV_OBJCOPY}
 
 all: blink-test.dat blink-test.bin uart-echo.dat spi-test.dat trap-test.dat timer-test.dat bootrom.dat bootrom.bin bootrom_onlyuart.dat bootrom_onlyuart.bin
 
