@@ -1,10 +1,12 @@
-CC=riscv64-unknown-elf-gcc
+include ../../Makefile.vars
+
+CC=${RV_GCC}
 CFLAGS=-I../libbioscalls -static -march=rv32im -mno-div -mabi=ilp32 -nostdlib -Os -fno-builtin-printf -fPIC -fdata-sections -ffunction-sections
 
-AR=riscv64-unknown-elf-ar
+AR=${RV_AR}
 ARFLAGS=rs
 
-DUMP=riscv64-unknown-elf-objdump
+DUMP=${RV_OBJDUMP}
 
 .PHONY: clean dump
 
