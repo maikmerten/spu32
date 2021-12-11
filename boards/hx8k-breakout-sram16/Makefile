@@ -18,7 +18,7 @@ CHECK := $(foreach exec,$(EXECS),\
 
 top.json: top.v
 	cd ../../software/asm && make
-	cd ../.. && yosys -p 'synth_ice40; attrmvcp; write_json ./boards/hx8k-breakout-sram16/top.json' ./boards/hx8k-breakout-sram16/top.v
+	cd ../.. && yosys -p 'read_verilog ./boards/hx8k-breakout-sram16/top.v' -p 'synth_ice40; attrmvcp; write_json ./boards/hx8k-breakout-sram16/top.json'
 
 top.asc: top.json hx8k-breakout-sram16.pcf
 	nextpnr-ice40 --randomize-seed --placer heap --hx8k --package ct256 --json top.json --pcf hx8k-breakout-sram16.pcf --asc top.asc --freq 26
