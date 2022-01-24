@@ -12,6 +12,7 @@
 *.elf
 *.bak
 *.dat
+*.dat32
 software/serial-uploader/uploader
 software/filesrv/filesrv_client
 *config-local.vh
