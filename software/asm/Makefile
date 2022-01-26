@@ -4,7 +4,7 @@ LINK=${RV_GCC} -march=rv32i -mabi=ilp32 -O0 -nostdlib -nostartfiles -Tlink.ld -x
 DUMP=${RV_OBJDUMP}
 COPY=${RV_OBJCOPY}
 
-all: blink-test.dat blink-test.bin uart-echo.dat spi-test.dat trap-test.dat timer-test.dat bootrom.dat bootrom.dat32 bootrom.bin bootrom_onlyuart.dat bootrom_onlyuart.bin
+all: blink-test.dat blink-test.dat32 blink-test.bin uart-echo.dat spi-test.dat trap-test.dat timer-test.dat bootrom.dat bootrom.dat32 bootrom.bin bootrom_onlyuart.dat bootrom_onlyuart.bin
 
 %.o: %.s
 	$(LINK) -o $@ $<
