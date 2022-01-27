@@ -21,23 +21,28 @@ module ice40_spram_1mbit_wb32
 
     always @(negedge I_wb_clk) begin
         // register SPRAM output
-        if(I_wb_stb) begin
-            case(I_wb_adr[14])
-                1'b0: readbuf <= {data1, data0};
-                1'b1: readbuf <= {data3, data2};
-            endcase
-        end
+        case(I_wb_adr[14])
+            1'b0: readbuf <= {data1, data0};
+            1'b1: readbuf <= {data3, data2};
+        endcase
     end
 
-    wire bank0_cs = !I_wb_adr[14];
-    wire bank1_cs = I_wb_adr[14];
+    wire cs = I_wb_stb;
+
+    wire[3:0] bank0_sel = I_wb_adr[14] ? 4'h0 : I_wb_sel;
+    wire[3:0] bank1_sel = I_wb_adr[14] ? I_wb_sel : 4'h0;
+
+    wire[3:0] bank00_mask = { {2{bank0_sel[1]}}, {2{bank0_sel[0]}} };
+    wire[3:0] bank01_mask = { {2{bank0_sel[3]}}, {2{bank0_sel[2]}} };
+    wire[3:0] bank10_mask = { {2{bank1_sel[1]}}, {2{bank1_sel[0]}} };
+    wire[3:0] bank11_mask = { {2{bank1_sel[3]}}, {2{bank1_sel[2]}} };
 
     SB_SPRAM256KA ram00 (
         .ADDRESS(I_wb_adr[13:0]),
         .DATAIN(I_wb_dat[15:0]),
-        .MASKWREN({I_wb_sel[1], I_wb_sel[1], I_wb_sel[0], I_wb_sel[0]}),
+        .MASKWREN(bank00_mask),
         .WREN(write),
-        .CHIPSELECT(bank0_cs),
+        .CHIPSELECT(cs),
         .CLOCK(I_wb_clk),
         .STANDBY(1'b0),
         .SLEEP(1'b0),
@@ -48,9 +53,9 @@ module ice40_spram_1mbit_wb32
     SB_SPRAM256KA ram01 (
         .ADDRESS(I_wb_adr[13:0]),
         .DATAIN(I_wb_dat[31:16]),
-        .MASKWREN({I_wb_sel[3], I_wb_sel[3], I_wb_sel[2], I_wb_sel[2]}),
+        .MASKWREN(bank01_mask),
         .WREN(write),
-        .CHIPSELECT(bank0_cs),
+        .CHIPSELECT(cs),
         .CLOCK(I_wb_clk),
         .STANDBY(1'b0),
         .SLEEP(1'b0),
@@ -61,9 +66,9 @@ module ice40_spram_1mbit_wb32
     SB_SPRAM256KA ram10 (
         .ADDRESS(I_wb_adr[13:0]),
         .DATAIN(I_wb_dat[15:0]),
-        .MASKWREN({I_wb_sel[1], I_wb_sel[1], I_wb_sel[0], I_wb_sel[0]}),
+        .MASKWREN(bank10_mask),
         .WREN(write),
-        .CHIPSELECT(bank1_cs),
+        .CHIPSELECT(cs),
         .CLOCK(I_wb_clk),
         .STANDBY(1'b0),
         .SLEEP(1'b0),
@@ -74,9 +79,9 @@ module ice40_spram_1mbit_wb32
     SB_SPRAM256KA ram11 (
         .ADDRESS(I_wb_adr[13:0]),
         .DATAIN(I_wb_dat[31:16]),
-        .MASKWREN({I_wb_sel[3], I_wb_sel[3], I_wb_sel[2], I_wb_sel[2]}),
+        .MASKWREN(bank11_mask),
         .WREN(write),
-        .CHIPSELECT(bank1_cs),
+        .CHIPSELECT(cs),
         .CLOCK(I_wb_clk),
         .STANDBY(1'b0),
         .SLEEP(1'b0),
