@@ -108,7 +108,7 @@ module vga_wb32_extram (
                         // I_wb_dat[15:8] - G component
                         // I_wb_dat[23:16] - R component
                         // I_wb_dat[31:24] - palette entry index
-                        palette_udpate <= I_wb_dat;
+                        palette_update <= I_wb_dat;
                         // request palette update
                         palette_update_request <= !palette_update_ack;
                     end
@@ -126,10 +126,10 @@ module vga_wb32_extram (
             end else begin
                 case(I_wb_adr[1:0])
                     // read access for bitmap/text base address
-                    2'b00: O_wb_dat <= {13'b0, ram_base[17:0], 1'b0}
+                    2'b00: O_wb_dat <= {13'b0, ram_base[17:0], 1'b0};
 
                     // read access for font base address
-                    2'b01: O_wb_dat <= {13'b0, font_base[17:0], 1'b0}
+                    2'b01: O_wb_dat <= {13'b0, font_base[17:0], 1'b0};
 
                     // read access to color palette update (quite useless?)
                     2'b10: O_wb_dat <= palette_update;
