@@ -126,7 +126,7 @@ module spu32_bus_wishbone32(
 
             if(I_wb_ack) begin
                 // yay, ACK received, read data and put into buffer
-                //if(!I_write) begin
+                if(!I_write) begin
                     casez({I_addr[1:0], ack_count[0]})
                         // first word access
                         {2'b00, 1'b0}: buffer[31:0] <= I_wb_dat[31:0];
@@ -138,7 +138,7 @@ module spu32_bus_wishbone32(
                         {2'b10, 1'b1}: buffer[31:16] <= I_wb_dat[15:0];
                         {2'b11, 1'b1}: buffer[31:8] <= I_wb_dat[23:0];
                     endcase
-                //end
+                end
                 ack_count <= ack_count_next;
 
                 if(ack_count_next == word_target) begin
