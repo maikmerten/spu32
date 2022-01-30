@@ -93,12 +93,6 @@ module spu32_bus_wishbone32(
             // Mister Dalliard! We've been activated!
             O_wb_we <= write;
 
-            // output byte select signals
-            case(addr_count[0])
-                1'b0: O_wb_sel <= byteenables[7:4];
-                1'b1: O_wb_sel <= byteenables[3:0];
-            endcase
-
             if(ack_count != word_target) begin
                 // we haven't yet received the proper number of ACKs, so we need to
                 // output addresses and receive ACKs
@@ -106,6 +100,12 @@ module spu32_bus_wishbone32(
                 if(addr_count != word_target && !I_wb_stall) begin
                     O_wb_stb <= 1;
                     O_wb_adr <= bus_addr;
+
+                    // output byte select signals
+                    case(addr_count[0])
+                        1'b0: O_wb_sel <= byteenables[7:4];
+                        1'b1: O_wb_sel <= byteenables[3:0];
+                    endcase
 
                     // put data on bus for current address
                     casez({I_addr[1:0], addr_count[0]})
@@ -126,7 +126,7 @@ module spu32_bus_wishbone32(
 
             if(I_wb_ack) begin
                 // yay, ACK received, read data and put into buffer
-                if(!I_write) begin
+                //if(!I_write) begin
                     casez({I_addr[1:0], ack_count[0]})
                         // first word access
                         {2'b00, 1'b0}: buffer[31:0] <= I_wb_dat[31:0];
@@ -138,7 +138,7 @@ module spu32_bus_wishbone32(
                         {2'b10, 1'b1}: buffer[31:16] <= I_wb_dat[15:0];
                         {2'b11, 1'b1}: buffer[31:8] <= I_wb_dat[23:0];
                     endcase
-                end
+                //end
                 ack_count <= ack_count_next;
 
                 if(ack_count_next == word_target) begin
