@@ -42,7 +42,7 @@ module ice40_spram_1mbit_wb32_vga
             2'b11: vga_word = data3;
         endcase
     end
-    assign O_vga_dat = vga_word;
+    assign O_vga_dat = {vga_word[7:0], vga_word[15:8]};
 
     // select address for SPRAM
     wire[13:0] spram_adr = I_vga_req ? I_vga_adr[14:1] : I_wb_adr[13:0];
@@ -110,7 +110,7 @@ module ice40_spram_1mbit_wb32_vga
 
 
     always @(posedge I_wb_clk) begin
-		O_wb_ack <= I_wb_stb;
+		O_wb_ack <= I_wb_stb & !I_vga_req;
 	end
 
 endmodule
