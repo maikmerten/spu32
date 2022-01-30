@@ -110,14 +110,14 @@ module spu32_bus_wishbone32(
                     // put data on bus for current address
                     casez({I_addr[1:0], addr_count[0]})
                         // first word access
-                        {2'b00, 1'b0}: O_wb_dat = {c3, c2, c1, c0};
-                        {2'b01, 1'b0}: O_wb_dat = {c2, c1, c0, c0};
-                        {2'b10, 1'b0}: O_wb_dat = {c1, c0, c0, c0};
-                        {2'b11, 1'b0}: O_wb_dat = {c0, c0, c0, c0};
+                        {2'b00, 1'b0}: O_wb_dat <= {c3, c2, c1, c0};
+                        {2'b01, 1'b0}: O_wb_dat <= {c2, c1, c0, c0};
+                        {2'b10, 1'b0}: O_wb_dat <= {c1, c0, c0, c0};
+                        {2'b11, 1'b0}: O_wb_dat <= {c0, c0, c0, c0};
                         // unaliged accesses in second access phase
-                        {2'b0?, 1'b1}: O_wb_dat = {c3, c3, c3, c3}; // I_addr[1:0] == 2'b00 should never matter here
-                        {2'b10, 1'b1}: O_wb_dat = {c3, c3, c3, c2};
-                        {2'b11, 1'b1}: O_wb_dat = {c3, c3, c2, c1};
+                        {2'b0?, 1'b1}: O_wb_dat <= {c3, c3, c3, c3}; // I_addr[1:0] == 2'b00 should never matter here
+                        {2'b10, 1'b1}: O_wb_dat <= {c3, c3, c3, c2};
+                        {2'b11, 1'b1}: O_wb_dat <= {c3, c3, c2, c1};
                     endcase
 
                     addr_count <= addr_count_next;
