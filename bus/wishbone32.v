@@ -39,12 +39,6 @@ module spu32_bus_wishbone32(
     wire[7:0] c2 = I_data[23:16];
     wire[7:0] c3 = I_data[31:24]; // most-significant byte
 
-    // wire up individual bytes from bus (b-prefix)
-    wire[7:0] b0 = I_wb_dat[7:0]; // least-significant byte
-    wire[7:0] b1 = I_wb_dat[15:8];
-    wire[7:0] b2 = I_wb_dat[23:16];
-    wire[7:0] b3 = I_wb_dat[31:24]; // most-significant byte
-
 
     reg[8:0] byteenables;
 
