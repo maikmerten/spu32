@@ -251,6 +251,7 @@ int main()
         }
 
         bios_video_set_mode(VIDEOMODE_TEXT_80, &videodat, &fontdat);
+        bios_set_stdout(DEVICE_VIDEO);
 
     } else {
         printf("could not load /font80.dat\n\r");
@@ -261,15 +262,22 @@ int main()
     printf("\n\r\n\rSPU32 Shell 0.0.1\n\r");
 
     while (1) {
-        read_input();
-        int exitcode = execute_input();
-
-        videomode_t videomode;
+        videomode_t videomode, oldmode;
         void* videobase;
         void* fontbase;
+
+        read_input();
+        
+        // save current video mode
+        bios_video_get_mode(&oldmode, &videobase, &fontbase);
+        
+        // execute program, could alter video mode
+        int exitcode = execute_input();
+
+        // restore old videomode
         bios_video_get_mode(&videomode, &videobase, &fontbase);
-        if(videomode != VIDEOMODE_TEXT_80) {
-            bios_video_set_mode(VIDEOMODE_TEXT_80, &videodat, &fontdat);
+        if(videomode != oldmode) {
+            bios_video_set_mode(oldmode, &videodat, &fontdat);
         }
         load_color_palette();
 
