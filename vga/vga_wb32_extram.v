@@ -140,7 +140,7 @@ module vga_wb32_extram (
                         // read access to line visible flag
                         O_wb_dat[23:16] <= {{7{1'b0}}, vga_visible};
                         // read access to graphics mode register
-                        O_wb_dat[31:24] <= {5'b000000, mode};
+                        O_wb_dat[31:24] <= {{5{1'b0}}, mode};
                     end
                 endcase
             end
