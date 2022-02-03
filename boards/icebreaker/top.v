@@ -1,16 +1,17 @@
 `default_nettype none
 
 `include "./cpu/cpu.v"
-`include "./bus/wishbone8.v"
+`include "./bus/wishbone32.v"
 `include "./leds/leds_wb8.v"
 `include "./uart/uart_wb8.v"
 `include "./spi/spi_wb8.v"
-`include "./timer/timer_wb8.v"
-`include "./ram/dummy_wb8.v"
-`include "./ram/ice40_spram_1mbit_wb8_vga.v"
-`include "./rom/rom_wb8.v"
-`include "./prng/prng_wb8.v"
-`include "./vga/vga_wb8_extram.v"
+`include "./timer/timer_wb32.v"
+`include "./ram/dummy_wb32.v"
+`include "./ram/ice40_spram_1mbit_wb32_vga.v"
+`include "./ram/bram_wb32.v"
+`include "./rom/rom_wb32.v"
+`include "./prng/prng_wb32.v"
+`include "./vga/vga_wb32_extram.v"
 
 module top(
         input clk_12mhz,
@@ -36,7 +37,7 @@ module top(
     wire cpu_strobe, cpu_write, cpu_halfword, cpu_fullword;
     wire[31:0] cpu_dat, cpu_adr;
 
-    reg[7:0] arbiter_dat_o;
+    reg[31:0] arbiter_dat_o;
     reg arbiter_ack_o, arbiter_stall_o;
     wire ram_stall;
 
@@ -48,11 +49,12 @@ module top(
     wire[31:0] bus_cpu_data = wb_cpu_data;
 
     wire wb_ack_i, wb_cyc_o, wb_stb_o, wb_we_o;
-    wire[31:0] wb_adr_o;
-    wire[7:0] wb_dat_o;
+    wire[29:0] wb_adr_o;
+    wire[3:0] wb_sel_o;
+    wire[31:0] wb_dat_o;
 
     reg dummy_stb;
-    wire[7:0] dummy_dat;
+    wire[31:0] dummy_dat;
     wire dummy_ack;
 
     reg leds_stb;
@@ -60,12 +62,12 @@ module top(
     wire leds_ack;
 
     reg prng_stb = 0;
-    wire[7:0] prng_dat;
+    wire[31:0] prng_dat;
     wire prng_ack;
 
     wire rom_ack;
     reg rom_stb;
-    wire[7:0] rom_dat;
+    wire[31:0] rom_dat;
 
     reg spi_wb_stb = 0;
     wire[7:0] spi_wb_dat;
@@ -77,10 +79,10 @@ module top(
 
     reg spram_stb;
     wire spram_ack, spram_stall;
-    wire[7:0] spram_dat;
+    wire[31:0] spram_dat;
 
     reg timer_stb = 0;
-    wire[7:0] timer_dat;
+    wire[31:0] timer_dat;
     wire timer_ack;
     wire timer_interrupt;
 
@@ -89,7 +91,7 @@ module top(
     wire[7:0] uart_dat;
 
     reg vga_stb = 0;
-    wire[7:0] vga_dat;
+    wire[31:0] vga_dat;
     wire[7:0] vga_r, vga_g, vga_b;
     wire[17:0] vga_ram_adr;
     wire vga_ram_req, vga_dev_vsync, vga_dev_hsync;
@@ -192,7 +194,7 @@ module top(
     );
 
 
-    spu32_bus_wishbone8 wb8_inst(
+    spu32_bus_wishbone32 wb32_inst(
         .I_clk(clk),
         // signals to CPU bus
         .I_strobe(cpu_strobe & wb_selected),
@@ -201,35 +203,38 @@ module top(
         .I_fullword(cpu_fullword),
         .I_addr(cpu_adr),
         .I_data(cpu_dat),
+        .I_reset(reset),
         .O_data(wb_cpu_data),
         .O_wait(wb_cpu_wait),
         // wired to outside world, RAM, devices etc.
         //naming of signals taken from Wishbone B4 spec
-        .ACK_I(arbiter_ack_o),
-        .STALL_I(arbiter_stall_o),
-        .DAT_I(arbiter_dat_o),
-        .RST_I(reset),
-        .ADR_O(wb_adr_o),
-        .DAT_O(wb_dat_o),
-        .CYC_O(wb_cyc_o),
-        .STB_O(wb_stb_o),
-        .WE_O(wb_we_o)
+        .I_wb_ack(arbiter_ack_o),
+        .I_wb_stall(arbiter_stall_o),
+        .I_wb_dat(arbiter_dat_o),
+        .O_wb_adr(wb_adr_o),
+        .O_wb_sel(wb_sel_o),
+        .O_wb_dat(wb_dat_o),
+        .O_wb_cyc(wb_cyc_o),
+        .O_wb_stb(wb_stb_o),
+        .O_wb_we(wb_we_o)
     );
 
 
-    dummy_wb8 dummy_inst(
+    dummy_wb32 dummy_inst(
         .I_wb_clk(clk),
         .I_wb_stb(dummy_stb),
         .O_wb_dat(dummy_dat),
         .O_wb_ack(dummy_ack)
     );
 
-    rom_wb8 #(
-        .ROMINITFILE("./software/asm/bootrom.dat")
+    rom_wb32 #(
+        .ROMINITFILE("./software/asm/bootrom.dat32")
+        //.ROMINITFILE("./software/asm/blink-test.dat32")
+        //.ROMINITFILE("./software/asm/uart-echo.dat32")
     ) rom_inst (
 	    .I_wb_clk(clk),
 	    .I_wb_stb(rom_stb),
-	    .I_wb_adr(wb_adr_o[8:0]),
+	    .I_wb_adr(wb_adr_o[7:0]),
 	    .O_wb_dat(rom_dat),
 	    .O_wb_ack(rom_ack)
     );
@@ -238,7 +243,7 @@ module top(
 
     leds_wb8 leds_inst(
         .I_wb_clk(clk),
-        .I_wb_dat(wb_dat_o),
+        .I_wb_dat(wb_dat_o[7:0]),
         .I_wb_stb(leds_stb),
         .I_wb_we(wb_we_o),
         .I_reset(reset),
@@ -253,8 +258,8 @@ module top(
         .CLOCKFREQ(CLOCKFREQ)
     ) uart_inst(
         .I_wb_clk(clk),
-        .I_wb_adr(wb_adr_o[3:2]),
-        .I_wb_dat(wb_dat_o),
+        .I_wb_adr(wb_adr_o[1:0]),
+        .I_wb_dat(wb_dat_o[7:0]),
         .I_wb_stb(uart_stb),
         .I_wb_we(wb_we_o),
         .O_wb_dat(uart_dat),
@@ -266,8 +271,8 @@ module top(
 
     spi_wb8 spi_inst(
         .I_wb_clk(clk),
-        .I_wb_adr(wb_adr_o[3:2]),
-        .I_wb_dat(wb_dat_o),
+        .I_wb_adr(wb_adr_o[1:0]),
+        .I_wb_dat(wb_dat_o[7:0]),
         .I_wb_stb(spi_wb_stb),
         .I_wb_we(wb_we_o),
         .O_wb_dat(spi_wb_dat),
@@ -281,11 +286,11 @@ module top(
     );
 
 
-    timer_wb8 #(
+    timer_wb32 #(
         .CLOCKFREQ(CLOCKFREQ)
     )timer_inst(
         .I_wb_clk(clk),
-        .I_wb_adr(wb_adr_o[2:0]),
+        .I_wb_adr(wb_adr_o[0]),
         .I_wb_dat(wb_dat_o),
         .I_wb_stb(timer_stb),
         .I_wb_we(wb_we_o),
@@ -295,9 +300,9 @@ module top(
     );
 
 
-    prng_wb8 prng_inst(
+    prng_wb32 prng_inst(
         .I_wb_clk(clk),
-        .I_wb_adr(wb_adr_o[1:0]),
+        .I_wb_sel(wb_sel_o),
         .I_wb_dat(wb_dat_o),
         .I_wb_stb(prng_stb),
         .I_wb_we(wb_we_o),
@@ -306,9 +311,18 @@ module top(
     );
 
 
-    ice40_spram_1mbit_wb8_vga spram_inst(
+    reg[7:0] stall_simulate = 0;
+    always @(posedge clk) begin
+        stall_simulate <= stall_simulate + 1;
+    end
+
+
+`define SPRAM 1
+`ifdef SPRAM
+    ice40_spram_1mbit_wb32_vga spram_inst(
         .I_wb_clk(clk),
-        .I_wb_adr(wb_adr_o[16:0]),
+        .I_wb_adr(wb_adr_o[14:0]),
+        .I_wb_sel(wb_sel_o),
         .I_wb_dat(wb_dat_o),
         .I_wb_stb(spram_stb),
         .I_wb_we(wb_we_o),
@@ -316,14 +330,33 @@ module top(
         .O_wb_ack(spram_ack),
         .O_wb_stall(spram_stall),
         .I_vga_req(vga_ram_req),
+        //.I_vga_req(stall_simulate[0]),
         .I_vga_adr(vga_ram_adr[15:0]),
-        .O_vga_dat(ram_vga_dat)
+        //.I_vga_adr(16'h0000),
+        .O_vga_dat(ram_vga_dat),
     );
+`else
+    bram_wb32
+	#(
+		.ADDRBITS(11), // by default, 8 KB of BRAM
+		.RAMINITFILE("./ram/raminit.dat")
+	)  bram32_inst
+	(
+		.I_wb_clk(clk),
+		.I_wb_stb(spram_stb),
+		.I_wb_we(wb_we_o),
+	    .I_wb_adr(wb_adr_o[10:0]),
+		.I_wb_dat(wb_dat_o),
+        .I_wb_sel(wb_sel_o),
+		.O_wb_dat(spram_dat),
+		.O_wb_ack(spram_ack)
+	);
+`endif
 
-
-    vga_wb8_extram vga_inst(
+    vga_wb32_extram vga_inst(
         .I_wb_clk(clk),
-        .I_wb_adr(wb_adr_o[12:0]),
+        .I_wb_adr(wb_adr_o[1:0]),
+        .I_wb_sel(wb_sel_o),
         .I_wb_dat(wb_dat_o),
         .I_wb_stb(vga_stb),
         .I_wb_we(wb_we_o),
@@ -375,15 +408,14 @@ module top(
         prng_stb = 0;
         spram_stb = 0;
         vga_stb = 0;
-
         arbiter_stall_o = 0;
 
-        casez(wb_adr_o[31:0])
+        casez({wb_adr_o[29:0], 2'b00})
 
             {16'hFFFF, 3'b000, {13{1'b?}}}: begin //0xFFFF0000 - 0xFFFF1FFF: VGA
                 arbiter_dat_o = vga_dat;
                 arbiter_ack_o = vga_ack;
-                vga_stb = wb_stb_o;         
+                vga_stb = wb_stb_o;
             end
 
             {20'hFFFFF, 1'b0, {11{1'b?}}}: begin // 0xFFFFF000 - 0xFFFFF7FF: boot ROM
@@ -393,13 +425,13 @@ module top(
             end
 
             {32'hFFFFF8??}: begin // 0xFFFFF8xx: UART
-                arbiter_dat_o = uart_dat;
+                arbiter_dat_o = {24'h000000, uart_dat};
                 arbiter_ack_o = uart_ack;
                 uart_stb = wb_stb_o;
             end
 
             {32'hFFFFF9??}: begin // 0xFFFFF9xx: SPI port
-                arbiter_dat_o = spi_wb_dat;
+                arbiter_dat_o = {24'h000000, spi_wb_dat};
                 arbiter_ack_o = spi_wb_ack;
                 spi_wb_stb = wb_stb_o;
             end
@@ -432,7 +464,7 @@ module top(
             // 0xFFFFFF1x to 0xFFFFFFEx
 
             {32'hFFFFFFF?}: begin // 0xFFFFFFFx LEDs
-                arbiter_dat_o = leds_dat;
+                arbiter_dat_o = {4{leds_dat}};
                 arbiter_ack_o = leds_ack;
                 leds_stb = wb_stb_o;                      
             end
