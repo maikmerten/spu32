@@ -50,6 +50,8 @@ module spu32_cpu_alu(
         .O_busy(mul_busy)
     );
 
+    wire zeros31 = {31{1'b0}};
+
 
 `define SINGLE_CYCLE_SHIFTER
 `ifdef SINGLE_CYCLE_SHIFTER
@@ -96,16 +98,9 @@ module spu32_cpu_alu(
                 `ALUOP_AND: result <= myand;
                 `ALUOP_OR:  result <= myor;
                 `ALUOP_XOR: result <= myxor;
+                `ALUOP_SLT: result <= { {31{1'b0}}, lt};
+                `ALUOP_SLTU: result <= { {31{1'b0}}, ltu};
 
-                `ALUOP_SLT: begin
-                    result <= 0;
-                    if(lt) result[0] <= 1;
-                end
-
-                `ALUOP_SLTU: begin
-                    result <= 0;
-                    if(ltu) result[0] <= 1;
-                end
 
                 `ifndef SINGLE_CYCLE_SHIFTER
                 // multi-cycle shifting, slow, but compact
