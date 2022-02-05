@@ -242,12 +242,11 @@ module spu32_cpu
     localparam STATE_DECODE         = 2;
     localparam STATE_EXEC           = 3;
     localparam STATE_LOADSTORE      = 4;
-    localparam STATE_BRANCH2        = 5;
-    localparam STATE_TRAP1          = 6;
-    localparam STATE_SYSTEM         = 7;
-    localparam STATE_CSRRW          = 8;
+    localparam STATE_TRAP1          = 5;
+    localparam STATE_SYSTEM         = 6;
+    localparam STATE_CSRRW          = 7;
 
-    reg[3:0] state, prevstate = STATE_RESET, nextstate = STATE_RESET;
+    reg[2:0] state, prevstate = STATE_RESET, nextstate = STATE_RESET;
 
     wire busy;
     assign busy = alu_busy | bus_busy;
@@ -352,8 +351,13 @@ module spu32_cpu
                         nextstate <= STATE_FETCH;
                     end
 
-                    `OP_BRANCH: begin // use ALU for comparisons
-                        nextstate <= STATE_BRANCH2;
+                    `OP_BRANCH: begin
+                        // use branch unit to evaluate branch and compute branch target
+                        // the comparisons are provided by the ALU lt/ltu/eq signals
+                        bru_en <= 1;
+                        bru_eval_branch <= 1;
+                        nextpc_from_bru <= 1;
+                        nextstate <= STATE_FETCH;
                     end
 
                     `OP_MISCMEM:    nextstate <= STATE_FETCH; // nop
@@ -367,15 +371,6 @@ module spu32_cpu
                 bus_en <= 1;
                 mux_bus_addr_sel <= MUX_BUSADDR_ALU;
                 bus_op <= dec_busop;
-                nextstate <= STATE_FETCH;
-            end
-
-
-            STATE_BRANCH2: begin
-                // use branch unit to evaluate branch and compute branch target
-                bru_en <= 1;
-                bru_eval_branch <= 1;
-                nextpc_from_bru <= 1;
                 nextstate <= STATE_FETCH;
             end
 

@@ -21,9 +21,9 @@ module spu32_cpu_alu(
         input [3:0] I_aluop,
         output O_busy,
         output[31:0] O_data,
-        output reg O_lt,
-        output reg O_ltu,
-        output reg O_eq
+        output O_lt,
+        output O_ltu,
+        output O_eq
     );
    
     reg[31:0] result, sum, myor, myxor, myand;
@@ -32,7 +32,9 @@ module spu32_cpu_alu(
     reg[4:0] shiftcnt;
 
     assign O_data = result;
-
+    assign O_lt = lt;
+    assign O_ltu = ltu;
+    assign O_eq = eq;
 
     wire[63:0] mul_result;
     wire mul_busy;
@@ -81,8 +83,7 @@ module spu32_cpu_alu(
         ltu = sub[32];
         // signed comparison: xor underflow bit with xored sign bit
         lt = (sub[32] ^ myxor[31]);
-        
-        eq = (sub[31:0] === 32'b0);
+        eq = I_dataS1 === I_dataS2;
     end
     
     always @(posedge I_clk) begin
@@ -133,10 +134,6 @@ module spu32_cpu_alu(
                 `ALUOP_MULH, `ALUOP_MULHSU, `ALUOP_MULHU: result <= mul_result[63:32];
 
             endcase
-
-            O_lt <= lt;
-            O_ltu <= ltu;
-            O_eq <= eq;
 
         end
     end
