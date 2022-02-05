@@ -311,12 +311,6 @@ module top(
     );
 
 
-    reg[7:0] stall_simulate = 0;
-    always @(posedge clk) begin
-        stall_simulate <= stall_simulate + 1;
-    end
-
-
 `define SPRAM 1
 `ifdef SPRAM
     ice40_spram_1mbit_wb32_vga spram_inst(
@@ -330,9 +324,7 @@ module top(
         .O_wb_ack(spram_ack),
         .O_wb_stall(spram_stall),
         .I_vga_req(vga_ram_req),
-        //.I_vga_req(stall_simulate[0]),
         .I_vga_adr(vga_ram_adr[15:0]),
-        //.I_vga_adr(16'h0000),
         .O_vga_dat(ram_vga_dat),
     );
 `else
