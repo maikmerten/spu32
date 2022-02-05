@@ -46,7 +46,7 @@ module spu32_cpu
 
     // ALU instance
     reg alu_en = 0;
-    wire[31:0] alu_dataout;
+    wire[31:0] alu_dataout, alu_loadstore_adr;
     reg[31:0] alu_dataS1, alu_dataS2;
     wire alu_busy, alu_lt, alu_ltu, alu_eq;
 
@@ -59,6 +59,7 @@ module spu32_cpu
         .I_aluop(dec_aluop),
         .O_busy(alu_busy),
         .O_data(alu_dataout),
+        .O_loadstore_adr(alu_loadstore_adr),
         .O_lt(alu_lt),
         .O_ltu(alu_ltu),
         .O_eq(alu_eq)
@@ -194,7 +195,7 @@ module spu32_cpu
     reg mux_bus_addr_sel = MUX_BUSADDR_ALU;
     always @(*) begin
         case(mux_bus_addr_sel)
-            MUX_BUSADDR_ALU: bus_addr = alu_dataout;
+            MUX_BUSADDR_ALU: bus_addr = alu_loadstore_adr;
             default:         bus_addr = {pc, 2'b00}; // MUX_BUSADDR_PC
         endcase
     end
@@ -241,10 +242,9 @@ module spu32_cpu
     localparam STATE_FETCH          = 1;
     localparam STATE_DECODE         = 2;
     localparam STATE_EXEC           = 3;
-    localparam STATE_LOADSTORE      = 4;
-    localparam STATE_TRAP1          = 5;
-    localparam STATE_SYSTEM         = 6;
-    localparam STATE_CSRRW          = 7;
+    localparam STATE_TRAP1          = 4;
+    localparam STATE_SYSTEM         = 5;
+    localparam STATE_CSRRW          = 6;
 
     reg[2:0] state, prevstate = STATE_RESET, nextstate = STATE_RESET;
 
@@ -340,8 +340,13 @@ module spu32_cpu
                         nextstate <= STATE_FETCH;
                     end
 
-                    `OP_LOAD, `OP_STORE: begin // compute load/store address on ALU
-                        nextstate <= STATE_LOADSTORE;
+                    `OP_LOAD, `OP_STORE: begin 
+                        // the load/store address is computed on the ALU
+                        // activate the bus unit for load/store operation
+                        bus_en <= 1;
+                        mux_bus_addr_sel <= MUX_BUSADDR_ALU;
+                        bus_op <= dec_busop;
+                        nextstate <= STATE_FETCH;
                     end
 
                     `OP_JAL, `OP_JALR: begin
@@ -366,13 +371,6 @@ module spu32_cpu
                 endcase
             end
 
-
-            STATE_LOADSTORE: begin // load from computed address
-                bus_en <= 1;
-                mux_bus_addr_sel <= MUX_BUSADDR_ALU;
-                bus_op <= dec_busop;
-                nextstate <= STATE_FETCH;
-            end
 
             STATE_SYSTEM: begin
                 nextstate <= STATE_TRAP1;

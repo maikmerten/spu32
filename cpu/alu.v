@@ -21,6 +21,7 @@ module spu32_cpu_alu(
         input [3:0] I_aluop,
         output O_busy,
         output[31:0] O_data,
+        output[31:0] O_loadstore_adr,
         output O_lt,
         output O_ltu,
         output O_eq
@@ -35,6 +36,7 @@ module spu32_cpu_alu(
     assign O_lt = lt;
     assign O_ltu = ltu;
     assign O_eq = eq;
+    assign O_loadstore_adr = sum;
 
     wire[63:0] mul_result;
     wire mul_busy;
