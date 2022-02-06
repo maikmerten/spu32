@@ -13,23 +13,6 @@ module spu32_cpu_mul(
         output O_busy
     );
 
-    
-    reg busy = 1'b0;
-    reg[63:0] s1 = 64'b0;
-    reg[63:0] s2 = 64'b0;
-    reg[63:0] s1_next;
-    reg[63:0] s2_next;
-    reg s1_sign, s2_sign;
-    reg[63:0] accumulator = 64'b0;
-    reg[63:0] accumulator_next;
-
-    assign O_result = accumulator;
-    assign O_busy = busy;
-
-`ifdef FORMAL
-    reg[31:0] form_s1 = 32'b0, form_s2 = 32'b0;
-    reg[3:0] form_op = `ALUOP_MUL;
-`endif
 
     reg s1_signed, s2_signed, enabled, hi;
     always @(*) begin
@@ -55,6 +38,46 @@ module spu32_cpu_mul(
         endcase
     end
 
+//`define MULDSP
+`ifdef MULDSP
+    // single-cycle multiplication with inferred DSP blocks
+
+    assign O_busy = 0;
+    wire[63:0] result;
+
+    wire s1_negative = I_s1[31] & s1_signed;
+    wire s2_negative = I_s2[31] & s2_signed;
+    wire result_negative = s1_negative ^ s2_negative;
+
+    wire[31:0] s1 = s1_negative ? ~I_s1 + 1 : I_s1;
+    wire[31:0] s2 = s2_negative ? ~I_s2 + 1 : I_s2;
+
+    wire[63:0] mult = s1 * s2;
+
+    always @(*) begin
+        result = result_negative ? ~mult + 1 : mult;
+    end
+    assign O_result = result;
+
+`else
+    // multi-cycle multiplication
+    
+    reg busy = 1'b0;
+    reg[63:0] s1 = 64'b0;
+    reg[63:0] s2 = 64'b0;
+    reg[63:0] s1_next;
+    reg[63:0] s2_next;
+    reg s1_sign, s2_sign;
+    reg[63:0] accumulator = 64'b0;
+    reg[63:0] accumulator_next;
+
+    assign O_result = accumulator;
+    assign O_busy = busy;
+
+`ifdef FORMAL
+    reg[31:0] form_s1 = 32'b0, form_s2 = 32'b0;
+    reg[3:0] form_op = `ALUOP_MUL;
+`endif
 
     always @(*) begin
         if(s2[0]) begin
@@ -115,6 +138,8 @@ module spu32_cpu_mul(
         end
 
     end
+
+`endif // MULDSP
 
 
 // --- FORMAL VERIFICATION --- //
