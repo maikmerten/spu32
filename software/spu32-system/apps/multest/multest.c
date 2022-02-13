@@ -212,12 +212,15 @@ void testMulhu()
 
 int main()
 {
-    testMul();
-    testMulh();
-    testMulhsu();
-    testMulhu();
 
-    printf("Tests passed.\n\r");
+    while(1) {
+        testMul();
+        testMulh();
+        testMulhsu();
+        testMulhu();
+
+        printf("Tests passed.\n\r");
+    }
 
     return 0;
 }
