@@ -219,9 +219,5 @@ int main()
 
     printf("Tests passed.\n\r");
 
-    while (1)
-    {
-    }
-
     return 0;
 }

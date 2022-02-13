@@ -10,7 +10,7 @@ COPY=${RV_OBJCOPY}
 .PHONY: clean
 
 
-all: argtest.bin filesrv.bin mandel.bin mandel2.bin minmemtest.bin memtest.bin chreact.bin vgadraw.bin showfont.bin ls.bin mkdir.bin rm.bin cd.bin mv.bin print.bin cp.bin cls.bin loadfont.bin sum.bin dhryston.bin
+all: argtest.bin filesrv.bin mandel.bin mandel2.bin minmemtest.bin memtest.bin multest.bin chreact.bin vgadraw.bin showfont.bin ls.bin mkdir.bin rm.bin cd.bin mv.bin print.bin cp.bin cls.bin loadfont.bin sum.bin dhryston.bin
 
 
 %.bin: %.elf
@@ -33,6 +33,10 @@ minmemtest.elf: ./minmemtest/*.* crt0.s
 
 memtest.elf: ./memtest/*.* crt0.s ../libtinyc/*.a ../libspu32/*.a
 	$(CC) $(CFLAGS) -o $@ memtest/memtest.c crt0.s $(LDFLAGS)
+
+multest.elf: ./multest/*.* crt0.s ../libtinyc/*.a
+	$(CC) $(CFLAGS) -o $@ multest/multest.c crt0.s $(LDFLAGS)
+
 
 dhryston.bin: ./dhrystone/*.* ../libtinyc/*.a
 	cd dhrystone && $(MAKE)
