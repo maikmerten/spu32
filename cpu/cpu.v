@@ -10,7 +10,8 @@
 module spu32_cpu
     #(
         parameter VECTOR_RESET = 32'd0,
-        parameter VECTOR_EXCEPTION = 32'd16
+        parameter VECTOR_EXCEPTION = 32'd16,
+        parameter ALU_MULDSP = 0
     )
     (
         input I_clk,
@@ -50,7 +51,9 @@ module spu32_cpu
     reg[31:0] alu_dataS1, alu_dataS2;
     wire alu_busy, alu_lt, alu_ltu, alu_eq;
 
-    spu32_cpu_alu alu_inst(
+    spu32_cpu_alu #(
+        .MULDSP(ALU_MULDSP)
+    ) alu_inst (
         .I_clk(clk),
         .I_en(alu_en),
         .I_reset(reset),

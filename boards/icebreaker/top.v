@@ -178,7 +178,8 @@ module top(
 
 
     spu32_cpu #(
-        .VECTOR_RESET(32'hFFFFF000)
+        .VECTOR_RESET(32'hFFFFF000),
+        .ALU_MULDSP(1) // use single-cycle DSP multiplication
     ) cpu_inst(
         .I_clk(clk),
         .I_reset(reset),

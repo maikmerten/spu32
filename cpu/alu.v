@@ -7,12 +7,18 @@
     `define ALUFORMAL
 `endif
 
+
 `include "./cpu/aludefs.vh"
 `include "./cpu/mul.v"
+`include "./cpu/muldsp.v"
 `include "./cpu/shifter.v"
 
 
-module spu32_cpu_alu(
+module spu32_cpu_alu
+    #(
+        parameter MULDSP = 0
+    )
+    (
         input I_clk,
         input I_en,
         input I_reset,
@@ -41,16 +47,32 @@ module spu32_cpu_alu(
     wire[63:0] mul_result;
     wire mul_busy;
     // multiplication unit
-    spu32_cpu_mul mul_inst(
-        .I_clk(I_clk),
-        .I_en(I_en),
-        .I_op(I_aluop),
-        .I_reset(I_reset),
-        .I_s1(I_dataS1),
-        .I_s2(I_dataS2),
-        .O_result(mul_result),
-        .O_busy(mul_busy)
-    );
+
+    if(MULDSP) begin
+        // single-cycle shifter using DSP blocks
+        spu32_cpu_muldsp mul_inst(
+            .I_clk(I_clk),
+            .I_en(I_en),
+            .I_op(I_aluop),
+            .I_reset(I_reset),
+            .I_s1(I_dataS1),
+            .I_s2(I_dataS2),
+            .O_result(mul_result),
+            .O_busy(mul_busy)
+        );
+    end else begin
+        // multi-cycle shifter without DSP blocks
+        spu32_cpu_mul mul_inst(
+            .I_clk(I_clk),
+            .I_en(I_en),
+            .I_op(I_aluop),
+            .I_reset(I_reset),
+            .I_s1(I_dataS1),
+            .I_s2(I_dataS2),
+            .O_result(mul_result),
+            .O_busy(mul_busy)
+        );
+    end
 
     wire zeros31 = {31{1'b0}};
 

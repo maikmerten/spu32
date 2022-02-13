@@ -38,30 +38,7 @@ module spu32_cpu_mul(
         endcase
     end
 
-//`define MULDSP
-`ifdef MULDSP
-    // single-cycle multiplication with inferred DSP blocks
 
-    assign O_busy = 0;
-    wire[63:0] result;
-
-    wire s1_negative = I_s1[31] & s1_signed;
-    wire s2_negative = I_s2[31] & s2_signed;
-    wire result_negative = s1_negative ^ s2_negative;
-
-    wire[31:0] s1 = s1_negative ? ~I_s1 + 1 : I_s1;
-    wire[31:0] s2 = s2_negative ? ~I_s2 + 1 : I_s2;
-
-    wire[63:0] mult = s1 * s2;
-
-    always @(*) begin
-        result = result_negative ? ~mult + 1 : mult;
-    end
-    assign O_result = result;
-
-`else
-    // multi-cycle multiplication
-    
     reg busy = 1'b0;
     reg[63:0] s1 = 64'b0;
     reg[63:0] s2 = 64'b0;
@@ -139,8 +116,6 @@ module spu32_cpu_mul(
 
     end
 
-`endif // MULDSP
-
 
 // --- FORMAL VERIFICATION --- //
 
@@ -148,14 +123,14 @@ module spu32_cpu_mul(
 `ifndef ALUFORMAL // skip this code during ALU formal verification
 
     reg past_valid = 1'b0;
-    reg[63:0] mul_unsigned_unsigned;
-    reg signed[63:0] mul_signed_signed;
-    reg signed[63:0] mul_signed_unsigned;
+    reg[63:0] form_mul_unsigned_unsigned;
+    reg signed[63:0] form_mul_signed_signed;
+    reg signed[63:0] form_mul_signed_unsigned;
 
     always @(*) begin
-        mul_unsigned_unsigned = {32'b0, form_s1} * {32'b0, form_s2};
-        mul_signed_signed = $signed(form_s1) * $signed(form_s2);
-        mul_signed_unsigned = $signed(form_s1) * $signed({32'b0, form_s2});
+        form_mul_unsigned_unsigned = {32'b0, form_s1} * {32'b0, form_s2};
+        form_mul_signed_signed = $signed(form_s1) * $signed(form_s2);
+        form_mul_signed_unsigned = $signed(form_s1) * $signed({32'b0, form_s2});
     end
 
     always @(posedge I_clk) begin
@@ -174,22 +149,22 @@ module spu32_cpu_mul(
 
                 // MUL
                 if(form_op == `ALUOP_MUL) begin
-                    assert(accumulator[31:0] == mul_unsigned_unsigned[31:0]);
+                    assert(accumulator[31:0] == form_mul_unsigned_unsigned[31:0]);
                 end
 
                 // MULH
                 if(form_op == `ALUOP_MULH) begin
-                    assert(accumulator[63:32] == mul_signed_signed[63:32]);
+                    assert(accumulator[63:32] == form_mul_signed_signed[63:32]);
                 end
 
                 // MULHU
                 if(form_op == `ALUOP_MULHU) begin
-                    assert(accumulator[63:32] == mul_unsigned_unsigned[63:32]);
+                    assert(accumulator[63:32] == form_mul_unsigned_unsigned[63:32]);
                 end
 
                 // MULHSU
                 if(form_op == `ALUOP_MULHSU) begin
-                    assert(accumulator[63:32] == mul_signed_unsigned[63:32]);
+                    assert(accumulator[63:32] == form_mul_signed_unsigned[63:32]);
                 end
             end
         end
