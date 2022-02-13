@@ -96,7 +96,7 @@ void testMul()
     mul(0x80000000, 0x80000000, 0x7fffffff);
     mul(0, 0x80000000, 0x80000000);
 
-    printf("MUL passed\n\r");
+    //printf("MUL passed\n\r");
 }
 
 void testMulh()
@@ -133,7 +133,7 @@ void testMulh()
     mulh(0xc0000000, 0x80000000, 0x7fffffff);
     mulh(0x40000000, 0x80000000, 0x80000000);
 
-    printf("MULH passed\n\r");
+    //printf("MULH passed\n\r");
 }
 
 void testMulhsu()
@@ -170,7 +170,7 @@ void testMulhsu()
     mulhsu(0xc0000000, 0x80000000, 0x7fffffff);
     mulhsu(0xc0000000, 0x80000000, 0x80000000);
 
-    printf("MULHSU passed\n\r");
+    //printf("MULHSU passed\n\r");
 }
 
 void testMulhu()
@@ -207,19 +207,31 @@ void testMulhu()
     mulhu(0x3fffffff, 0x80000000, 0x7fffffff);
     mulhu(0x40000000, 0x80000000, 0x80000000);
 
-    printf("MULHU passed\n\r");
+    //printf("MULHU passed\n\r");
 }
 
-int main()
-{
+void doTests() {
+    uint32_t repeats = 10000;
 
-    while(1) {
+    printf("Doing round of %d repeats...\n\r", repeats);
+    while(repeats--) {
         testMul();
         testMulh();
         testMulhsu();
         testMulhu();
+    }
+    printf("Tests passed.\n\r");
+}
 
-        printf("Tests passed.\n\r");
+
+int main()
+{
+    uint32_t round = 0;
+    while(1) {
+        printf("\n\r\n\r-- Test round %d --\n\r", ++round);
+        doTests();
+
+        
     }
 
     return 0;
