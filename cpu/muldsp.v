@@ -60,9 +60,10 @@ module spu32_cpu_muldsp(
     
     // This approach does three multiplications in parallel (DSP-heavy!)
     // and chooses the upmost 32-bit according to operation.
+
     wire[63:0] mul_signed = $signed(I_s1) * $signed(I_s2);
     wire[63:0] mul_unsigned = $unsigned(I_s1) * $unsigned(I_s2);
-    wire[63:0] mul_signed_unsigned = $signed(I_s1) * $unsigned(I_s2);
+    wire[63:0] mul_signed_unsigned = $signed(I_s1) * $signed({1'b0,I_s2});
 
     reg[31:0] mulhi;
     always @(*) begin
@@ -72,7 +73,7 @@ module spu32_cpu_muldsp(
             default: mulhi[31:0] = mul_signed_unsigned[63:32];
         endcase
     end
-    wire[63:0] result = {mulhi, mul_unsigned[31:0]};
+    wire[63:0] result = {mulhi, mul_signed[31:0]};
     assign O_result = result;
 
 endmodule
