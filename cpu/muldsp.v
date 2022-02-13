@@ -63,6 +63,9 @@ module spu32_cpu_muldsp(
 
     wire[63:0] mul_signed = $signed(I_s1) * $signed(I_s2);
     wire[63:0] mul_unsigned = $unsigned(I_s1) * $unsigned(I_s2);
+    // In Verilog, mixed signed/unsigned multiplications are *unsigned*!
+    // Thus do signed multiplication with zero-extension for the unsigned
+    // operand.
     wire[63:0] mul_signed_unsigned = $signed(I_s1) * $signed({1'b0,I_s2});
 
     reg[31:0] mulhi;
