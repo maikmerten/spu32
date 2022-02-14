@@ -2,6 +2,10 @@
 #include <libspu32.h>
 #include <stdint.h>
 
+#include "../../bios/devices.h"
+
+#define LED *((volatile uint8_t*) DEV_LED)
+
 void mul(uint32_t expected, uint32_t s1, uint32_t s2)
 {
     uint32_t result;
@@ -228,6 +232,7 @@ int main()
 {
     uint32_t round = 0;
     while(1) {
+        LED = (uint8_t)round;
         printf("\n\r\n\r-- Test round %d --\n\r", ++round);
         doTests();
 
