@@ -60,7 +60,7 @@ module vga_pixelpipe_bitmap
 
         // by default, do not access RAM
         fetch0 <= 1'b0;      
-        // start of new character each 8th column
+        // fetch pixel data each 4th column
         if(I_col[1:0] == 2'b00) begin
             if(I_visible) begin
                 // set up bitmap fetch
@@ -114,6 +114,7 @@ module vga_pixelpipe_bitmap
         end
 
         if(!pixel_doubled) begin
+            // 16-color (4 bit) mode
             case(col1[1:0])
                 2'b00: O_palette_idx <= {4'h0, I_ram_dat[15:12]};
                 2'b01: O_palette_idx <= {4'h0, pixel_data2[11:8]};
@@ -121,6 +122,7 @@ module vga_pixelpipe_bitmap
                 2'b11: O_palette_idx <= {4'h0, pixel_data2[3:0]};
             endcase
         end else begin
+            // 256-color (8 bit) mode
             case(col1[1:0])
                 2'b00: O_palette_idx <= I_ram_dat[15:8];
                 2'b01: O_palette_idx <= pixel_data2[15:8];
