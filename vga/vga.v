@@ -5,6 +5,7 @@
 `include "vga/vga_pixelpipe_test.v"
 `include "vga/vga_pixelpipe_text.v"
 `include "vga/vga_pixelpipe_bitmap.v"
+`include "vga/vga_pixelpipe_compressed_bitmap.v"
 `include "vga/vga_palette.v"
 
 
@@ -38,11 +39,12 @@ module vga
     assign O_ram_adr = ram_adr;
     assign O_ram_req = ram_req;
 
-    wire timing_select = I_mode[3];
-    wire test_mode = I_mode[2:0] == 3'b000;
+    wire test_mode = I_mode[3];
+    wire compressed_mode = I_mode[2];
     wire text_mode = I_mode[1];
     wire doubled_mode = I_mode[0];
 
+    wire timing_select = 1'b0;
 
     wire[9:0] last_visible_col, h_pulse_start, h_pulse_end, last_col;
     wire[9:0] last_visible_row, v_pulse_start, v_pulse_end, last_row;
@@ -150,41 +152,77 @@ module vga
         .O_ram_adr(pixelpipe_bitmap_ram_adr)
     );
 
+    wire[23:0] pixelpipe_compressed_bitmap_rgb;
+    wire pixelpipe_compressed_bitmap_vsync, pixelpipe_compressed_bitmap_hsync, pixelpipe_compressed_bitmap_visible, pixelpipe_compressed_bitmap_ram_req;
+    wire[17:0] pixelpipe_compressed_bitmap_ram_adr;
+    vga_pixelpipe_compressed_bitmap vga_pixelpipe_compressed_bitmap_inst(
+        .I_clk(I_vga_clk),
+        .I_col(col),
+        .I_row(row),
+        .I_base_adr(I_base_adr),
+        .I_pixel_doubled(doubled_mode),
+        .I_vsync(vsync),
+        .I_hsync(hsync),
+        .I_visible(visible),
+        .I_ram_dat(ram_dat),
+        .O_ram_req(pixelpipe_compressed_bitmap_ram_req),
+        .O_ram_adr(pixelpipe_compressed_bitmap_ram_adr),
+        .O_rgb(pixelpipe_compressed_bitmap_rgb),
+        .O_vsync(pixelpipe_compressed_bitmap_vsync),
+        .O_hsync(pixelpipe_compressed_bitmap_hsync),
+        .O_visible(pixelpipe_compressed_bitmap_visible)
+    );
+
 
     // select active pixel pipe
     reg[7:0] pixelpipe_palette_idx;
-    reg pixelpipe_vsync, pixelpipe_hsync, pixelpipe_visible;
+    reg pixelpipe_vsync, pixelpipe_hsync, pixelpipe_visible, pixelpipe_is_rgb;
     always @(*) begin
-        casez({test_mode, text_mode})
-            2'b1?: begin
+        casez({test_mode, text_mode, compressed_mode})
+            3'b1??: begin
                 // test pipe
                 pixelpipe_palette_idx = pixelpipe_test_palette_idx;
                 pixelpipe_vsync = pixelpipe_test_vsync;
                 pixelpipe_hsync = pixelpipe_test_hsync;
                 pixelpipe_visible = pixelpipe_test_visible;
+                pixelpipe_is_rgb = 1'b0;
                 ram_req = 1'b0;
                 ram_adr = 18'b0;
             end
 
-            2'b01: begin
+            3'b01?: begin
                 // text pipe
                 pixelpipe_palette_idx = pixelpipe_text_palette_idx;
                 pixelpipe_vsync = pixelpipe_text_vsync;
                 pixelpipe_hsync = pixelpipe_text_hsync;
                 pixelpipe_visible = pixelpipe_text_visible;
+                pixelpipe_is_rgb = 1'b0;
                 ram_req = pixelpipe_text_ram_req;
                 ram_adr = pixelpipe_text_ram_adr;
             end
 
-            2'b00: begin
+            3'b000: begin
                 // bitmap pipe
                 pixelpipe_palette_idx = pixelpipe_bitmap_palette_idx;
                 pixelpipe_vsync = pixelpipe_bitmap_vsync;
                 pixelpipe_hsync = pixelpipe_bitmap_hsync;
                 pixelpipe_visible = pixelpipe_bitmap_visible;
+                pixelpipe_is_rgb = 1'b0;
                 ram_req = pixelpipe_bitmap_ram_req;
                 ram_adr = pixelpipe_bitmap_ram_adr;
             end
+
+            3'b001: begin
+                // compressed bitmap pipe
+                pixelpipe_palette_idx = pixelpipe_test_palette_idx; // unused
+                pixelpipe_vsync = pixelpipe_compressed_bitmap_vsync;
+                pixelpipe_hsync = pixelpipe_compressed_bitmap_hsync;
+                pixelpipe_visible = pixelpipe_compressed_bitmap_visible;
+                pixelpipe_is_rgb = 1'b1; // this is a RGB mode
+                ram_req = pixelpipe_compressed_bitmap_ram_req;
+                ram_adr = pixelpipe_compressed_bitmap_ram_adr;
+            end
+
         endcase
     end
 
@@ -203,15 +241,17 @@ module vga
 
 
     reg vsync_delay, hsync_delay, visible_delay;
+    reg[23:0] rgb_delay;
     always @(posedge I_vga_clk) begin
         vsync_delay <= pixelpipe_vsync;
         hsync_delay <= pixelpipe_hsync;
         visible_delay <= pixelpipe_visible;
+        rgb_delay <= pixelpipe_compressed_bitmap_rgb; // only RGB pipeline for now
     end
 
     assign O_vsync = vsync_delay;
     assign O_hsync = hsync_delay;
-    assign O_rgb = visible_delay ? palette_rgb[23:0] : 24'h000000;
+    assign O_rgb = visible_delay ? (pixelpipe_is_rgb ? rgb_delay : palette_rgb[23:0]) : 24'h000000;
 
 
 

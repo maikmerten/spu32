@@ -33,6 +33,7 @@ module vga_wb32_extram (
     localparam MODE_GRAPHICS_640 = 3'b010;
     localparam MODE_GRAPHICS_320 = 3'b011;
     localparam MODE_TEXT_80 = 3'b100;
+    localparam MODE_COMPRESSED_640 = 3'b101;
 
     reg[2:0] mode = MODE_TEXT_40;
 
@@ -41,10 +42,11 @@ module vga_wb32_extram (
     always @(*) begin
         case(mode)
             MODE_TEXT_40: vga_mode = 4'b0111;
-            MODE_GRAPHICS_640: vga_mode = 4'b0100;
-            MODE_GRAPHICS_320: vga_mode = 4'b0101;
+            MODE_GRAPHICS_640: vga_mode = 4'b0000;
+            MODE_GRAPHICS_320: vga_mode = 4'b0001;
             MODE_TEXT_80: vga_mode = 4'b0110;
-            default: vga_mode = 4'b0000;
+            MODE_COMPRESSED_640: vga_mode = 4'b0100;
+            default: vga_mode = 4'b1000;
         endcase
     end
 
