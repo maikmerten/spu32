@@ -10,7 +10,7 @@ COPY=${RV_OBJCOPY}
 .PHONY: clean
 
 
-all: argtest.bin filesrv.bin mandel.bin mandel2.bin minmemtest.bin memtest.bin multest.bin chreact.bin vgadraw.bin showfont.bin ls.bin mkdir.bin rm.bin cd.bin mv.bin print.bin cp.bin cls.bin loadfont.bin sum.bin dhryston.bin
+all: argtest.bin filesrv.bin mandel.bin mandel2.bin minmemtest.bin memtest.bin multest.bin chreact.bin vgadraw.bin showfont.bin ls.bin mkdir.bin rm.bin cd.bin mv.bin picview.bin print.bin cp.bin cls.bin loadfont.bin sum.bin dhryston.bin
 
 
 %.bin: %.elf
@@ -63,6 +63,9 @@ cd.elf: ./cmds/*.* crt0.s ../libtinyc/*.a
 
 mv.elf: ./cmds/*.* crt0.s ../libtinyc/*.a
 	$(CC) $(CFLAGS) -o $@ cmds/mv.c cmds/shared.c crt0.s $(LDFLAGS)
+
+picview.elf: ./cmds/*.* crt0.s ../libtinyc/*.a
+	$(CC) $(CFLAGS) -o $@ cmds/picview.c cmds/shared.c crt0.s $(LDFLAGS)
 
 print.elf: ./cmds/*.* crt0.s ../libtinyc/*.a
 	$(CC) $(CFLAGS) -o $@ cmds/print.c cmds/shared.c crt0.s $(LDFLAGS)
