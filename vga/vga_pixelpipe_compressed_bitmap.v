@@ -236,8 +236,8 @@ module vga_pixelpipe_compressed_bitmap
                 block_offset <= block_offset + 9;
             end else begin
                 // line reached end of visibility
-                if(I_row[2:0] == 3'b000) begin
-                    // every 8 pixels, move RAM offset to next row of blocks
+                if(I_row[2:0] == 3'b111) begin
+                    // every 8 pixel rows, move RAM offset to next row of blocks
                     ram_base <= ram_base + block_offset;
                 end 
 
