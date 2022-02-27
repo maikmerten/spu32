@@ -12,7 +12,7 @@ _init:
     sb s1, -1(zero)
 
 	# set up stack pointer
-	li s1, (512 - 40) * 1024;
+	li s1, (512 - 36) * 1024;
 	mv sp, s1
 
 	# call main function

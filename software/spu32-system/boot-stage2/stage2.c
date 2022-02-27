@@ -55,15 +55,15 @@ int main()
         halt(ERR_SIZE);
     }
 
-    if(size > 8192) {
-        printf("shell.bin is %d bytes, must not be bigger than 8192 bytes, halting.\n\r");
+    if(size > 4096) {
+        printf("shell.bin is %d bytes, must not be bigger than 4096 bytes, halting.\n\r");
         halt(ERR_TOOBIG);
     }
 
     printf("size of shell.bin is %d bytes\n\r", size);
 
 
-    void* buf = (void*)((512 - 40) * 1024);
+    void* buf = (void*)((512 - 36) * 1024);
 
     uint32_t read;
     res = bios_fs_read(fh, buf, 8 * 1024, &read);

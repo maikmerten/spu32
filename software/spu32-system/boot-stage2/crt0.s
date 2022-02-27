@@ -10,6 +10,6 @@ _start:
 
 
 	# start execution of shell
-	li t0, (512 - 40) * 1024;
+	li t0, (512 - 36) * 1024;
 	jr t0
 
