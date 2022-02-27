@@ -98,9 +98,9 @@ module top(
     wire vga_ack;
     wire[15:0] ram_vga_dat;
 
-    assign {vga_r3, vga_r2, vga_r1, vga_r0} = vga_r[3:0];
-    assign {vga_g3, vga_g2, vga_g1, vga_g0} = vga_g[3:0];
-    assign {vga_b3, vga_b2, vga_b1, vga_b0} = vga_b[3:0];
+    assign {vga_r3, vga_r2, vga_r1, vga_r0} = vga_r[7:4];
+    assign {vga_g3, vga_g2, vga_g1, vga_g0} = vga_g[7:4];
+    assign {vga_b3, vga_b2, vga_b1, vga_b0} = vga_b[7:4];
     assign vga_hsync = vga_dev_hsync;
     assign vga_vsync = vga_dev_vsync;
 
