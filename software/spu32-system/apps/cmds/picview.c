@@ -23,9 +23,7 @@ int do_picview(char* arg0)
     }
 
     // allocate framebuffer on stack
-    // FIXME: For now, only half of the picture is loaded to
-    // make sure the stack is not consumed completely
-    uint8_t framebuffer[PICSIZE / 2];
+    uint8_t framebuffer[PICSIZE];
     if(((uint32_t) &framebuffer[0]) & 0x1) {
         printf("frambuffer unaligned\n");
         return 1;
