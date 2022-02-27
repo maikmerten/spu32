@@ -10,11 +10,11 @@ COPY=${RV_OBJCOPY}
 TRUNCATE=truncate
 CP=cp
 
-all: bios_32k.bin
+all: bios_24k.bin
 
-bios_32k.bin: bios.bin
+bios_24k.bin: bios.bin
 	$(CP) $< $@
-	$(TRUNCATE) -s 32768 $@
+	$(TRUNCATE) -s 24576 $@
 
 %.bin: %.elf
 	$(COPY) -O binary $< $@

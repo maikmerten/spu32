@@ -63,10 +63,10 @@ int main()
     printf("size of shell.bin is %d bytes\n\r", size);
 
 
-    void* buf = (void*)((512 - 36) * 1024);
+    void* buf = (void*)((512 - 28) * 1024);
 
     uint32_t read;
-    res = bios_fs_read(fh, buf, 8 * 1024, &read);
+    res = bios_fs_read(fh, buf, 4 * 1024, &read);
     if (res != RESULT_OK) {
         printf("error reading shell.bin, halting.\n\r");
         halt(ERR_READ);

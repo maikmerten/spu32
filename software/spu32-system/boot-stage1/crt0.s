@@ -12,14 +12,14 @@ _init:
     sb s1, -1(zero)
 
 	# set up stack pointer
-	li s1, (512 - 36) * 1024;
+	li s1, (512 - 28) * 1024;
 	mv sp, s1
 
 	# call main function
 	jal ra,main
 
 	# register BIOS ISR
-	li s1, (512 - 32) * 1024;
+	li s1, (512 - 24) * 1024;
 	csrrw zero, 0x7C3, s1
 
     # turn off board LEDs

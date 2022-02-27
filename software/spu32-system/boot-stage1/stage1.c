@@ -31,8 +31,8 @@ Binary size: 4 Kibibyte
 #define STAGE2_RAM_LOCATION (64 * 1024)
 
 #define BIOS_FLASH_LOCATION (FLASH_OFFSET + (8 * 1024))
-#define BIOS_SIZE (32 * 1024)
-#define BIOS_RAM_LOCATION ((512 - 32) * 1024)
+#define BIOS_SIZE (24 * 1024)
+#define BIOS_RAM_LOCATION ((512 - 24) * 1024)
 
 uint8_t transmit_spi(uint8_t txdata)
 {
