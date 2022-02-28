@@ -188,17 +188,28 @@ module vga_pixelpipe_compressed_bitmap
     reg[2:0] col3;
 
     // pipeline stage 4
-    reg[15:0] color_data4;
     reg[13:0] pixel_data4;
     reg[1:0] pixel_idx4;
-    reg vsync4, hsync4, visible4, fetch4;
+    always @(*) begin
+        case(col3[2:0])
+            3'b000: pixel_idx4 = I_ram_dat[15:14]; // just fetched
+            3'b001: pixel_idx4 = pixel_data4[13:12];
+            3'b010: pixel_idx4 = pixel_data4[11:10];
+            3'b011: pixel_idx4 = pixel_data4[9:8];
+            3'b100: pixel_idx4 = pixel_data4[7:6];
+            3'b101: pixel_idx4 = pixel_data4[5:4];
+            3'b110: pixel_idx4 = pixel_data4[3:2];
+            3'b111: pixel_idx4 = pixel_data4[1:0];
+        endcase
+    end
+
 
     // instantiate color interpolator to generate four 24-bit colors
     // from two RGB332 colors.
     wire[23:0] color0, color1, color2, color3;
     vga_color_interpolator color_interpolator_inst(
-        .I_reference_color0(color_data4[15:8]), // RGB332
-        .I_reference_color1(color_data4[7:0]), // RGB332
+        .I_reference_color0(color_data3[15:8]), // RGB332
+        .I_reference_color1(color_data3[7:0]), // RGB332
         .O_color0(color0),
         .O_color1(color1),
         .O_color2(color2),
@@ -303,26 +314,7 @@ module vga_pixelpipe_compressed_bitmap
 
         if(fetch3) begin
             pixel_data4 <= I_ram_dat[13:0];
-            pixel_idx4 <= I_ram_dat[15:14];
-        end else begin
-            case(col3[2:0])
-                3'b001: pixel_idx4 <= pixel_data4[13:12];
-                3'b010: pixel_idx4 <= pixel_data4[11:10];
-                3'b011: pixel_idx4 <= pixel_data4[9:8];
-                3'b100: pixel_idx4 <= pixel_data4[7:6];
-                3'b101: pixel_idx4 <= pixel_data4[5:4];
-                3'b110: pixel_idx4 <= pixel_data4[3:2];
-                default: pixel_idx4 <= pixel_data4[1:0];
-            endcase
-
         end
-
-        {vsync4, hsync4, visible4} <= {vsync3, hsync3, visible3};
-        color_data4 <= color_data3;
-
-        // #############################
-        // ######### STAGE 5 ###########
-        // #############################
 
         // select from interpolated colors
         case(pixel_idx4)
@@ -332,7 +324,7 @@ module vga_pixelpipe_compressed_bitmap
             2'b11: O_rgb <= color3;
         endcase
 
-        {O_vsync, O_hsync, O_visible} <= {vsync4, hsync4, visible4};
+        {O_vsync, O_hsync, O_visible} <= {vsync3, hsync3, visible3};
 
 
     end
