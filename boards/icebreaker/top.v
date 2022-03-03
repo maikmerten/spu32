@@ -12,6 +12,7 @@
 `include "./rom/rom_wb32.v"
 `include "./prng/prng_wb32.v"
 `include "./vga/vga_wb32_extram.v"
+`include "./vga/vga_dither.v"
 
 module top(
         input clk_12mhz,
@@ -97,12 +98,6 @@ module top(
     wire vga_ram_req, vga_dev_vsync, vga_dev_hsync;
     wire vga_ack;
     wire[15:0] ram_vga_dat;
-
-    assign {vga_r3, vga_r2, vga_r1, vga_r0} = vga_r[7:4];
-    assign {vga_g3, vga_g2, vga_g1, vga_g0} = vga_g[7:4];
-    assign {vga_b3, vga_b2, vga_b1, vga_b0} = vga_b[7:4];
-    assign vga_hsync = vga_dev_hsync;
-    assign vga_vsync = vga_dev_vsync;
 
 
 
@@ -368,7 +363,24 @@ module top(
         .O_vga_b(vga_b)
     );
 
+    wire[11:0] vga_dither_rgb;
+    wire vga_dither_vsync, vga_dither_hsync;
+    vga_dither_24_to_12 vga_dither_inst(
+        .I_clk(clk),
+        .I_vsync(vga_dev_vsync),
+        .I_hsync(vga_dev_hsync),
+        .I_rgb24({vga_r, vga_g, vga_b}),
+        .O_vsync(vga_dither_vsync),
+        .O_hsync(vga_dither_hsync),
+        .O_rgb12(vga_dither_rgb)
+    );
 
+
+    assign {vga_r3, vga_r2, vga_r1, vga_r0} = vga_dither_rgb[11:8];
+    assign {vga_g3, vga_g2, vga_g1, vga_g0} = vga_dither_rgb[7:4];
+    assign {vga_b3, vga_b2, vga_b1, vga_b0} = vga_dither_rgb[3:0];
+    assign vga_hsync = vga_dither_hsync;
+    assign vga_vsync = vga_dither_vsync;
 
     wire uart_reset_blocked = 1'b0; //(leds_value == 8'hFF);
 

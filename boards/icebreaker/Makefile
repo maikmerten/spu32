@@ -21,7 +21,7 @@ top.json: top.v
 	cd ../.. && yosys -p 'read_verilog ./boards/icebreaker/top.v' -p 'synth_ice40 -dsp; write_json ./boards/icebreaker/top.json'
 
 top.asc: top.json icebreaker.pcf
-	nextpnr-ice40 --opt-timing --promote-logic --placer heap --randomize-seed --up5k --package sg48 --json top.json --pcf icebreaker.pcf --asc top.asc --freq 15
+	nextpnr-ice40 --opt-timing --promote-logic --placer heap --randomize-seed --up5k --package sg48 --json top.json --pcf icebreaker.pcf --asc top.asc --freq 22 --timing-allow-fail --tmg-ripup
 
 top.bin: top.asc
 	icepack -s top.asc top.bin
