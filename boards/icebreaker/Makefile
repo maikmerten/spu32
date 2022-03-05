@@ -18,10 +18,10 @@ CHECK := $(foreach exec,$(EXECS),\
 
 top.json: top.v
 	cd ../../software/asm && make
-	cd ../.. && yosys -p 'read_verilog ./boards/icebreaker/top.v' -p 'synth_ice40 -dsp; write_json ./boards/icebreaker/top.json'
+	cd ../.. && yosys -p 'read_verilog ./boards/icebreaker/top.v' -p 'synth_ice40 -abc2 -abc9 -device u -dsp; write_json ./boards/icebreaker/top.json'
 
 top.asc: top.json icebreaker.pcf
-	nextpnr-ice40 --opt-timing --promote-logic --placer heap --randomize-seed --up5k --package sg48 --json top.json --pcf icebreaker.pcf --asc top.asc --freq 22 --timing-allow-fail --tmg-ripup
+	nextpnr-ice40 --opt-timing --promote-logic --placer heap --randomize-seed --up5k --package sg48 --json top.json --pcf icebreaker.pcf --asc top.asc --freq 25 --timing-allow-fail
 
 top.bin: top.asc
 	icepack -s top.asc top.bin
