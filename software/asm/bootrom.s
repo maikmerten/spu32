@@ -168,8 +168,8 @@ load_from_spi:
     li a0, 0x0B
     jal transmit_spi
 
-    # send address (0x100000 in this case) and dummy byte for fast read
-    li a0, 0x10 # addr[23:16]
+    # send address (0x300000 in this case) and dummy byte for fast read
+    li a0, 0x30 # addr[23:16]
     jal transmit_spi
     li a0, 0x00 # addr[15:8]
     jal transmit_spi

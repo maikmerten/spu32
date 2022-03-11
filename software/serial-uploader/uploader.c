@@ -475,7 +475,7 @@ int main(int argc, char *argv[])
     
 
     if(program) {
-        programFile(filename, 0x100000);
+        programFile(filename, 0x300000);
     } else {
         drainfd();
         uploadFile(filename, 0);

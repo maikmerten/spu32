@@ -24,7 +24,7 @@ Binary size: 4 Kibibyte
 
 #define VGA_PALETTE *((volatile uint32_t *)DEV_VGA_PALETTE)
 
-#define FLASH_OFFSET 0x100000
+#define FLASH_OFFSET 0x300000
 
 #define STAGE2_FLASH_LOCATION (FLASH_OFFSET + (4 * 1024))
 #define STAGE2_SIZE (4 * 1024)
