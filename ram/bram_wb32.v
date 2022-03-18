@@ -14,7 +14,7 @@ module bram_wb32
         output reg O_wb_ack
     );
 
-    localparam RAMSIZE = 2**ADDRBITS;
+    localparam RAMSIZE = 4 * (2**ADDRBITS);
 
     reg[7:0] ram3 [RAMSIZE-1:0];
     reg[7:0] ram2 [RAMSIZE-1:0];
