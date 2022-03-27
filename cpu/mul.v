@@ -7,6 +7,7 @@ module spu32_cpu_mul(
         input I_en,
         input I_reset,
         input[3:0] I_op,
+        input[1:0] I_op_signed,
         input[31:0] I_s1,
         input[31:0] I_s2,
         output[63:0] O_result,
@@ -16,8 +17,8 @@ module spu32_cpu_mul(
 
     reg s1_signed, s2_signed, enabled, hi;
     always @(*) begin
-        s1_signed = 1'b0;
-        s2_signed = 1'b0;
+        s1_signed = I_op_signed[0];
+        s2_signed = I_op_signed[1];
         hi = 1'b1;
         case({I_en, I_op})
             {1'b1, `ALUOP_MUL}: begin
@@ -26,14 +27,7 @@ module spu32_cpu_mul(
             end
             {1'b1, `ALUOP_MULH}: begin
                 enabled = 1'b1;
-                s1_signed = 1'b1;
-                s2_signed = 1'b1;
             end
-            {1'b1, `ALUOP_MULHSU}: begin
-                enabled = 1'b1;
-                s1_signed = 1'b1;
-            end
-            {1'b1, `ALUOP_MULHU}: enabled = 1'b1;
             default: enabled = 1'b0;
         endcase
     end
@@ -54,6 +48,7 @@ module spu32_cpu_mul(
 `ifdef FORMAL
     reg[31:0] form_s1 = 32'b0, form_s2 = 32'b0;
     reg[3:0] form_op = `ALUOP_MUL;
+    reg[1:0] form_op_signed = 2'b00;
 `endif
 
     always @(*) begin
@@ -91,6 +86,7 @@ module spu32_cpu_mul(
                 form_s1 <= I_s1;
                 form_s2 <= I_s2;
                 form_op <= I_op;
+                form_op_signed = I_op_signed;
 `endif
                 busy <= 1'b1;
             end
@@ -141,29 +137,35 @@ module spu32_cpu_mul(
         assume(I_s1 == 32'hF4321000 || I_s1 == 32'h07654321);
         assume(I_s2 == 32'hF0001234 || I_s2 == 32'h01234567);
 
-        assume((I_op == `ALUOP_MUL) || (I_op == `ALUOP_MULH) || (I_op == `ALUOP_MULHSU) || (I_op == `ALUOP_MULHU));
+        assume(
+              ((I_op == `ALUOP_MUL)  && (I_op_signed == 2'b00)) // MUL
+           || ((I_op == `ALUOP_MULH) && (I_op_signed == 2'b00)) // MULHU
+           || ((I_op == `ALUOP_MULH) && (I_op_signed == 2'b01)) // MULHSU
+           || ((I_op == `ALUOP_MULH) && (I_op_signed == 2'b11)) // MULH
+        );
+
 
         if(past_valid) begin
 
             if($past(busy) && !busy) begin
 
                 // MUL
-                if(form_op == `ALUOP_MUL) begin
+                if(form_op == `ALUOP_MUL && form_op_signed == 2'b00) begin
                     assert(accumulator[31:0] == form_mul_unsigned_unsigned[31:0]);
                 end
 
                 // MULH
-                if(form_op == `ALUOP_MULH) begin
+                if(form_op == `ALUOP_MULH && form_op_signed == 2'b11) begin
                     assert(accumulator[63:32] == form_mul_signed_signed[63:32]);
                 end
 
                 // MULHU
-                if(form_op == `ALUOP_MULHU) begin
+                if(form_op == `ALUOP_MULH && form_op_signed == 2'b00) begin
                     assert(accumulator[63:32] == form_mul_unsigned_unsigned[63:32]);
                 end
 
                 // MULHSU
-                if(form_op == `ALUOP_MULHSU) begin
+                if(form_op == `ALUOP_MULH && form_op_signed == 2'b01) begin
                     assert(accumulator[63:32] == form_mul_signed_unsigned[63:32]);
                 end
             end

@@ -24,7 +24,8 @@ module spu32_cpu_alu
         input I_reset,
         input[31:0] I_dataS1,
         input[31:0] I_dataS2,
-        input [3:0] I_aluop,
+        input[3:0] I_aluop,
+        input[1:0] I_aluop_signed,
         output O_busy,
         output[31:0] O_data,
         output[31:0] O_loadstore_adr,
@@ -54,6 +55,7 @@ module spu32_cpu_alu
             .I_clk(I_clk),
             .I_en(I_en),
             .I_op(I_aluop),
+            .I_op_signed(I_aluop_signed),
             .I_reset(I_reset),
             .I_s1(I_dataS1),
             .I_s2(I_dataS2),
@@ -66,6 +68,7 @@ module spu32_cpu_alu
             .I_clk(I_clk),
             .I_en(I_en),
             .I_op(I_aluop),
+            .I_op_signed(I_aluop_signed),
             .I_reset(I_reset),
             .I_s1(I_dataS1),
             .I_s2(I_dataS2),
@@ -150,7 +153,7 @@ module spu32_cpu_alu
                 `endif
 
                 `ALUOP_MUL: result <= mul_result[31:0];
-                `ALUOP_MULH, `ALUOP_MULHSU, `ALUOP_MULHU: result <= mul_result[63:32];
+                `ALUOP_MULH: result <= mul_result[63:32];
 
             endcase
 

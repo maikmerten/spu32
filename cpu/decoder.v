@@ -16,6 +16,7 @@ module spu32_cpu_decoder(
         output reg[2:0] O_funct3,
         output reg[5:0] O_branchmask,
         output reg[3:0] O_aluop,
+        output reg[1:0] O_aluop_signed,
         output reg[2:0] O_busop,
         output reg O_alumux1,
         output reg O_alumux2,
@@ -48,6 +49,7 @@ module spu32_cpu_decoder(
     reg[3:0] aluop;
 
     reg[3:0] aluop_op, aluop_opimm;
+    reg[1:0] aluop_signed;
     reg[2:0] busop, busop_load, busop_store;
     reg alumux1, alumux2;
     reg[1:0] reginputmux;
@@ -113,6 +115,7 @@ module spu32_cpu_decoder(
         endcase
         
         // OP_OP
+        aluop_signed = 2'b00;
         case({funct3, funct7[0]})
             {`FUNC_ADD_SUB, 1'b0}:  aluop_op = funct7[5] ? `ALUOP_SUB : `ALUOP_ADD;
             {`FUNC_SLL, 1'b0}:      aluop_op = `ALUOP_SLL;
@@ -122,10 +125,22 @@ module spu32_cpu_decoder(
             {`FUNC_SRL_SRA, 1'b0}:  aluop_op = funct7[5] ? `ALUOP_SRA : `ALUOP_SRL;
             {`FUNC_OR, 1'b0}:       aluop_op = `ALUOP_OR;
             {`FUNC_AND, 1'b0}:      aluop_op = `ALUOP_AND;
-            {`FUNC_MUL, 1'b1}:      aluop_op = `ALUOP_MUL;
-            {`FUNC_MULH, 1'b1}:     aluop_op = `ALUOP_MULH;
-            {`FUNC_MULHSU, 1'b1}:   aluop_op = `ALUOP_MULHSU;
-            {`FUNC_MULHU, 1'b1}:    aluop_op = `ALUOP_MULHU;
+            {`FUNC_MUL, 1'b1}: begin
+                                    aluop_op = `ALUOP_MUL;
+                                    aluop_signed = 2'b00;
+            end      
+            {`FUNC_MULH, 1'b1}: begin
+                                    aluop_op = `ALUOP_MULH;
+                                    aluop_signed = 2'b11;
+            end
+            {`FUNC_MULHSU, 1'b1}: begin
+                                    aluop_op = `ALUOP_MULH;
+                                    aluop_signed = 2'b01;
+            end
+            {`FUNC_MULHU, 1'b1}:  begin
+                                    aluop_op = `ALUOP_MULH;
+                                    aluop_signed = 2'b00;
+            end
             default:        aluop_op = `ALUOP_ADD;
         endcase
 
@@ -178,6 +193,7 @@ module spu32_cpu_decoder(
             O_funct3 <= funct3;
             O_branchmask <= branchmask;
             O_aluop <= aluop;
+            O_aluop_signed <= aluop_signed;
             O_rd <= rd;
             O_busop <= busop;
             O_alumux1 <= alumux1;

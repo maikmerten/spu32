@@ -60,6 +60,7 @@ module spu32_cpu
         .I_dataS1(alu_dataS1),
         .I_dataS2(alu_dataS2),
         .I_aluop(dec_aluop),
+        .I_aluop_signed(dec_aluop_signed),
         .O_busy(alu_busy),
         .O_data(alu_dataout),
         .O_loadstore_adr(alu_loadstore_adr),
@@ -115,6 +116,7 @@ module spu32_cpu
     wire[2:0] dec_funct3;
     wire[5:0] dec_branchmask;
     wire[3:0] dec_aluop;
+    wire[1:0] dec_aluop_signed;
     wire[2:0] dec_busop;
     wire dec_alumux1, dec_alumux2, dec_writeback;
     wire[1:0] dec_reginputmux;
@@ -133,6 +135,7 @@ module spu32_cpu
         .O_funct3(dec_funct3),
         .O_branchmask(dec_branchmask),
         .O_aluop(dec_aluop),
+        .O_aluop_signed(dec_aluop_signed),
         .O_busop(dec_busop),
         .O_alumux1(dec_alumux1),
         .O_alumux2(dec_alumux2),
