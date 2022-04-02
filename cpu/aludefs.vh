@@ -14,5 +14,7 @@
 
     `define ALUOP_MUL    4'b1010
     `define ALUOP_MULH   4'b1011
-    
+
+    `define ALUOP_DIV  4'b1100
+    `define ALUOP_REM  4'b1101    
 `endif

@@ -141,6 +141,22 @@ module spu32_cpu_decoder(
                                     aluop_op = `ALUOP_MULH;
                                     aluop_signed = 2'b00;
             end
+            {`FUNC_DIV, 1'b1}:  begin
+                                    aluop_op = `ALUOP_DIV;
+                                    aluop_signed = 2'b11;
+            end
+            {`FUNC_DIVU, 1'b1}:  begin
+                                    aluop_op = `ALUOP_DIV;
+                                    aluop_signed = 2'b00;
+            end
+            {`FUNC_REM, 1'b1}:  begin
+                                    aluop_op = `ALUOP_REM;
+                                    aluop_signed = 2'b11;
+            end
+            {`FUNC_REMU, 1'b1}:  begin
+                                    aluop_op = `ALUOP_REM;
+                                    aluop_signed = 2'b00;
+            end
             default:        aluop_op = `ALUOP_ADD;
         endcase
 

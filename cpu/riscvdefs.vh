@@ -66,6 +66,10 @@
     `define FUNC_MULH   3'b001
     `define FUNC_MULHSU 3'b010
     `define FUNC_MULHU  3'b011
+    `define FUNC_DIV    3'b100
+    `define FUNC_DIVU   3'b101
+    `define FUNC_REM    3'b110
+    `define FUNC_REMU   3'b111
 
     // imm[11:0] of SYSTEM-opcode encodes function
     `define SYSTEM_ECALL	12'b000000000000
