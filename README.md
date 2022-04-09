@@ -7,9 +7,23 @@ A demo-SoC is also included, featuring some peripherals.
 The project ist writting in Verilog and is designed to be synthesizable using the open-source [Yosys open synthesis suite](http://www.clifford.at/yosys/).
 
 An overview of the SoC:
+```mermaid
 
-<img src="./soc.png" width="95%">
+graph TD;
+    CPU[CPU<br>RISC-V, 32 bit] --- WB[Wishbone bus<br>8 or 32 bit, pipelined]
+    WB --- BROM[Boot ROM]
+    WB --- RAM[RAM]
+    WB --- UART[UART<br>115200 baud]
+    WB --- SPI[SPI bus]
+    SPI --- SDCARD[SD card]
+    WB --- TIMER[Timer<br>Interrupt-capable]
+    WB --- PRNG[PRNG<br>32 bit predictable<br>random numbers]
+    WB --- LEDS[LEDs<br>blinky board LEDs]
+    WB --- IR[IR decoder<br>NEC protocol]
+    IR --- IRREC[IR receiver<br>38 kHz carrier]
+    WB --- VGA[VGA graphics<br>text and bitmaps]        
 
+```
 
 ## CPU
 
