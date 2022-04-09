@@ -4,9 +4,9 @@ This is SPU32 ("Small Processing Unit 32"), a compact RISC-V processor implement
 
 A demo-SoC is also included, featuring some peripherals.
 
-The project ist writting in Verilog and is designed to be synthesizable using the open-source [Yosys open synthesis suite](http://www.clifford.at/yosys/).
+The project ist writting in Verilog and is designed to be synthesizable using the open-source [Yosys open synthesis suite](https://github.com/YosysHQ/yosys).
 
-An overview of the SoC:
+An example SoC:
 ```mermaid
 
 graph TD;
