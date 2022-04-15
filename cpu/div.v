@@ -27,7 +27,7 @@ module spu32_cpu_div(
     wire neg_dividend = (I_signed_op && I_dividend[31]);
     wire neg_divisor  = (I_signed_op && I_divisor[31]);
     wire neg_result   = (div_signed && (I_dividend[31] != I_divisor[31]) && (I_divisor != 0))
-                      | (rem_signed && I_divisor[31]);
+                      | (rem_signed && I_dividend[31]);
 
     // select quotient or dividend depending on whether we divide or compute the remainder
     wire[31:0] result = I_divide ? quotient : dividend;
