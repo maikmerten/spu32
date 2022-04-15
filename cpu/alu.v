@@ -12,6 +12,7 @@
 `include "./cpu/mul.v"
 `include "./cpu/muldsp.v"
 `include "./cpu/shifter.v"
+`include "./cpu/div.v"
 
 
 module spu32_cpu_alu
@@ -77,6 +78,22 @@ module spu32_cpu_alu
         );
     end
 
+    wire[31:0] div_result;
+    wire div_busy;
+    wire op_div = I_aluop == `ALUOP_DIV;
+    wire op_rem = I_aluop == `ALUOP_REM;
+    spu32_cpu_div div_inst(
+        .I_clk(I_clk),
+        .I_en(I_en & (op_div | op_rem)),
+        .I_dividend(I_dataS1),
+        .I_divisor(I_dataS2),
+        .I_divide(op_div),
+        .I_signed_op(I_aluop_signed[0] || I_aluop_signed[1]),
+        .I_reset(I_reset),
+        .O_result(div_result),
+        .O_busy(div_busy)
+    );
+
     wire zeros31 = {31{1'b0}};
 
 
@@ -93,9 +110,9 @@ module spu32_cpu_alu
         .O_data(shifter_out)
     );
 
-    assign O_busy = mul_busy;
+    assign O_busy = (mul_busy || div_busy);
 `else
-    assign O_busy = (busy || mul_busy);
+    assign O_busy = (busy || mul_busy || div_busy);
 `endif
 
     always @(*) begin
@@ -154,6 +171,8 @@ module spu32_cpu_alu
 
                 `ALUOP_MUL: result <= mul_result[31:0];
                 `ALUOP_MULH: result <= mul_result[63:32];
+
+                `ALUOP_DIV, `ALUOP_REM: result <= div_result;
 
             endcase
 

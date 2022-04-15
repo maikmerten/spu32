@@ -32,8 +32,8 @@ module spu32_cpu_div(
     // select quotient or dividend depending on whether we divide or compute the remainder
     wire[31:0] result = I_divide ? quotient : dividend;
 
-    reg busy = 0;
-    assign O_busy = busy;
+    reg[1:0] state = 0;
+    assign O_busy = (state != 0);
     reg finished = 0;
 
 //`define SUBTRACTCOMPARE
@@ -44,22 +44,22 @@ module spu32_cpu_div(
 `endif
 
     always @(posedge I_clk) begin
-        case(busy)
-            1'b0: begin // idle state
+        case(state)
+            0: begin // idle state
                 quotient <= 0;
                 quot_mask <= (1 << 31);
                 finished <= 0;                
                 if(I_en) begin
                     dividend <= neg_dividend ? -I_dividend : I_dividend;
                     divisor <= (neg_divisor  ? -I_divisor  : I_divisor) << 31;
-                    busy <= 1;
+                    state <= 1;
                 end
             end
 
-            1'b1: begin // busy state
+            1: begin // busy state
                 if(finished) begin
                     O_result <= neg_result ? -result : result;
-                    busy <= 0;
+                    state <= 2;
                 end
 
 `ifdef SUBTRACTCOMPARE
@@ -78,11 +78,17 @@ module spu32_cpu_div(
                 divisor <= divisor >> 1;
                 quot_mask <= quot_mask >> 1;
             end
+
+            2: begin // busy-signal delay state
+                // return to idle state with one cycle delay to signal !busy after the
+                // result is registered
+                state <= 0;
+            end
         endcase
 
         // reset logic
         if(I_reset) begin
-            busy <= 0;
+            state <= 2'b00;
         end
     end
     
