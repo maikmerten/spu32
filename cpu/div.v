@@ -20,13 +20,14 @@ module spu32_cpu_div(
     reg[31:0] quot_mask = 0;
     reg[31:0] dividend = 0;
     reg[62:0] divisor = 0;
+    reg divisornotzero = 0;
 
     wire div_signed = I_divide && I_signed_op;
     wire rem_signed = !I_divide && I_signed_op;
 
     wire neg_dividend = (I_signed_op && I_dividend[31]);
     wire neg_divisor  = (I_signed_op && I_divisor[31]);
-    wire neg_result   = (div_signed && (I_dividend[31] != I_divisor[31]) && (I_divisor != 0))
+    wire neg_result   = (div_signed && (I_dividend[31] != I_divisor[31]) && divisornotzero)
                       | (rem_signed && I_dividend[31]);
 
     // select quotient or dividend depending on whether we divide or compute the remainder
@@ -48,7 +49,8 @@ module spu32_cpu_div(
             0: begin // idle state
                 quotient <= 0;
                 quot_mask <= (1 << 31);
-                finished <= 0;                
+                finished <= 0; 
+                divisornotzero <= 0;               
                 if(I_en) begin
                     dividend <= neg_dividend ? -I_dividend : I_dividend;
                     divisor <= (neg_divisor  ? -I_divisor  : I_divisor) << 31;
@@ -61,6 +63,8 @@ module spu32_cpu_div(
                     O_result <= neg_result ? -result : result;
                     state <= 2;
                 end
+                // as the divisor slides by, look if at least one bit is set
+                divisornotzero <= divisornotzero | divisor[31];
 
 `ifdef SUBTRACTCOMPARE
                 if(divisor_lessequal_dividend) begin
