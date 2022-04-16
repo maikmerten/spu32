@@ -33,6 +33,7 @@ For Linux, in a nutshell (adapt paths as desired):
 mkdir riscv-gcc
 cd riscv-gcc
 git clone --recursive https://github.com/riscv/riscv-gnu-toolchain
+cd riscv-gnu-toolchain
 ./configure --prefix=/opt/riscv32 --with-arch=rv32i --with-abi=ilp32
 make -j$(nproc)
 ```
