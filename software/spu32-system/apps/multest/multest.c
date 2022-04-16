@@ -34,10 +34,11 @@
 #include "../../bios/devices.h"
 
 #define LED *((volatile uint8_t*) DEV_LED)
+#define PRNG *((volatile uint32_t*) DEV_PRNG)
 
-void mul(uint32_t expected, uint32_t s1, uint32_t s2)
+void mul(int32_t expected, int32_t s1, int32_t s2)
 {
-    uint32_t result;
+    int32_t result;
     asm("mul %[dest], %[reg1], %[reg2]"
         : [dest] "=r"(result)
         : [reg1] "r"(s1), [reg2] "r"(s2));
@@ -110,6 +111,19 @@ void div(int32_t expected, int32_t s1, int32_t s2)
     }
 }
 
+int32_t __divsi3 (int32_t a, int32_t b);
+void testDivPrng() {
+    int32_t s1 = (int32_t)PRNG;
+    int32_t s2 = 0;
+    for(int i = 0; i < 37; i++) {
+         s2 = (int32_t)PRNG;
+    }
+    // compute expected value in software
+    int32_t expected = __divsi3(s1, s2);
+    // compare to hardware result
+    div(expected, s1, s2);
+}
+
 void divu(uint32_t expected, uint32_t s1, uint32_t s2)
 {
     uint32_t result;
@@ -123,6 +137,19 @@ void divu(uint32_t expected, uint32_t s1, uint32_t s2)
         {
         }
     }
+}
+
+uint32_t __udivsi3 (uint32_t a, uint32_t b);
+void testDivuPrng() {
+    uint32_t s1 = (uint32_t)PRNG;
+    uint32_t s2 = 0;
+    for(int i = 0; i < 37; i++) {
+         s2 = (uint32_t)PRNG;
+    }
+    // compute expected value in software
+    uint32_t expected = __udivsi3(s1, s2);
+    // compare to hardware result
+    divu(expected, s1, s2);
 }
 
 void rem(int32_t expected, int32_t s1, int32_t s2)
@@ -140,6 +167,20 @@ void rem(int32_t expected, int32_t s1, int32_t s2)
     }
 }
 
+
+int32_t __modsi3 (int32_t a, int32_t b);
+void testRemPrng() {
+    int32_t s1 = (int32_t)PRNG;
+    int32_t s2 = 0;
+    for(int i = 0; i < 37; i++) {
+         s2 = (int32_t)PRNG;
+    }
+    // compute expected value in software
+    int32_t expected = __modsi3(s1, s2);
+    // compare to hardware result
+    rem(expected, s1, s2);
+}
+
 void remu(uint32_t expected, uint32_t s1, uint32_t s2)
 {
     uint32_t result;
@@ -153,6 +194,19 @@ void remu(uint32_t expected, uint32_t s1, uint32_t s2)
         {
         }
     }
+}
+
+uint32_t __umodsi3 (uint32_t a, uint32_t b);
+void testRemuPrng() {
+    uint32_t s1 = (uint32_t)PRNG;
+    uint32_t s2 = 0;
+    for(int i = 0; i < 37; i++) {
+         s2 = (uint32_t)PRNG;
+    }
+    // compute expected value in software
+    uint32_t expected = __umodsi3(s1, s2);
+    // compare to hardware result
+    remu(expected, s1, s2);
 }
 
 void testMul()
@@ -452,9 +506,9 @@ void testRemu()
 }
 
 void doTests() {
-    uint32_t repeats = 5000;
+    uint32_t repeats = 1000;
 
-    printf("Doing round of %d repeats...\n\r", repeats);
+    printf("Doing %d tests with fixed test vectors...\n\r", repeats);
     while(repeats--) {
         testMul();
         testMulh();
@@ -465,12 +519,24 @@ void doTests() {
         testRem();
         testRemu();
     }
+
+    repeats = 5000;
+    printf("Doing %d tests with random test vectors...\n\r", repeats);
+    while(repeats--) {
+        testDivPrng();
+        testDivuPrng();
+        testRemPrng();
+        testRemuPrng();
+    }
+
+
     printf("Tests passed.\n\r");
 }
 
 
 int main()
 {
+    PRNG = 1337;
     uint32_t round = 0;
     while(1) {
         LED = (uint8_t)round;
