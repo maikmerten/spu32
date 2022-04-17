@@ -121,6 +121,39 @@ module div_tb;
             if(result != expected) error <= testnum;
         end
     endtask
+
+    task looptest;
+        reg[16:0] i;
+        reg[7:0] hi, lo;
+        reg[31:0] a, b, divu_expected, rem_expected;
+        reg signed[31:0] div_expected, remu_expected;
+        begin
+            for(i = 0; !i[16]; i = i + 1) begin
+                hi = i[15:8];
+                lo = i[7:0];
+                a = {hi[7:5], {25{hi[4]}}, hi[3:0]};
+                b = {lo[7:5], {25{lo[4]}}, lo[3:0]};
+
+                if(b == 0) begin 
+                    div_expected = 32'hffffffff;
+                    divu_expected = 32'hffffffff;
+                    rem_expected = a;
+                    remu_expected = a;
+                end else begin
+                    div_expected = $signed(a) / $signed(b);
+                    divu_expected = a / b;
+                    rem_expected = $signed(a) % $signed(b);
+                    remu_expected = a % b;
+                end
+
+                div(div_expected, a, b);
+                rem(rem_expected, a, b);
+                divu(divu_expected, a, b);
+                remu(remu_expected, a, b);
+            end
+            
+        end
+    endtask
     
     initial begin
         $dumpfile("./cpu/tests/div_tb.lxt");
@@ -254,6 +287,7 @@ module div_tb;
 	    remu(1, 32'h80000000, 32'h7fffffff);
 	    remu(0, 32'h80000000, 32'h80000000);
 
+        looptest();
 
         #(3 * CLKPERIOD);
         $finish;
