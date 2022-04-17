@@ -1,7 +1,7 @@
 `default_nettype none
 `include "./cpu/div.v"
 
-// This testbench uses test vectors taken from "risc-v compliance."
+// This testbench uses test vectors taken from "risc-v compliance".
 // "risc-compliance" is licensed as follows:
 /*
 # Copyright (c) 2018, Imperas Software Ltd.
@@ -232,60 +232,60 @@ module div_tb;
         rem(0, 0, 32'h80000000);
 
         rem(1, 1, 0);
-	    rem(0, 1, 1);
-	    rem(0, 1, -1);
-	    rem(1, 1, 32'h7fffffff);
-	    rem(1, 1, 32'h80000000); // FAIL
+        rem(0, 1, 1);
+        rem(0, 1, -1);
+        rem(1, 1, 32'h7fffffff);
+        rem(1, 1, 32'h80000000); // FAIL
 
-	    rem(32'hffffffff, -1, 0);
-	    rem(0, -1, 1);
-	    rem(0, -1, -1);
-	    rem(32'hffffffff, -1, 32'h7fffffff);
-	    rem(32'hffffffff, -1, 32'h80000000);
+        rem(32'hffffffff, -1, 0);
+        rem(0, -1, 1);
+        rem(0, -1, -1);
+        rem(32'hffffffff, -1, 32'h7fffffff);
+        rem(32'hffffffff, -1, 32'h80000000);
 
-	    rem(32'h7fffffff, 32'h7fffffff, 0);
-	    rem(0, 32'h7fffffff, 1);
-	    rem(0, 32'h7fffffff, -1);
-	    rem(0, 32'h7fffffff, 32'h7fffffff);
-	    rem(32'h7fffffff, 32'h7fffffff, 32'h80000000);
+        rem(32'h7fffffff, 32'h7fffffff, 0);
+        rem(0, 32'h7fffffff, 1);
+        rem(0, 32'h7fffffff, -1);
+        rem(0, 32'h7fffffff, 32'h7fffffff);
+        rem(32'h7fffffff, 32'h7fffffff, 32'h80000000);
 
-	    rem(32'h80000000, 32'h80000000, 0);
-	    rem(0, 32'h80000000, 32'h1);
-	    rem(0, 32'h80000000, -1);
-	    rem(32'hffffffff, 32'h80000000, 32'h7fffffff);
-	    rem(0, 32'h80000000, 32'h80000000);
+        rem(32'h80000000, 32'h80000000, 0);
+        rem(0, 32'h80000000, 32'h1);
+        rem(0, 32'h80000000, -1);
+        rem(32'hffffffff, 32'h80000000, 32'h7fffffff);
+        rem(0, 32'h80000000, 32'h80000000);
 
         // test vectors from riscv-compliance, REMU.S
 
         remu(0, 0, 0);
-	    remu(0, 0, 1);
-	    remu(0, 0, -1);
-	    remu(0, 0, 32'h7fffffff);
-	    remu(0, 0, 32'h80000000);
+        remu(0, 0, 1);
+        remu(0, 0, -1);
+        remu(0, 0, 32'h7fffffff);
+        remu(0, 0, 32'h80000000);
 
         remu(1, 1, 0);
-	    remu(0, 1, 1);
-	    remu(1, 1, -1);
-	    remu(1, 1, 32'h7fffffff);
-	    remu(1, 1, 32'h80000000);
+        remu(0, 1, 1);
+        remu(1, 1, -1);
+        remu(1, 1, 32'h7fffffff);
+        remu(1, 1, 32'h80000000);
 
         remu(32'hffffffff, -1, 0);
-	    remu(0, -1, 1);
-	    remu(0, -1, -1);
-	    remu(1, -1, 32'h7fffffff);
-	    remu(32'h7fffffff, -1, 32'h80000000);
+        remu(0, -1, 1);
+        remu(0, -1, -1);
+        remu(1, -1, 32'h7fffffff);
+        remu(32'h7fffffff, -1, 32'h80000000);
 
-	    remu(32'h7fffffff, 32'h7fffffff, 0);
-	    remu(0, 32'h7fffffff, 1);
-	    remu(32'h7fffffff, 32'h7fffffff, -1);
-	    remu(0, 32'h7fffffff, 32'h7fffffff);
-	    remu(32'h7fffffff, 32'h7fffffff, 32'h80000000);
+        remu(32'h7fffffff, 32'h7fffffff, 0);
+        remu(0, 32'h7fffffff, 1);
+        remu(32'h7fffffff, 32'h7fffffff, -1);
+        remu(0, 32'h7fffffff, 32'h7fffffff);
+        remu(32'h7fffffff, 32'h7fffffff, 32'h80000000);
 
         remu(32'h80000000, 32'h80000000, 0);
-	    remu(0, 32'h80000000, 1);
-	    remu(32'h80000000, 32'h80000000, -1);
-	    remu(1, 32'h80000000, 32'h7fffffff);
-	    remu(0, 32'h80000000, 32'h80000000);
+        remu(0, 32'h80000000, 1);
+        remu(32'h80000000, 32'h80000000, -1);
+        remu(1, 32'h80000000, 32'h7fffffff);
+        remu(0, 32'h80000000, 32'h80000000);
 
         looptest();
 
