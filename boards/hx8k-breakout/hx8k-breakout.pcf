@@ -1,0 +1,21 @@
+
+set_io --warn-no-port clk_12mhz J3
+
+
+set_io --warn-no-port uart_tx B12
+set_io --warn-no-port uart_rx B10
+set_io --warn-no-port uart_rts B13
+
+
+set_io led0 B5
+set_io led1 B4
+set_io led2 A2
+set_io led3 A1
+set_io led4 C5
+set_io led5 C4
+set_io led6 B3
+set_io led7 C3
+
+set_io debug1 C9
+set_io debug2 A11
+
