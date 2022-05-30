@@ -133,7 +133,7 @@ module cpu_tb();
 
     initial begin
         $dumpfile("./cpu/tests/cpu_tb.lxt");
-        $dumpvars(0, cpu_inst);
+        $dumpvars(0, cpu_inst, wb8_inst);
 
         #3
         reset = 0;
