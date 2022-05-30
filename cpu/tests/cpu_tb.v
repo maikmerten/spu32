@@ -133,7 +133,7 @@ module cpu_tb();
 
     initial begin
         $dumpfile("./cpu/tests/cpu_tb.lxt");
-        $dumpvars(0, clk, error, reset, wb_cyc_o, wb_stb_o, wb_we_o, cpu_write, wb_we_o, cpu_dat, cpu_adr, ram_ack, ram_dat, cpu_inst.state, cpu_inst.busy, cpu_inst.alu_en, cpu_inst.bus_en, cpu_inst.bus_op, cpu_inst.reg_re, cpu_inst.reg_we, cpu_inst.bus_addr, cpu_inst.alu_dataout, cpu_inst.reg_val1, cpu_inst.reg_val2, cpu_inst.dec_rs1, cpu_inst.dec_rs2, cpu_inst.dec_rd, cpu_inst.reg_datain, cpu_inst.bus_dataout, cpu_inst.pc, cpu_inst.pcnext, leds_value, stall, ram_stall);
+        $dumpvars(0, cpu_inst);
 
         #3
         reset = 0;
